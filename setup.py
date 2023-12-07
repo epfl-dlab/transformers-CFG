@@ -17,7 +17,7 @@ setup(
     ],
     install_requires=open('requirements.txt').read().splitlines(),
     package_data={
-        "transformers_cfg": ["grammars/*.ebnf"],
+        "transformers_cfg": ["examples/grammars/*.ebnf"],
     },
     include_package_data=True,
     # Add any additional package configuration here

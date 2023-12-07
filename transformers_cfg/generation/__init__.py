@@ -1,1 +1,1 @@
-from logits_process import GrammarConstrainedLogitsProcessor
+from .logits_process import GrammarConstrainedLogitsProcessor

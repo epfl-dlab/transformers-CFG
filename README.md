@@ -1,9 +1,6 @@
 # 🤗 Transformers-CFG
 
-
->  Transformers-CFG is a fork of the Hugging Face Transformers library adding support for CFG-based Grammar-Constrained Generation methods.
->  The library is trying to keep up-to-date with the main branch of the 🤗 Transformers library.
->  The library tries to offer a compatible interface to llama-cpp project.
+Transformers-CFG is a fork of the Hugging Face Transformers library adding support for *Context-Free Grammar based Constrained Generation* methods. The library is trying to keep up-to-date with the main branch of the 🤗 Transformers library. The library tries to offer a compatible interface to llama-cpp project.
 
 ## Installation
 
@@ -19,8 +16,8 @@ The below example can be found in `examples/pytorch/text-geenration/grammar_cons
 ```python
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.generation.grammar_utils import IncrementalGrammarConstraint
-from transformers.generation.logits_process import GrammarConstrainedLogitsProcessor
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
 
 if __name__ == "__main__":
@@ -69,10 +66,10 @@ We try to keep the grammars up-to-date with the original grammars from llama-cpp
 But up to now, we can not yet guarantee that all grammars from llama-cpp project can be directly used in transformers-CFG.
 
 The list of grammars contains:
-- `json.gbnf`: A grammar for generating valid json objects.
-- `c.gbnf`: A grammar for generating valid C programs.
-- `chess.gbnf`: A grammar for generating valid chess moves.
-- `arithmetic.gbnf`: A grammar for generating valid arithmetic expressions.
+- `json.ebnf`: A grammar for generating valid json objects.
+- `c.ebnf`: A grammar for generating valid C programs.
+- `chess.ebnf`: A grammar for generating valid chess moves.
+- `arithmetic.ebnf`: A grammar for generating valid arithmetic expressions.
 
 
 ## Why should I use transformers-CFG?
@@ -80,6 +77,10 @@ The list of grammars contains:
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 
+
+## Acknowledgement
+
+This project is based on the [torch-grammars](https://github.com/Shopify/torch-grammar) project. 
 
 
 
