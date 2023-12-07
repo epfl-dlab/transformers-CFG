@@ -1,15 +1,16 @@
-# 🤗 Transformers-CFG
+# 🤗 Transformers CFG
 
-Transformers-CFG is a fork of the Hugging Face Transformers library adding support for *Context-Free Grammar based Constrained Generation* methods. The library is trying to keep up-to-date with the main branch of the 🤗 Transformers library. The library tries to offer a compatible interface to llama-cpp project.
+
+## Introduction
+`transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG). This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
 
 ## Installation
 
 ```bash
-pip install git+https://github.com/epfl-dlab/transformers-GCD.git
+pip install git+https://github.com/epfl-dlab/transformers_cfg.git
 ```
 
-
-### QuickStart: Force LLM to generate a valid json object
+## QuickStart: Force LLM to generate a valid json object
 
 The below example can be found in `examples/pytorch/text-geenration/grammar_constrained_generation.py`
 
@@ -77,6 +78,8 @@ The list of grammars contains:
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 
+## License
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgement
 
