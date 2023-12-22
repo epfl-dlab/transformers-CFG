@@ -12,7 +12,7 @@ pip install git+https://github.com/epfl-dlab/transformers_cfg.git
 
 ## QuickStart: Force LLM to generate a valid json object
 
-The below example can be found in `examples/pytorch/text-geenration/grammar_constrained_generation.py`
+The below example can be found in `examples/run_grammar_constrained_generation.py`
 
 ```python
 
