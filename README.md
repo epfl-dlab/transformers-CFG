@@ -19,7 +19,7 @@ See relevant discussion [here](https://github.com/huggingface/transformers/pull/
 ## Installation
 
 ```bash
-pip install git+https://github.com/Saibo-creator/transformers_cfg.git
+pip install git+https://github.com/Saibo-creator/transformers-CFG.git
 ```
 
 ## QuickStart: Force LLM to generate a valid json object
