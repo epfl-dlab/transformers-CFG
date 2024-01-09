@@ -1,4 +1,7 @@
 import math
+import os
+import pprint
+
 import torch
 import logging
 from transformers.generation.logits_process import LogitsProcessor, LOGITS_PROCESSOR_INPUTS_DOCSTRING
@@ -18,7 +21,28 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # indicating acceptance
         # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
         acceptance = self.grammar_constraint.batch_filter_vocab(self.batch_stacks, device)
-        logger.debug(acceptance)
+        # acceptance is a tensor of shape (batch_size, vocab_size)
+        # get the indices of the accepted tokens
+        # do the following operation only in debug mode
+        if os.getenv('DEBUG_MODE') == 'True':
+            # convert acceptance to numpy array
+            batch_size, vocab_size = acceptance.shape
+            acceptance_np = acceptance.cpu().numpy()
+            accepted_x, accepted_y = acceptance_np.nonzero()
+            # dict of {batch_index: [accepted_token_indices]}
+            # initialize the dict with empty list
+            accepted_token_indices = {i: [] for i in range(batch_size)}
+            for x, y in zip(accepted_x, accepted_y):
+                accepted_token_indices[x].append(y)
+            logger.debug("Accepted token indices for the current batch:")
+            logger.debug("\n"+ pprint.pformat(accepted_token_indices))
+            # convert token_ids to tokens
+            accepted_tokens = {
+                i: [self.grammar_constraint.tokenizer.decode([token_id]) for token_id in token_ids]
+                for i, token_ids in accepted_token_indices.items()
+            }
+            logger.debug("Accepted tokens for the current batch:")
+            logger.debug("\n"+ pprint.pformat(accepted_tokens))
         # Logits to -inf where False
         logits[~acceptance] = -math.inf
 
@@ -34,6 +58,18 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         if self.batch_stacks is None:
             self.batch_stacks = [self.grammar_constraint.init_stacks() for _ in range(len(input_ids))]
 
+
+
+        if os.getenv('DEBUG_MODE') == 'True':
+            print("-" * 80)
+
+        logger.debug("input_ids: \n" + pprint.pformat(input_ids))
+        logger.debug("scores: \n" + pprint.pformat(scores))
+        logger.debug("parse_start_index: \n" + pprint.pformat(parse_start_index))
+        logger.debug("last_size: \n" + pprint.pformat(self.last_size))
+        logger.debug("num of stacks: \n" + pprint.pformat([len(stack) for stack in self.batch_stacks]))
+        logger.debug("stacks: \n" + pprint.pformat(self.batch_stacks))
+
         # if self.last_size is not set (which would be the case when processing the first token).
         # In this case, do nothing.
         if self.last_size is None:
@@ -43,15 +79,16 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             ]
             # self.grammar_acceptor.accept_token_ids(prefix_to_parse, self.stacks)
             self.batch_stacks = [
-                self.grammar_constraint.accept_token_ids(prefix, stack)
+                self.grammar_constraint.consume_token_ids(prefix, stack)
                 for prefix, stack in zip(prefix_to_parse, self.batch_stacks)
             ]
         #  if the length of the current input IDs (input_ids[0]) is exactly one more than self.last_size.
         #  This is expected in a scenario where inputs are processed incrementally, one token at a time.
         elif len(input_ids[0]) == self.last_size + 1:
             # self.stacks = self.grammar_acceptor.accept_token_id(input_ids[0][-1], self.stacks)
+            import pdb; pdb.set_trace()
             self.batch_stacks = [
-                self.grammar_constraint.accept_token_id(single_input_ids[-1], stack)
+                self.grammar_constraint.consume_token_id(single_input_ids[-1], stack)
                 for single_input_ids, stack in zip(input_ids, self.batch_stacks)
             ]
         #  ensure that the input size is consistent with the expected incremental processing

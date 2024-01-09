@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 import time
 from abc import ABC
@@ -8,6 +7,7 @@ from typing import Dict, List
 
 import torch
 
+from transformers_cfg.vocab_struct import LEAF, TokenTrie
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ class ParseState:
     def __init__(self):
         self.symbol_ids = {}
         self.grammar_encoding = []  # old name: out_grammar
+        self.grammar_encoding_rule_size = []
 
 
 def get_symbol_id(state, src):
@@ -241,6 +242,7 @@ def parse_alternates(state, src, rule_name, rule_id, is_nested):
     state.grammar_encoding.append(rule_id)
     state.grammar_encoding.extend(outbuf)
     state.grammar_encoding.append(0)
+    state.grammar_encoding_rule_size.append(len(outbuf) + 2)
     return remaining_src
 
 
@@ -328,6 +330,12 @@ def print_grammar(file, state):
         print(f"{state.grammar_encoding[pos]:04x}", end=" ", file=file)
         pos += 1
     print("ffff\n")
+
+    offset = 0
+    print("Grammar Rule Sizes:", file=file)
+    for i, rule_size in enumerate(state.grammar_encoding_rule_size):
+        print(f"<{i}> {rule_size} {state.grammar_encoding[offset:offset+rule_size]}", file=file)
+        offset += rule_size
 
 
 ###################################
@@ -431,11 +439,11 @@ class GrammarConstraint(ABC):
             subpos += self.grammar_encoding[subpos] + 1
         return stacks
 
-    def accept_char(self, *args, **kwargs):
+    def consume_char(self, *args, **kwargs):
         """Process a byte according to the grammar rules."""
         raise NotImplementedError
 
-    def accept_token_id(self, *args, **kwargs):
+    def consume_token_id(self, *args, **kwargs):
         """Process a token according to the grammar rules."""
         raise NotImplementedError
 
@@ -447,7 +455,7 @@ class IncrementalGrammarConstraint(GrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, start_rule_name, tokenizer)
 
-    def accept_char(self, byte, stacks):
+    def consume_char(self, byte, stacks):
         new_stacks = []
         for stack in stacks:
             # stack is empty
@@ -475,13 +483,13 @@ class IncrementalGrammarConstraint(GrammarConstraint):
 
         return new_stacks
 
-    def accept_string(self, string: str, stacks: List[List[int]]):
+    def consume_string(self, string: str, stacks: List[List[int]]):
         _bytes = bytes(string, "utf-8")
         for byte in _bytes:
-            stacks = self.accept_char(byte, stacks)
+            stacks = self.consume_char(byte, stacks)
         return stacks
 
-    def accept_token_id(self, token_id: int, stacks: List[List[int]]):
+    def consume_token_id(self, token_id: int, stacks: List[List[int]]):
         if token_id == self.eos_token_id:
             if stacks and all(len(stack) != 0 for stack in stacks):
                 raise Exception(
@@ -491,7 +499,7 @@ class IncrementalGrammarConstraint(GrammarConstraint):
             return []
 
         for byte in self.token_trie.id2str(token_id):
-            stacks = self.accept_char(byte, stacks)
+            stacks = self.consume_char(byte, stacks)
             # check updated stacks
             # TODO, I commented this out because it will fail when the stack is empty
             # empty stack means the end of the grammar
@@ -499,27 +507,27 @@ class IncrementalGrammarConstraint(GrammarConstraint):
 
         return stacks
 
-    def accept_token_ids(self, token_ids: List[int], stacks: List[List[int]], as_string=True):
+    def consume_token_ids(self, token_ids: List[int], stacks: List[List[int]], as_string=True):
         if as_string:
             string = self.tokenizer.decode(token_ids)
-            stacks = self.accept_string(string, stacks)
+            stacks = self.consume_string(string, stacks)
         else:
             for token_id in token_ids:
-                stacks = self.accept_token_id(token_id, stacks)
+                stacks = self.consume_token_id(token_id, stacks)
         return stacks
 
-    def batch_filter_vocab(self, batch_stacks, device):
+    def batch_filter_vocab(self, batch_stacks, device) -> torch.Tensor:
         batch_acceptance = []
         for stacks in batch_stacks:
             batch_acceptance.append(self.filter_vocab(stacks, device))
         return torch.stack(batch_acceptance)
 
-    def filter_vocab(self, stacks, device):
+    def filter_vocab(self, stacks, device) -> torch.Tensor:
         if not stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
             vocab_size = len(self.token_trie)
-            logger.debug(f"sum of acceptance: {0}")
+            logger.debug(f"Empty stack, sum of acceptance: {0}")
             return torch.zeros(vocab_size, dtype=torch.bool, device=device)
 
         acceptance_matrix = torch.cat([self.token_acceptance_for_stack(tuple(stack), device) for stack in stacks])
@@ -598,81 +606,9 @@ class StaticGrammarConstraint(GrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, start_rule_name, tokenizer)
 
-    def accept_char(self):
+    def consume_char(self):
         raise NotImplementedError
 
-
-#################
-# DATA STRUCTURES
-#################
-
-
-LEAF = -1
-
-
-class TokenTrie:
-    def __init__(self, tokenizer):
-        self.eos_token_id = tokenizer.eos_token_id
-        self.tokens = []
-        self.trie = {}
-        self.load_tokens(tokenizer)
-
-    def id2str(self, token_id):
-        return self.tokens[token_id]
-
-    def __len__(self):
-        return len(self.tokens)
-
-    def load_tokens(self, tokenizer):
-        def replace_hex(match):
-            hex_value = match.group(1)
-            return chr(int(hex_value, 16))
-
-        if "gpt2" in tokenizer.__class__.__name__.lower():
-            special = tokenizer.additional_special_tokens_ids
-
-            # Here, the decoder does a string replace on a bunch of sequences
-            # like ' .' for '.'. This interferes with our assumptions, where a
-            # token should always have exactly one representation.
-            # Fortunately(?) text-generation-inference doesn't seem to run this
-            # cleanup, so we get extraneous spaces. So, in order to generate
-            # the right token set for TGI, we have to skip the space trimming.
-            # See:
-            # https://github.com/huggingface/transformers/blob/main/src/transformers/tokenization_utils_base.py#L3588-L3600
-            def fmt_token(id):
-                if id in special:
-                    return None
-                return bytes(tokenizer.decode([id], clean_up_tokenization_spaces=False), "utf-8")
-
-        elif "llama" in tokenizer.__class__.__name__.lower():
-
-            def fmt_token(id):
-                token = tokenizer.convert_ids_to_tokens(id)
-                token = re.sub(r"<0x([0-9a-fA-F]{2})>", replace_hex, token)
-                token = token.replace("▁", " ")
-                return bytes(token, "utf-8")
-
-        else:
-            print("Warning: unrecognized tokenizer: using default token formatting")
-
-            def fmt_token(id):
-                token = tokenizer.convert_ids_to_tokens(id)
-                return bytes(token, "utf-8")
-
-        # note: vocab_size doesn't work here because there are also
-        # get_added_vocab() tokens
-        self.tokens = [fmt_token(i) for i in range(len(tokenizer.get_vocab()))]
-        for token_id, token_bytes in enumerate(self.tokens):
-            if token_bytes is not None:
-                self.insert_into_trie(self.trie, token_bytes, token_id)
-
-    def insert_into_trie(self, trie, token_bytes, token_id):
-        current = trie
-        for byte in token_bytes:
-            if byte not in current:
-                current[byte] = {}
-            current = current[byte]
-        current[LEAF] = token_id
 
 
 if __name__ == "__main__":
@@ -680,11 +616,12 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     try:
-        with open("examples/json.ebnf", "r") as file:
+        with open("examples/grammars/grammar_t5_fail_1.ebnf", "r") as file:
             input_text = file.read()
         state = parse_ebnf(input_text)
         print_grammar(sys.stdout, state)
-        print(state.symbol_ids)
+        print(f"symbol_ids: \n{state.symbol_ids}")
+        import pdb; pdb.set_trace()
     except FileNotFoundError:
         print("Error: File 'grammar.ebnf' not found.")
     except IOError as e:
