@@ -2,15 +2,17 @@
 
 ## Latest News
 
-**Integration with Text-Generation-WebUI** (2023-08-31):
+**Integration with Text-Generation-WebUI** (2023-12-17)
 
-We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project. 
-This integration enables users to utilize our CFG capabilities within the popular, 30.5K-starred web interface for text generation. 
+We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project.
+This integration enables users to utilize our CFG capabilities within the popular, 30.5K-starred web interface for text generation.
 For more details, see [Relevent Pull Request](https://github.com/oobabooga/text-generation-webui/pull/4953)
 
 
+
+
 ## Introduction
-`transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG). 
+`transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG).
 This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
 
 It was initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library.
@@ -90,7 +92,17 @@ The list of grammars contains:
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 
+## Supported Models
 
+`Transformers-CFG` is tokenizer-dependent and model-agnostic.
+All models with the same tokenizer should naturally be supported.
+
+We have tested the following models:
+- `gpt2`
+- `LLaMa` (and its variants and `LLaMa-2`)
+- `t5` (in progress)
+
+If you find any model that is not supported, please open an issue or submit a pull request.
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
@@ -98,6 +110,3 @@ This project is licensed under the [MIT License](LICENSE).
 ## Acknowledgement
 
 This project is derived from the [torch-grammars](https://github.com/Shopify/torch-grammar) project, which was derived from the [llama-cpp](https://github.com/ggerganov/llama.cpp) project.
-
-
-

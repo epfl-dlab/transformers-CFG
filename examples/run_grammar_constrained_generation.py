@@ -35,11 +35,12 @@ if __name__ == "__main__":
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
-
     # Generate
     prefix1 = "This is a valid json string for http request:"
     prefix2 = "This is a valid json string for shopping cart:"
-    input_ids = tokenizer([prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True)["input_ids"]
+    input_ids = tokenizer(
+        [prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True
+    )["input_ids"]
 
     output = model.generate(
         input_ids,
