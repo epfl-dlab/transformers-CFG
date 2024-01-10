@@ -711,7 +711,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     try:
-        with open("examples/grammars/grammar_t5_fail_1.ebnf", "r") as file:
+        with open("examples/grammars/json.ebnf", "r") as file:
             input_text = file.read()
         state = parse_ebnf(input_text)
         print_grammar(sys.stdout, state)

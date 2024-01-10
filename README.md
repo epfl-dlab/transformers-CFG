@@ -2,10 +2,6 @@
 
 ## Latest News
 
-**Add support for `t5` model** (2024-01-10)
-
-Transformers-CFG now supports `t5` model.
-
 **Integration with Text-Generation-WebUI** (2023-12-17)
 
 We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project.
@@ -104,7 +100,7 @@ All models with the same tokenizer should naturally be supported.
 We have tested the following models:
 - `gpt2`
 - `LLaMa` (and its variants and `LLaMa-2`)
-- `t5`
+- `t5` (in progress)
 
 If you find any model that is not supported, please open an issue or submit a pull request.
 
