@@ -1,4 +1,3 @@
-
 #################
 # DATA STRUCTURES
 #################
@@ -41,9 +40,14 @@ class TokenTrie:
             def fmt_token(id):
                 if id in special:
                     return None
-                return bytes(tokenizer.decode([id], clean_up_tokenization_spaces=False), "utf-8")
+                return bytes(
+                    tokenizer.decode([id], clean_up_tokenization_spaces=False), "utf-8"
+                )
 
-        elif "llama" in tokenizer.__class__.__name__.lower():
+        elif (
+            "llama" in tokenizer.__class__.__name__.lower()
+            or "t5" in tokenizer.__class__.__name__.lower()
+        ):
 
             def fmt_token(id):
                 token = tokenizer.convert_ids_to_tokens(id)
@@ -74,8 +78,8 @@ class TokenTrie:
         current[LEAF] = token_id
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from transformers import AutoTokenizer
+
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     token_trie = TokenTrie(tokenizer)
-    import pdb; pdb.set_trace()

@@ -7,7 +7,7 @@ from typing import Dict, List
 
 import torch
 
-from transformers_cfg.vocab_struct import LEAF, TokenTrie
+from .vocab_struct import LEAF, TokenTrie
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,9 @@ def parse_sequence(state, src, rule_name, outbuf, is_nested):
             # parse nested alternates into synthesized rule
             remaining_src = remove_leading_white_space(remaining_src[1:], True)
             sub_rule_id = generate_symbol_id(state, rule_name)
-            remaining_src = parse_alternates(state, remaining_src, rule_name, sub_rule_id, True)
+            remaining_src = parse_alternates(
+                state, remaining_src, rule_name, sub_rule_id, True
+            )
             last_sym_start = len(outbuf)
             # output reference to synthesized rule
             outbuf.append(REF_RULE_MARKER)
@@ -184,7 +186,9 @@ def parse_sequence(state, src, rule_name, outbuf, is_nested):
             remaining_src = remove_leading_white_space(remaining_src[1:], is_nested)
         elif remaining_src[0] in ("*", "+", "?"):  # repetition operator
             if len(outbuf) - out_start_pos - 1 == 0:
-                raise RuntimeError("expecting preceeding item to */+/? at " + remaining_src)
+                raise RuntimeError(
+                    "expecting preceeding item to */+/? at " + remaining_src
+                )
             out_grammar = state.grammar_encoding
 
             # apply transformation to previous symbol (last_sym_start -
@@ -237,7 +241,9 @@ def parse_alternates(state, src, rule_name, rule_id, is_nested):
     remaining_src = parse_sequence(state, src, rule_name, outbuf, is_nested)
     while remaining_src and remaining_src[0] == "|":
         remaining_src = remove_leading_white_space(remaining_src[1:], True)
-        remaining_src = parse_sequence(state, remaining_src, rule_name, outbuf, is_nested)
+        remaining_src = parse_sequence(
+            state, remaining_src, rule_name, outbuf, is_nested
+        )
 
     state.grammar_encoding.append(rule_id)
     state.grammar_encoding.extend(outbuf)
@@ -258,7 +264,9 @@ def parse_rule(state, src):
     remaining_src = parse_alternates(state, remaining_src, name, rule_id, False)
 
     if remaining_src and remaining_src[0] == "\r":
-        remaining_src = remaining_src[2:] if remaining_src[1] == "\n" else remaining_src[1:]
+        remaining_src = (
+            remaining_src[2:] if remaining_src[1] == "\n" else remaining_src[1:]
+        )
     elif remaining_src and remaining_src[0] == "\n":
         remaining_src = remaining_src[1:]
     elif remaining_src:
@@ -274,7 +282,9 @@ def parse_ebnf(src):
         while grammar_repr:
             if last_grammar_repr:
                 last_parsed_rule_len = len(last_grammar_repr) - len(grammar_repr)
-                logger.debug(f"last_parsed_rule: {last_grammar_repr[:last_parsed_rule_len]}")
+                logger.debug(
+                    f"last_parsed_rule: {last_grammar_repr[:last_parsed_rule_len]}"
+                )
             last_grammar_repr = grammar_repr
             grammar_repr = parse_rule(state, grammar_repr)
         state.grammar_encoding.append(0xFFFF)
@@ -307,9 +317,15 @@ def print_rule(file, grammar_encoding, index, symbol_id_names):
                 pos += 1
 
                 for i in range(0, num_chars, 2):
-                    print("{}-".format(chr(grammar_encoding[pos + i])), end="", file=file)
+                    print(
+                        "{}-".format(chr(grammar_encoding[pos + i])), end="", file=file
+                    )
                     if i + 1 < num_chars:
-                        print("{}".format(chr(grammar_encoding[pos + i + 1])), end="", file=file)
+                        print(
+                            "{}".format(chr(grammar_encoding[pos + i + 1])),
+                            end="",
+                            file=file,
+                        )
                 print("]", end=" ", file=file)
                 pos += num_chars
         pos += 1
@@ -334,7 +350,10 @@ def print_grammar(file, state):
     offset = 0
     print("Grammar Rule Sizes:", file=file)
     for i, rule_size in enumerate(state.grammar_encoding_rule_size):
-        print(f"<{i}> {rule_size} {state.grammar_encoding[offset:offset+rule_size]}", file=file)
+        print(
+            f"<{i}> {rule_size} {state.grammar_encoding[offset:offset+rule_size]}",
+            file=file,
+        )
         offset += rule_size
 
 
@@ -343,10 +362,8 @@ def print_grammar(file, state):
 ###################################
 
 
-class GrammarConstraint(ABC):
+class AbstractGrammarConstraint(ABC):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
-        self.tt = 0
-        self.nt = 0
         state = parse_ebnf(grammar_str)
         grammar_encoding = state.grammar_encoding
         self.start_rule_id = state.symbol_ids.get(start_rule_name)
@@ -439,19 +456,157 @@ class GrammarConstraint(ABC):
             subpos += self.grammar_encoding[subpos] + 1
         return stacks
 
-    def consume_char(self, *args, **kwargs):
-        """Process a byte according to the grammar rules."""
+    def _consume_char(self, byte, stacks):
+        new_stacks = []
+        for stack in stacks:
+            # stack is empty
+            if not stack:
+                continue
+
+            pos = stack[-1]
+            num_chars = self.grammar_encoding[pos]
+
+            # to make pos point to the size of the char range rule
+            pos += 1
+            found = False
+            for i in range(0, num_chars, 2):
+                if (
+                    self.grammar_encoding[pos + i] <= byte
+                    and byte <= self.grammar_encoding[pos + i + 1]
+                ):
+                    found = True
+                    break
+            if not found:
+                continue
+
+            pos += num_chars
+            new_stack = stack[:-1]
+            if self.grammar_encoding[pos]:
+                new_stack.append(pos)
+            new_stacks.extend(self.advance_stack(tuple(new_stack)))
+
+        return new_stacks
+
+    def _consume_string(self, string: str, stacks: List[List[int]]):
+        _bytes = bytes(string, "utf-8")
+        for byte in _bytes:
+            stacks = self._consume_char(byte, stacks)
+        return stacks
+
+    def _consume_token_id(self, token_id: int, stacks: List[List[int]]):
+        if token_id == self.eos_token_id:
+            if stacks and all(len(stack) != 0 for stack in stacks):
+                raise Exception(
+                    f"At least one of the stack should be empty when EOS is reached. However, "
+                    f"the stacks are {stacks}"
+                )
+            return []
+
+        for byte in self.token_trie.id2str(token_id):
+            stacks = self._consume_char(byte, stacks)
+            # check updated stacks
+            # TODO, I commented this out because it will fail when the stack is empty
+            # empty stack means the end of the grammar
+            # assert stacks != []
+
+        return stacks
+
+    def advance_token_ids(self, *args, **kwargs):
+        """Process a list of tokens according to the grammar rules."""
         raise NotImplementedError
 
-    def consume_token_id(self, *args, **kwargs):
-        """Process a token according to the grammar rules."""
-        raise NotImplementedError
+    def batch_filter_vocab(self, batch_stacks, device) -> torch.Tensor:
+        batch_acceptance = []
+        for stacks in batch_stacks:
+            batch_acceptance.append(self.filter_vocab(stacks, device))
+        return torch.stack(batch_acceptance)
 
-    def filter_vocab(self, *args, **kwargs):
-        raise NotImplementedError
+    def filter_vocab(self, stacks, device) -> torch.Tensor:
+        if not stacks:  # Check if stacks is empty
+            # Handle the empty case: for example, return a tensor of False
+            # The size of the tensor should match the size of your vocabulary
+            vocab_size = len(self.token_trie)
+            logger.debug(f"Empty stack, sum of acceptance: {0}")
+            return torch.zeros(vocab_size, dtype=torch.bool, device=device)
+
+        acceptance_matrix = torch.cat(
+            [self.token_acceptance_for_stack(tuple(stack), device) for stack in stacks]
+        )
+        # Merge stacks: any True => True
+        acceptance = acceptance_matrix.reshape(len(stacks), -1).any(dim=0)
+        logger.debug(f"sum of acceptance: {acceptance.sum()}")
+        return acceptance
+
+    # For each sub-rule in the grammar, cache whether each byte is accepted.
+    @lru_cache(maxsize=None)
+    def char_acceptance_at_rule_pos(self, rule_pos):
+        # every time this function is called, the result is cached
+        # next time when the same pos is called, the result is returned directly
+        # Here the pos corresponds to the literal or char range rule
+        # it doesn't handle the rule reference
+        acceptance = [False] * 256
+        num_chars = self.grammar_encoding[rule_pos]
+        rule_pos += 1
+        for i in range(0, num_chars, 2):
+            start = self.grammar_encoding[rule_pos + i]
+            end = self.grammar_encoding[rule_pos + i + 1]
+            for j in range(start, end + 1):
+                acceptance[j] = True
+        return acceptance
+
+    # Probably this should be configurable. If the grammar has an exceedingly
+    # large number of states, the correct setting is a tradeoff between GPU
+    # RAM usage and recomputation time.
+    #
+    # The main variable that pushes usage up here is number of states in the
+    # grammar.
+    @lru_cache(maxsize=32768)
+    def token_acceptance_for_stack(self, stack, device):
+        stack = list(stack)  # needs to come in as a tuple for lru_cache
+
+        accepts = [False] * len(self.token_trie)
+        accepts[self.eos_token_id] = len(stack) == 0
+        if len(stack) == 0:
+            logger.debug("empty stack")
+
+        def traverse_trie(trie, stacks):
+            for byte, next_trie in trie.items():
+                if byte == LEAF:
+                    token_id = next_trie
+                    if token_id != self.eos_token_id:
+                        # if the stacks is not empty, it means we can still continue to parse
+                        # so we should accept the token
+                        accepts[token_id] = bool(stacks)
+                    continue
+
+                new_stacks = []
+                for stk in stacks:
+                    if not stk:
+                        continue
+
+                    next_rule_pos = stk[-1]
+                    num_chars = self.grammar_encoding[next_rule_pos]
+
+                    if not self.char_acceptance_at_rule_pos(next_rule_pos)[byte]:
+                        # if the current byte is not accepted by the current rule, we need to try next rule
+                        continue
+
+                    next_rule_pos += num_chars + 1
+                    new_stack = stk[:-1]
+                    if self.grammar_encoding[next_rule_pos]:
+                        new_stack.append(next_rule_pos)
+                    new_stacks.extend(self.advance_stack(tuple(new_stack)))
+
+                if new_stacks:
+                    traverse_trie(next_trie, new_stacks)
+
+        traverse_trie(self.token_trie.trie, [stack])
+
+        x = torch.tensor(accepts, dtype=torch.bool, device=device)
+        return x
 
 
-class IncrementalGrammarConstraint(GrammarConstraint):
+class IncrementalGrammarConstraint(AbstractGrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, start_rule_name, tokenizer)
         self.last_size = None
@@ -463,19 +618,22 @@ class IncrementalGrammarConstraint(GrammarConstraint):
 
         if self.last_size is None:
             prefix_to_parse = [
-                single_input_ids[parse_start_index:] if parse_start_index is not None else []
+                single_input_ids[parse_start_index:]
+                if parse_start_index is not None
+                else []
                 for single_input_ids in input_ids
             ]
+
             # self.grammar_acceptor.accept_token_ids(prefix_to_parse, self.stacks)
             batch_stacks = [
-                self.consume_token_ids(prefix, stack)
+                self._consume_token_ids(prefix, stack)
                 for prefix, stack in zip(prefix_to_parse, batch_stacks)
             ]
             #  if the length of the current input IDs (input_ids[0]) is exactly one more than self.last_size.
             #  This is expected in a scenario where inputs are processed incrementally, one token at a time.
         elif len(input_ids[0]) == self.last_size + 1:
             batch_stacks = [
-                self.consume_token_id(single_input_ids[-1], stack)
+                self._consume_token_id(single_input_ids[-1], stack)
                 for single_input_ids, stack in zip(input_ids, batch_stacks)
             ]
             #  ensure that the input size is consistent with the expected incremental processing
@@ -500,161 +658,52 @@ class IncrementalGrammarConstraint(GrammarConstraint):
 
         return batch_stacks
 
-
-    def consume_char(self, byte, stacks):
-        new_stacks = []
-        for stack in stacks:
-            # stack is empty
-            if not stack:
-                continue
-
-            pos = stack[-1]
-            num_chars = self.grammar_encoding[pos]
-
-            # to make pos point to the size of the char range rule
-            pos += 1
-            found = False
-            for i in range(0, num_chars, 2):
-                if self.grammar_encoding[pos + i] <= byte and byte <= self.grammar_encoding[pos + i + 1]:
-                    found = True
-                    break
-            if not found:
-                continue
-
-            pos += num_chars
-            new_stack = stack[:-1]
-            if self.grammar_encoding[pos]:
-                new_stack.append(pos)
-            new_stacks.extend(self.advance_stack(tuple(new_stack)))
-
-        return new_stacks
-
-    def consume_string(self, string: str, stacks: List[List[int]]):
-        _bytes = bytes(string, "utf-8")
-        for byte in _bytes:
-            stacks = self.consume_char(byte, stacks)
-        return stacks
-
-    def consume_token_id(self, token_id: int, stacks: List[List[int]]):
-        if token_id == self.eos_token_id:
-            if stacks and all(len(stack) != 0 for stack in stacks):
-                raise Exception(
-                    f"At least one of the stack should be empty when EOS is reached. However, "
-                    f"the stacks are {stacks}"
-                )
-            return []
-
-        for byte in self.token_trie.id2str(token_id):
-            stacks = self.consume_char(byte, stacks)
-            # check updated stacks
-            # TODO, I commented this out because it will fail when the stack is empty
-            # empty stack means the end of the grammar
-            # assert stacks != []
-
-        return stacks
-
-    def consume_token_ids(self, token_ids: List[int], stacks: List[List[int]], as_string=True):
+    def _consume_token_ids(
+        self, token_ids: List[int], stacks: List[List[int]], as_string=True
+    ):
         if as_string:
             string = self.tokenizer.decode(token_ids)
-            stacks = self.consume_string(string, stacks)
+            stacks = self._consume_string(string, stacks)
         else:
             for token_id in token_ids:
-                stacks = self.consume_token_id(token_id, stacks)
+                stacks = self._consume_token_id(token_id, stacks)
         return stacks
 
-    def batch_filter_vocab(self, batch_stacks, device) -> torch.Tensor:
-        batch_acceptance = []
-        for stacks in batch_stacks:
-            batch_acceptance.append(self.filter_vocab(stacks, device))
-        return torch.stack(batch_acceptance)
 
-    def filter_vocab(self, stacks, device) -> torch.Tensor:
-        if not stacks:  # Check if stacks is empty
-            # Handle the empty case: for example, return a tensor of False
-            # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.token_trie)
-            logger.debug(f"Empty stack, sum of acceptance: {0}")
-            return torch.zeros(vocab_size, dtype=torch.bool, device=device)
-
-        acceptance_matrix = torch.cat([self.token_acceptance_for_stack(tuple(stack), device) for stack in stacks])
-        # Merge stacks: any True => True
-        acceptance = acceptance_matrix.reshape(len(stacks), -1).any(dim=0)
-        logger.debug(f"sum of acceptance: {acceptance.sum()}")
-        return acceptance
-
-    # For each sub-rule in the grammar, cache whether each byte is accepted.
-    @lru_cache(maxsize=None)
-    def pos_char_acceptance(self, pos):
-        acceptance = [False] * 256
-        num_chars = self.grammar_encoding[pos]
-        pos += 1
-        for i in range(0, num_chars, 2):
-            start = self.grammar_encoding[pos + i]
-            end = self.grammar_encoding[pos + i + 1]
-            for j in range(start, end + 1):
-                acceptance[j] = True
-        return acceptance
-
-    # Probably this should be configurable. If the grammar has an exceedingly
-    # large number of states, the correct setting is a tradeoff between GPU
-    # RAM usage and recomputation time.
-    #
-    # The main variable that pushes usage up here is number of states in the
-    # grammar.
-    @lru_cache(maxsize=32768)
-    def token_acceptance_for_stack(self, stack, device):
-        st = time.time()
-        stack = list(stack)  # needs to come in as a tuple for lru_cache
-
-        accepts = [False] * len(self.token_trie)
-        accepts[self.eos_token_id] = len(stack) == 0
-        if len(stack) == 0:
-            logger.debug("empty stack")
-
-        def traverse_trie(trie, stacks):
-            for byte, next_trie in trie.items():
-                if byte == LEAF:
-                    token_id = next_trie
-                    if token_id != self.eos_token_id:
-                        accepts[token_id] = bool(stacks)
-                    continue
-
-                new_stacks = []
-                for stk in stacks:
-                    if not stk:
-                        continue
-
-                    pos = stk[-1]
-                    num_chars = self.grammar_encoding[pos]
-
-                    if not self.pos_char_acceptance(pos)[byte]:
-                        continue
-
-                    pos += num_chars + 1
-                    new_stack = stk[:-1]
-                    if self.grammar_encoding[pos]:
-                        new_stack.append(pos)
-                    new_stacks.extend(self.advance_stack(tuple(new_stack)))
-
-                if new_stacks:
-                    traverse_trie(next_trie, new_stacks)
-
-        traverse_trie(self.token_trie.trie, [stack])
-
-        et = time.time() - st
-        x = torch.tensor(accepts, dtype=torch.bool, device=device)
-        self.tt += et
-        self.nt += 1
-        return x
-
-
-class StaticGrammarConstraint(GrammarConstraint):
+class VanillaGrammarConstraint(AbstractGrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, start_rule_name, tokenizer)
+        self.offset = None
 
-    def consume_char(self):
-        raise NotImplementedError
+    def advance_token_ids(self, input_ids, batch_stacks, parse_start_index=None):
+        # By design, the batch_stacks should be empty at the beginning, thus it doesn't matter what we pass in.
+        if self.offset is None:
+            self.offset = (
+                len(input_ids[0]) if parse_start_index is None else parse_start_index
+            )
 
+        batch_stacks_from_scratch = [self.init_stacks() for _ in range(len(input_ids))]
+
+        prefix_to_consume = [
+            single_input_ids[self.offset :] for single_input_ids in input_ids
+        ]
+        # self.grammar_acceptor.accept_token_ids(prefix_to_consume, self.stacks)
+        advanced_batch_stacks = [
+            self._consume_token_ids(prefix, stack, as_string=False)
+            for prefix, stack in zip(prefix_to_consume, batch_stacks_from_scratch)
+        ]
+        return advanced_batch_stacks
+
+    def _consume_token_ids(
+        self, token_ids: List[int], stacks: List[List[int]], as_string=True
+    ):
+        if as_string:
+            string = self.tokenizer.decode(token_ids)
+            stacks = self._consume_string(string, stacks)
+        else:
+            for token_id in token_ids:
+                stacks = self._consume_token_id(token_id, stacks)
+        return stacks
 
 
 if __name__ == "__main__":
@@ -667,7 +716,7 @@ if __name__ == "__main__":
         state = parse_ebnf(input_text)
         print_grammar(sys.stdout, state)
         print(f"symbol_ids: \n{state.symbol_ids}")
-        import pdb; pdb.set_trace()
+
     except FileNotFoundError:
         print("Error: File 'grammar.ebnf' not found.")
     except IOError as e:
