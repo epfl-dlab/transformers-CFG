@@ -30,23 +30,36 @@ class ParseState:
         self.grammar_encoding_rule_size = []
 
 
-def get_symbol_id(state, src):
-    if src not in state.symbol_ids:
-        state.symbol_ids[src] = len(state.symbol_ids)
-    return state.symbol_ids[src]
+def get_symbol_id(state: ParseState, symbol_name: str) -> int:
+    if symbol_name not in state.symbol_ids:
+        state.symbol_ids[symbol_name] = len(state.symbol_ids)
+    return state.symbol_ids[symbol_name]
 
 
-def generate_symbol_id(state, base_name):
+def generate_symbol_id(state: ParseState, base_name: str) -> int:
     next_id = len(state.symbol_ids)
     state.symbol_ids[base_name + "_" + str(next_id)] = next_id
     return next_id
 
 
-def is_word_char(c):
+def is_word_char(c: str) -> bool:
+    """
+    Check if a char is  a-z, A-Z, 0-9, -, _, i.e., chars allowed as rule names
+    Returns:
+
+    """
     return c.isalnum() or c == "-" or c == "_"
 
 
-def hex_to_int(c):
+def hex_to_int(c: str) -> int:
+    """
+    Convert a hex char to int, c should be in the range of 0-9, a-f, A-F
+    case insensitive
+    Args:
+        c:  a hex char
+    Returns:
+        int: the int value of the hex char
+    """
     if c.isdigit():
         return int(c)
     elif "a" <= c.lower() <= "f":
@@ -54,20 +67,20 @@ def hex_to_int(c):
     return -1
 
 
-def remove_leading_white_space(src, newline_ok):
+def remove_leading_white_space(src, rm_leading_newline):
     """
     Skips over whitespace and comments in the input string.
 
     This function processes the input string, skipping over any spaces, tabs,
     and content following a '#' character, which denotes a comment. The parsing
     of a comment continues until the end of the line (denoted by newline characters
-    '\r' or '\n'). If the 'newline_ok' parameter is set to False, the function
+    '\r' or '\n'). If the 'rm_leading_newline' parameter is set to False, the function
     will stop processing and return the remaining string upon encountering a
     newline character, otherwise it will skip over newline characters as well.
 
     Parameters:
     src (str): The input string to be processed.
-    newline_ok (bool): A flag indicating whether encountering a newline character
+    rm_leading_newline (bool): A flag indicating whether encountering a newline character
                        should stop the parsing (False) or if it should be skipped (True).
 
     Returns:
@@ -79,7 +92,7 @@ def remove_leading_white_space(src, newline_ok):
             while pos < len(src) and src[pos] not in ("\r", "\n"):
                 pos += 1
         else:
-            if not newline_ok and src[pos] in ("\r", "\n"):
+            if not rm_leading_newline and src[pos] in ("\r", "\n"):
                 break
             pos += 1
     return src[pos:]
@@ -136,7 +149,6 @@ def parse_sequence(state, src, rule_name, outbuf, is_nested):
     while remaining_src:
         if remaining_src[0] == '"':  # literal string
             remaining_src = remaining_src[1:]
-            last_sym_start = len(outbuf)
             while remaining_src[0] != '"':
                 char, remaining_src = parse_char(remaining_src)
 
@@ -166,10 +178,10 @@ def parse_sequence(state, src, rule_name, outbuf, is_nested):
         elif is_word_char(remaining_src[0]):  # rule reference
             name, remaining_src = parse_name(remaining_src)
             ref_rule_id = get_symbol_id(state, name)
-            remaining_src = remove_leading_white_space(remaining_src, is_nested)
             last_sym_start = len(outbuf)
             outbuf.append(REF_RULE_MARKER)
             outbuf.append(ref_rule_id)
+            remaining_src = remove_leading_white_space(remaining_src, is_nested)
         elif remaining_src[0] == "(":  # grouping
             # parse nested alternates into synthesized rule
             remaining_src = remove_leading_white_space(remaining_src[1:], True)
