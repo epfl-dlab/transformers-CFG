@@ -46,10 +46,10 @@ if __name__ == "__main__":
         input_ids,
         do_sample=False,
         max_length=50,
-        num_beams=2,
+        num_beams=4,
         logits_processor=[grammar_processor],
         repetition_penalty=5.0,
-        num_return_sequences=1,
+        num_return_sequences=4,
     )
     # decode output
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)

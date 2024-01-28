@@ -26,6 +26,7 @@ class AbstractGrammarConstraint(ABC):
         pos = 0
         rules: Dict[int, int] = {}
 
+        # build `rules` as list of pointers to rules embedded in binary grammar `src`
         while grammar_encoding[pos] != 0xFFFF:
             rule_id = grammar_encoding[pos]
 
@@ -51,9 +52,19 @@ class AbstractGrammarConstraint(ABC):
         # grammar_encoding[1] = rule_size
         # grammar_encoding[2] = rule_type
         # this is why we need to add 2 to the start rule position
-        stack = [self.start_rule_pos + 2]
+        # stack = [self.start_rule_pos + 2]
+        stacks = []
         # convert to tuple for caching(immutable)
-        return self.advance_stack(tuple(stack))
+
+        # loop over alternates of start rule to build initial stacks
+        size_idx = self.start_rule_pos + 1
+        while self.grammar_encoding[size_idx]:
+            stack = []
+            if self.grammar_encoding[size_idx + 1]:
+                stack.append(size_idx + 1)
+            stacks.extend(self.advance_stack(tuple(stack)))
+            size_idx += self.grammar_encoding[size_idx] + 1
+        return stacks
 
     # For each stack, resolve rules to find the actual characters that are
     # accepted by this stack (not the set of sub-rules).
