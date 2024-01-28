@@ -1,5 +1,7 @@
+from unittest import TestCase
+
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.recognizer import IncrementalGrammarConstraint
 from transformers_cfg.generation import GrammarConstrainedLogitsProcessor
 
 MODEL_IDS = [
@@ -11,111 +13,119 @@ MODEL_IDS = [
 ]
 
 
-def test_grammar_constrained_decoding_greedy_w_number_grammar():
-    # test greedy decoding with grammar constraints
-    grammar_str = """
-    root ::= [0-9]+
-    """
+class Test(TestCase):
+    def test_grammar_constrained_decoding_greedy_w_number_grammar(self):
+        # test greedy decoding with grammar constraints
+        grammar_str = """
+        root ::= [0-9]+
+        """
 
-    for model_id in MODEL_IDS:
+        for model_id in MODEL_IDS:
+            model = AutoModelForCausalLM.from_pretrained(model_id)
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            tokenizer.pad_token = tokenizer.eos_token
 
-        model = AutoModelForCausalLM.from_pretrained(model_id)
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        tokenizer.pad_token = tokenizer.eos_token
+            grammar = IncrementalGrammarConstraint(
+                grammar_str, start_rule_name="root", tokenizer=tokenizer
+            )
+            grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
-        grammar = IncrementalGrammarConstraint(
-            grammar_str, start_rule_name="root", tokenizer=tokenizer
-        )
-        grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
+            prefix = "This is a valid number:"
 
-        prefix = "This is a valid number:"
+            input_ids = tokenizer(
+                [prefix], add_special_tokens=False, return_tensors="pt", padding=True
+            )["input_ids"]
 
-        input_ids = tokenizer(
-            [prefix], add_special_tokens=False, return_tensors="pt", padding=True
-        )["input_ids"]
+            output = model.generate(
+                input_ids,
+                do_sample=False,
+                pad_token_id=tokenizer.eos_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+                num_beams=1,
+                max_new_tokens=40,
+                top_p=0.92,
+                top_k=5,
+                logits_processor=[grammar_processor],
+                repetition_penalty=100.0,
+                early_stopping=True,
+            )
 
-        output = model.generate(
-            input_ids,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-            eos_token_id=tokenizer.eos_token_id,
-            num_beams=1,
-            max_new_tokens=40,
-            top_p=0.92,
-            top_k=5,
-            logits_processor=[grammar_processor],
-            repetition_penalty=100.0,
-            early_stopping=True,
-        )
+            # generations = tokenizer.batch_decode(output, skip_special_tokens=True)
 
-        # generations = tokenizer.batch_decode(output, skip_special_tokens=True)
+            generations = tokenizer.batch_decode(
+                output[:, input_ids.shape[1] :], skip_special_tokens=True
+            )
+            # assert generations[0].isdigit(), f"generations: {generations} is not a number"
+            self.assertTrue(
+                generations[0].isdigit(), f"generations: {generations} is not a number"
+            )
 
-        generations = tokenizer.batch_decode(
-            output[:, input_ids.shape[1] :], skip_special_tokens=True
-        )
-        assert generations[0].isdigit(), f"generations: {generations} is not a number"
+    def test_grammar_constrained_decoding_greedy_w_balanced_parenthesis_grammar(self):
+        # test greedy decoding with grammar constraints
+        grammar_str = """
+        root ::= "(" root ")" | ""
+        """
 
+        for model_id in MODEL_IDS:
 
-def test_grammar_constrained_decoding_greedy_w_balanced_parenthesis_grammar():
-    # test greedy decoding with grammar constraints
-    grammar_str = """
-    root ::= "(" root ")" | ""
-    """
+            model = AutoModelForCausalLM.from_pretrained(model_id)
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            tokenizer.pad_token = tokenizer.eos_token
 
-    for model_id in MODEL_IDS:
+            grammar = IncrementalGrammarConstraint(
+                grammar_str, start_rule_name="root", tokenizer=tokenizer
+            )
+            grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
-        model = AutoModelForCausalLM.from_pretrained(model_id)
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        tokenizer.pad_token = tokenizer.eos_token
+            prefix = "This is a valid json:"
 
-        grammar = IncrementalGrammarConstraint(
-            grammar_str, start_rule_name="root", tokenizer=tokenizer
-        )
-        grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
+            input_ids = tokenizer(
+                [prefix], add_special_tokens=False, return_tensors="pt", padding=True
+            )["input_ids"]
+            MAX_NEW_TOKENS = 20
 
-        prefix = "This is a valid json:"
+            output = model.generate(
+                input_ids,
+                do_sample=True,
+                pad_token_id=tokenizer.eos_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+                num_beams=1,
+                max_new_tokens=40,
+                top_p=0.92,
+                top_k=5,
+                logits_processor=[grammar_processor],
+                repetition_penalty=100.0,
+                early_stopping=True,
+            )
 
-        input_ids = tokenizer(
-            [prefix], add_special_tokens=False, return_tensors="pt", padding=True
-        )["input_ids"]
-        MAX_NEW_TOKENS = 20
+            # generations = tokenizer.batch_decode(output, skip_special_tokens=True)
 
-        output = model.generate(
-            input_ids,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id,
-            eos_token_id=tokenizer.eos_token_id,
-            num_beams=1,
-            max_new_tokens=40,
-            top_p=0.92,
-            top_k=5,
-            logits_processor=[grammar_processor],
-            repetition_penalty=100.0,
-            early_stopping=True,
-        )
+            generation: str = tokenizer.batch_decode(
+                output[:, input_ids.shape[1] :], skip_special_tokens=True
+            )[0]
 
-        # generations = tokenizer.batch_decode(output, skip_special_tokens=True)
+            def check_parentheses(generation):
+                stack = []
+                for char in generation:
+                    if char == "(":
+                        stack.append(char)
+                    elif char == ")":
+                        if not stack:
+                            return False
+                        stack.pop()
+                return not stack
 
-        generation: str = tokenizer.batch_decode(
-            output[:, input_ids.shape[1] :], skip_special_tokens=True
-        )[0]
-
-        def check_parentheses(generation):
-            stack = []
-            for char in generation:
-                if char == "(":
-                    stack.append(char)
-                elif char == ")":
-                    if not stack:
-                        return False
-                    stack.pop()
-            return not stack
-
-        assert check_parentheses(
-            generation
-        ), f"generations: {generation} is not a balanced parenthesis"
+            # assert check_parentheses(
+            #     generation
+            # ), f"generations: {generation} is not a balanced parenthesis"
+            self.assertTrue(
+                check_parentheses(generation),
+                f"generations: {generation} is not a balanced parenthesis",
+            )
 
 
-if __name__ == "__main__":
-    test_grammar_constrained_decoding_greedy_w_number_grammar()
-    test_grammar_constrained_decoding_greedy_w_balanced_parenthesis_grammar()
+#
+#
+# if __name__ == "__main__":
+#     test_grammar_constrained_decoding_greedy_w_number_grammar()
+#     test_grammar_constrained_decoding_greedy_w_balanced_parenthesis_grammar()
