@@ -1,3 +1,4 @@
+import os
 import sys
 from unittest import TestCase
 from transformers_cfg.parsing import (
@@ -15,7 +16,7 @@ from transformers_cfg.parsing import (
     _parse_rhs_repetition_operators,
     parse_ebnf,
     parse_rhs,
-    END_OF_SIMPLE_RULE_MARKER,
+    END_OF_ALTERNATE_MARKER,
 )
 
 
@@ -139,13 +140,19 @@ class Test(TestCase):
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("你"), ord("你")], outbuf)
 
-    # def test_parse_rule(self):
-    #     state = ParseState()
-    #     src = "root ::= \"0\""
-    #     print(f"\nsrc: {src}")
-    #     parse_rule(state=state, rule_text=src)
-    #     print(f"state: {state.grammar_encoding}")
-    #     state.print(file=sys.stdout)
+    def test_null(self):
+        src = "root ::= "
+        rhs_src = ""
+        state = ParseState()
+        state.symbol_table["root"] = 9
+        _ = parse_rhs(
+            state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
+        )
+        self.assertListEqual(
+            [9, 1, END_OF_ALTERNATE_MARKER, END_OF_RULE_MARKER],
+            state.grammar_encoding,
+            f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
+        )
 
     def test_parse_rhs(self):
         state = ParseState()
@@ -158,7 +165,7 @@ class Test(TestCase):
         )
         print(f"outbuf: {outbuf}")
         self.assertEqual(
-            END_OF_SIMPLE_RULE_MARKER,
+            END_OF_ALTERNATE_MARKER,
             outbuf[-1],
             f"outbuf[-1]: {outbuf[-1]} != END_OF_RULE_MARKER",
         )
@@ -178,7 +185,7 @@ class Test(TestCase):
             f" The last symbol in the grammar encoding should be END_OF_RULE_MARKER, but got {state.grammar_encoding[-1]}",
         )
         self.assertEqual(
-            END_OF_SIMPLE_RULE_MARKER,
+            END_OF_ALTERNATE_MARKER,
             state.grammar_encoding[-2],
             f" The second last symbol in the grammar encoding should be END_OF_SIMPLE_RULE_MARKER, but got {state.grammar_encoding[-2]}",
         )
@@ -196,7 +203,21 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding: {state.grammar_encoding}")
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+
+        src = 'root ::= "2" | null | "4"'
+        rhs_src = '"2" | '
+        state = ParseState()
+        state.symbol_table["root"] = 9
+        _ = parse_rhs(
+            state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
+        )
+        self.assertEqual(
+            9,
+            state.grammar_encoding[0],
+            f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
+        )
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= "2" "3" "4"'
         rhs_src = '"2" "3" "4"'
@@ -210,7 +231,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding: {state.grammar_encoding}")
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= "234"'
         rhs_src = '"234"'
@@ -224,7 +245,35 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding: {state.grammar_encoding}")
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+
+        src = "root ::= [234]"
+        rhs_src = "[234]"
+        state = ParseState()
+        state.symbol_table["root"] = 9
+        _ = parse_rhs(
+            state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
+        )
+        self.assertEqual(
+            9,
+            state.grammar_encoding[0],
+            f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
+        )
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+
+        src = 'root ::= [234] | "5"'
+        rhs_src = '[234] | "5"'
+        state = ParseState()
+        state.symbol_table["root"] = 9
+        _ = parse_rhs(
+            state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
+        )
+        self.assertEqual(
+            9,
+            state.grammar_encoding[0],
+            f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
+        )
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= [234]"5"'
         rhs_src = '[234]"5"'
@@ -238,7 +287,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding: {state.grammar_encoding}")
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= ("2" | "3" | "4") | ("5" | "6" | "7")'
         rhs_src = '("2" | "3" | "4") | ("5" | "6" | "7")'
@@ -247,7 +296,7 @@ class Test(TestCase):
         _ = parse_rhs(
             state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
         )
-        print(f"state.grammar_encoding: {state.grammar_encoding}")
+        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
     def test__parse_symbol_reference(self):
         state = ParseState()

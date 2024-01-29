@@ -5,7 +5,6 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 END_OF_ALTERNATE_MARKER = 0
-END_OF_SIMPLE_RULE_MARKER = 0
 END_OF_RULE_MARKER = 0
 END_OF_GRAMMAR_MARKER = 0xFFFF
 TO_BE_FILLED_MARKER = 0
@@ -270,7 +269,7 @@ def _parse_rhs_repetition_operators(
     # S? --> S' ::= S |
     sub_rule_id = generate_symbol_id(state, rule_name)
     out_grammar.append(sub_rule_id)
-    sub_rule_start = len(out_grammar)
+    sub_rule_offset = len(out_grammar)
     # placeholder for size of 1st alternate
     out_grammar.append(TO_BE_FILLED_MARKER)
     # add preceding symbol to generated rule
@@ -280,17 +279,17 @@ def _parse_rhs_repetition_operators(
         out_grammar.append(REF_RULE_MARKER)
         out_grammar.append(sub_rule_id)
     # apply actual size
-    out_grammar[sub_rule_start] = len(out_grammar) - sub_rule_start
+    out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
     # mark end of 1st alternate
     out_grammar.append(END_OF_ALTERNATE_MARKER)
-    sub_rule_start = len(out_grammar)
+    sub_rule_offset = len(out_grammar)
     # placeholder for size of 2nd alternate
     out_grammar.append(TO_BE_FILLED_MARKER)
     if remaining_src[0] == "+":
         # add preceding symbol as alternate only for '+'
         out_grammar.extend(outbuf[last_sym_start:])
     # apply actual size of 2nd alternate
-    out_grammar[sub_rule_start] = len(out_grammar) - sub_rule_start
+    out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
     # mark end of 2nd alternate, then end of rule
     out_grammar.append(END_OF_ALTERNATE_MARKER)
     out_grammar.append(END_OF_RULE_MARKER)
@@ -301,7 +300,7 @@ def _parse_rhs_repetition_operators(
 
 
 def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
-    out_start_pos = len(outbuf)
+    simple_rhs_offset = len(outbuf)
 
     # sequence size, will be replaced at end when known
     outbuf.append(TO_BE_FILLED_MARKER)
@@ -327,7 +326,7 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, outbuf)
         elif remaining_rhs[0] in ("*", "+", "?"):  # repetition operator
             # No need to mark the start of the last symbol, because we already did it
-            if len(outbuf) - out_start_pos - 1 == 0:
+            if len(outbuf) - simple_rhs_offset - 1 == 0:
                 raise RuntimeError(
                     "expecting preceeding item to */+/? at " + remaining_rhs
                 )
@@ -349,9 +348,9 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
         )
 
     # apply actual size of this alternate sequence
-    outbuf[out_start_pos] = len(outbuf) - out_start_pos
+    outbuf[simple_rhs_offset] = len(outbuf) - simple_rhs_offset
     # mark end of alternate
-    outbuf.append(END_OF_SIMPLE_RULE_MARKER)
+    outbuf.append(END_OF_ALTERNATE_MARKER)
     return remaining_rhs
 
 

@@ -6,14 +6,14 @@ from typing import Dict, List
 
 import torch
 
-from transformers_cfg.parsing import parse_ebnf, print_grammar
+from transformers_cfg.parsing import parse_ebnf, print_grammar, END_OF_RULE_MARKER
 from .vocab_struct import LEAF, TokenTrie
 
 logger = logging.getLogger(__name__)
 
 
 class AbstractGrammarConstraint(ABC):
-    def __init__(self, grammar_str, start_rule_name, tokenizer):
+    def __init__(self, grammar_str, tokenizer, start_rule_name="root"):
         state = parse_ebnf(grammar_str)
         grammar_encoding = state.grammar_encoding
         self.start_rule_id = state.symbol_table.get(start_rule_name)
@@ -23,29 +23,28 @@ class AbstractGrammarConstraint(ABC):
         self.tokenizer = tokenizer
         self.grammar_encoding = grammar_encoding
 
-        pos = 0
-        rules: Dict[int, int] = {}
+        rule_offset = 0
+        rule_offsets: Dict[int, int] = {}
 
-        # build `rules` as list of pointers to rules embedded in binary grammar `src`
-        while grammar_encoding[pos] != 0xFFFF:
-            rule_id = grammar_encoding[pos]
+        while grammar_encoding[rule_offset] != 0xFFFF:
+            rule_id = grammar_encoding[rule_offset]
+            # store the offset idx
+            rule_offsets[rule_id] = rule_offset
 
-            # Store the current position in the 'rules' list at the index corresponding to rule_id.
-            # This effectively maps each rule_id to its position in the grammar encoding.
-            rules[rule_id] = pos
-            pos += 1
+            # Skip rule ID
+            simple_rhs_offset = rule_offset + 1
 
-            # Continue to the next rule in the encoding.
-            # The loop advances by the size indicated at the current position (grammar_encoding[pos])
-            # plus one for the size field itself.
-            while grammar_encoding[pos]:
-                pos += 1 + grammar_encoding[pos]
-            # Now we're at the end of the rule,
-            # so advance to the next rule by skipping the 0, which means 'end of rule'.
-            pos += 1
+            # Skip rule alternates
+            while grammar_encoding[simple_rhs_offset] != END_OF_RULE_MARKER:
+                simple_rhs_offset = (
+                    simple_rhs_offset + 1 + grammar_encoding[simple_rhs_offset]
+                )
 
-        self.start_rule_pos = rules[self.start_rule_id]
-        self.rules_pos_dict: Dict[int, int] = rules
+            # Skip 0 denoting end of rule
+            rule_offset = simple_rhs_offset + 1
+
+        self.start_rule_pos = rule_offsets[self.start_rule_id]
+        self.rules_pos_dict: Dict[int, int] = rule_offsets
 
     def init_stacks(self):
         # suppose the start rule position is 0, then grammar_encoding[0] = rule_id
@@ -269,7 +268,7 @@ class AbstractGrammarConstraint(ABC):
 
 class IncrementalGrammarConstraint(AbstractGrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
-        super().__init__(grammar_str, start_rule_name, tokenizer)
+        super().__init__(grammar_str, tokenizer, start_rule_name)
         self.last_size = None
 
         # if self.last_size is not set (which would be the case when processing the first token).
@@ -333,7 +332,7 @@ class IncrementalGrammarConstraint(AbstractGrammarConstraint):
 
 class VanillaGrammarConstraint(AbstractGrammarConstraint):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
-        super().__init__(grammar_str, start_rule_name, tokenizer)
+        super().__init__(grammar_str, tokenizer, start_rule_name)
         self.offset = None
 
     def advance_token_ids(self, input_ids, batch_stacks, parse_start_index=None):
