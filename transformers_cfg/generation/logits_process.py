@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 import pprint
@@ -65,7 +66,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_stacks is None:
             self.batch_stacks = [
-                self.grammar_constraint.init_stacks() for _ in range(len(input_ids))
+                # self.grammar_constraint.init_stacks()
+                copy.deepcopy(self.grammar_constraint.grammar.stacks)
+                for _ in range(len(input_ids))
             ]
 
         if os.getenv("DEBUG_MODE") == "True":

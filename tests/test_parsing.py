@@ -1,7 +1,7 @@
 import os
 import sys
 from unittest import TestCase
-from transformers_cfg.parsing import (
+from transformers_cfg.parser import (
     remove_leading_white_space,
     parse_name,
     _parse_rhs_char_ranges,

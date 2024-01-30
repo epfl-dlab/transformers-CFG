@@ -1,3 +1,4 @@
+import copy
 import logging
 import sys
 from abc import ABC
@@ -6,7 +7,8 @@ from typing import Dict, List
 
 import torch
 
-from transformers_cfg.parsing import parse_ebnf, print_grammar, END_OF_RULE_MARKER
+from transformers_cfg.parser import parse_ebnf, print_grammar, END_OF_RULE_MARKER
+from transformers_cfg.grammar import GrammarAutomaton
 from .vocab_struct import LEAF, TokenTrie
 
 logger = logging.getLogger(__name__)
@@ -21,137 +23,7 @@ class AbstractGrammarConstraint(ABC):
         self.eos_token_id = tokenizer.eos_token_id
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
-        self.grammar_encoding = grammar_encoding
-
-        rule_offset = 0
-        rule_offsets: Dict[int, int] = {}
-
-        while grammar_encoding[rule_offset] != 0xFFFF:
-            rule_id = grammar_encoding[rule_offset]
-            # store the offset idx
-            rule_offsets[rule_id] = rule_offset
-
-            # Skip rule ID
-            simple_rhs_offset = rule_offset + 1
-
-            # Skip rule alternates
-            while grammar_encoding[simple_rhs_offset] != END_OF_RULE_MARKER:
-                simple_rhs_offset = (
-                    simple_rhs_offset + 1 + grammar_encoding[simple_rhs_offset]
-                )
-
-            # Skip 0 denoting end of rule
-            rule_offset = simple_rhs_offset + 1
-
-        self.start_rule_pos = rule_offsets[self.start_rule_id]
-        self.rules_pos_dict: Dict[int, int] = rule_offsets
-
-    def init_stacks(self):
-        # suppose the start rule position is 0, then grammar_encoding[0] = rule_id
-        # grammar_encoding[1] = rule_size
-        # grammar_encoding[2] = rule_type
-        # this is why we need to add 2 to the start rule position
-        # stack = [self.start_rule_pos + 2]
-        stacks = []
-        # convert to tuple for caching(immutable)
-
-        # loop over alternates of start rule to build initial stacks
-        size_idx = self.start_rule_pos + 1
-        while self.grammar_encoding[size_idx]:
-            stack = []
-            if self.grammar_encoding[size_idx + 1]:
-                stack.append(size_idx + 1)
-            stacks.extend(self.advance_stack(tuple(stack)))
-            size_idx += self.grammar_encoding[size_idx] + 1
-        return stacks
-
-    # For each stack, resolve rules to find the actual characters that are
-    # accepted by this stack (not the set of sub-rules).
-    # This is where the parsing happens.
-    # The parsing is a top-down, left-to-right, depth-first traversal of the
-    # grammar.
-    @lru_cache(maxsize=32768)
-    def advance_stack(self, stack):
-        stack = list(stack)
-        # If the stack is empty, we're done. Because no more tokens should be accepted.
-        if len(stack) == 0:
-            return [stack]
-
-        # Get the top of the stack.
-        pos = stack[-1]
-
-        # If the stack head is a terminal(literal), we can resolve it immediately.
-        # literal is marked with 2 in the grammar encoding.
-        if self.grammar_encoding[pos] > 1:
-            return [stack]
-
-        # The stack head is a nonterminal (a rule reference, 1 in the grammar encoding).
-        # Resolving this rule gives a set of one or more possible positions
-        # (e.g. two in `a ::= b | c`)
-        # We pop the current rule off the stack and, for each option, push:
-        # - the symbol following this symbol in the current rule; then
-        # - the first symbol of the resolved rule.
-        referenced_rule_id = self.grammar_encoding[pos + 1]
-
-        # rule_stride_idx should points to the size of the subrule
-        rule_stride_idx = self.rules_pos_dict[referenced_rule_id] + 1
-        stacks: List[List[int]] = []
-
-        # do depth-first search to find all possible rules and check the next terminal
-        # When this value is non-zero, it indicates that rule_stride_idx is not yet at the end of the rule, so we can continue.
-        # here rule_stride_idx is a pointer, and the value in the rule encoding can never be 0 except for the end of the rule.
-        while self.grammar_encoding[rule_stride_idx]:
-            new_stack = stack[:-1]
-            if self.grammar_encoding[pos + 2]:
-                # check if there is a next symbol in the current rule, e.g. `a ::= b c | d`
-                # if yes, push the pos to rule_size to the stack
-                new_stack.append(pos + 2)
-
-            # if the type of the next symbol is not "empty", push the first symbol of the resolved rule to the stack
-            if self.grammar_encoding[rule_stride_idx + 1]:
-                new_stack.append(rule_stride_idx + 1)
-            stacks.extend(self.advance_stack(tuple(new_stack)))
-            # The increment rule_stride_idx += self.grammar_encoding[rule_stride_idx] + 1
-            # moves rule_stride_idx forward in the grammar encoding array to the next ALTERNATIVE in the current rule.
-            rule_stride_idx += self.grammar_encoding[rule_stride_idx] + 1
-        return stacks
-
-    def _consume_char(self, byte, stacks):
-        new_stacks = []
-        for stack in stacks:
-            # stack is empty
-            if not stack:
-                continue
-
-            idx = stack[-1]
-            num_chars = self.grammar_encoding[idx]
-
-            # to make idx point to the size of the char range rule
-            idx += 1
-            found = False
-            for i in range(0, num_chars, 2):
-                if (
-                    self.grammar_encoding[idx + i] <= byte
-                    and byte <= self.grammar_encoding[idx + i + 1]
-                ):
-                    found = True
-                    break
-            if not found:
-                continue
-
-            idx += num_chars
-            new_stack = stack[:-1]
-            if self.grammar_encoding[idx]:
-                new_stack.append(idx)
-            new_stacks.extend(self.advance_stack(tuple(new_stack)))
-
-        return new_stacks
-
-    def _consume_string(self, string: str, stacks: List[List[int]]):
-        _bytes = bytes(string, "utf-8")
-        for byte in _bytes:
-            stacks = self._consume_char(byte, stacks)
-        return stacks
+        self.grammar = GrammarAutomaton(grammar_encoding, self.start_rule_id)
 
     def _consume_token_id(self, token_id: int, stacks: List[List[int]]):
         if token_id == self.eos_token_id:
@@ -163,7 +35,7 @@ class AbstractGrammarConstraint(ABC):
             return []
 
         for byte in self.token_trie.id2str(token_id):
-            stacks = self._consume_char(byte, stacks)
+            stacks = self.grammar._consume_char(byte, stacks)
             # check updated stacks
             # TODO, I commented this out because it will fail when the stack is empty
             # empty stack means the end of the grammar
@@ -199,17 +71,17 @@ class AbstractGrammarConstraint(ABC):
 
     # For each sub-rule in the grammar, cache whether each byte is accepted.
     @lru_cache(maxsize=None)
-    def char_acceptance_at_rule_pos(self, rule_pos):
+    def char_acceptance_at_rule_pos(self, rule_offset):
         # every time this function is called, the result is cached
         # next time when the same pos is called, the result is returned directly
         # Here the pos corresponds to the literal or char range rule
         # it doesn't handle the rule reference
         acceptance = [False] * 256
-        num_chars = self.grammar_encoding[rule_pos]
-        rule_pos += 1
+        num_chars = self.grammar.grammar_encoding[rule_offset]
+        rule_offset += 1
         for i in range(0, num_chars, 2):
-            start = self.grammar_encoding[rule_pos + i]
-            end = self.grammar_encoding[rule_pos + i + 1]
+            start = self.grammar.grammar_encoding[rule_offset + i]
+            end = self.grammar.grammar_encoding[rule_offset + i + 1]
             for j in range(start, end + 1):
                 acceptance[j] = True
         return acceptance
@@ -245,7 +117,7 @@ class AbstractGrammarConstraint(ABC):
                         continue
 
                     next_rule_pos = stk[-1]
-                    num_chars = self.grammar_encoding[next_rule_pos]
+                    num_chars = self.grammar.grammar_encoding[next_rule_pos]
 
                     if not self.char_acceptance_at_rule_pos(next_rule_pos)[byte]:
                         # if the current byte is not accepted by the current rule, we need to try next rule
@@ -253,9 +125,9 @@ class AbstractGrammarConstraint(ABC):
 
                     next_rule_pos += num_chars + 1
                     new_stack = stk[:-1]
-                    if self.grammar_encoding[next_rule_pos]:
+                    if self.grammar.grammar_encoding[next_rule_pos]:
                         new_stack.append(next_rule_pos)
-                    new_stacks.extend(self.advance_stack(tuple(new_stack)))
+                    new_stacks.extend(self.grammar.advance_stack(tuple(new_stack)))
 
                 if new_stacks:
                     traverse_trie(next_trie, new_stacks)
@@ -323,7 +195,7 @@ class IncrementalGrammarConstraint(AbstractGrammarConstraint):
     ):
         if as_string:
             string = self.tokenizer.decode(token_ids)
-            stacks = self._consume_string(string, stacks)
+            stacks = self.grammar._consume_string(string, stacks)
         else:
             for token_id in token_ids:
                 stacks = self._consume_token_id(token_id, stacks)
@@ -331,6 +203,8 @@ class IncrementalGrammarConstraint(AbstractGrammarConstraint):
 
 
 class VanillaGrammarConstraint(AbstractGrammarConstraint):
+    # TODO, this class may have been broken because of the recent refactoring, in particular, the stacks is bound to the
+    # parser class
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, tokenizer, start_rule_name)
         self.offset = None
@@ -342,7 +216,10 @@ class VanillaGrammarConstraint(AbstractGrammarConstraint):
                 len(input_ids[0]) if parse_start_index is None else parse_start_index
             )
 
-        batch_stacks_from_scratch = [self.init_stacks() for _ in range(len(input_ids))]
+        # TODO: here may be broken, the deepcopy may not work
+        batch_stacks_from_scratch = [
+            copy.deepcopy(self.grammar.stacks) for _ in range(len(input_ids))
+        ]
 
         prefix_to_consume = [
             single_input_ids[self.offset :] for single_input_ids in input_ids
@@ -359,7 +236,7 @@ class VanillaGrammarConstraint(AbstractGrammarConstraint):
     ):
         if as_string:
             string = self.tokenizer.decode(token_ids)
-            stacks = self._consume_string(string, stacks)
+            stacks = self.grammar._consume_string(string, stacks)
         else:
             for token_id in token_ids:
                 stacks = self._consume_token_id(token_id, stacks)
