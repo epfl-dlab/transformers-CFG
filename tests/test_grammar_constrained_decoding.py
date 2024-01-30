@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.recognizer import IncrementalGrammarConstraint
+from transformers_cfg.LLM_recognizer import IncrementalLLMGrammarRecognizer
 from transformers_cfg.generation import GrammarConstrainedLogitsProcessor
 
 MODEL_IDS = [
@@ -25,7 +25,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalGrammarConstraint(
+            grammar = IncrementalLLMGrammarRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -72,7 +72,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalGrammarConstraint(
+            grammar = IncrementalLLMGrammarRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)

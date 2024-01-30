@@ -31,7 +31,7 @@ The below example can be found in `examples/run_grammar_constrained_generation.p
 ```python
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.recognizer import IncrementalGrammarConstraint
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
 if __name__ == "__main__":

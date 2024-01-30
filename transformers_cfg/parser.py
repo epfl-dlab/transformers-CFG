@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 from typing import List
@@ -21,41 +22,9 @@ class ParseState:
     def __init__(self):
         self.symbol_table = {}
         self.grammar_encoding = []  # old name: out_grammar
-        self.grammar_encoding_rule_size = []
 
     def print(self, file=sys.stdout):
-        pos = 0
-        symbol_id_names = {v: k for k, v in self.symbol_table.items()}
-        print("Grammar Rules:", file=file)
-
-        while (
-            pos < len(self.grammar_encoding)
-            and self.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER
-        ):
-            pos = print_rule(file, self.grammar_encoding, pos, symbol_id_names)
-        if pos > len(self.grammar_encoding):
-            raise Warning(f"grammar_encoding is not ended with {END_OF_GRAMMAR_MARKER}")
-        pos = 0
-        print("\nHex representation:", file=file)
-        while (
-            pos < len(self.grammar_encoding)
-            and self.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER
-        ):
-            print(f"{self.grammar_encoding[pos]:04x}", end=" ", file=file)
-            pos += 1
-        if pos > len(self.grammar_encoding):
-            raise Warning(f"grammar_encoding is not ended with {END_OF_GRAMMAR_MARKER}")
-        else:
-            print("ffff\n")
-
-        offset = 0
-        print("Grammar Rule Sizes:", file=file)
-        for i, rule_size in enumerate(self.grammar_encoding_rule_size):
-            print(
-                f"<{i}> {rule_size} {self.grammar_encoding[offset:offset + rule_size]}",
-                file=file,
-            )
-            offset += rule_size
+        print_grammar(file, self)
 
 
 def get_symbol_id(state: ParseState, symbol_name: str) -> int:
@@ -367,7 +336,6 @@ def parse_rhs(state, rhs: str, rule_name, rule_id, is_nested):
     state.grammar_encoding.append(rule_id)
     state.grammar_encoding.extend(outbuf)
     state.grammar_encoding.append(END_OF_RULE_MARKER)
-    state.grammar_encoding_rule_size.append(len(outbuf) + 2)
     return remaining_rhs
 
 
@@ -418,7 +386,51 @@ def parse_ebnf(grammar_text: str) -> ParseState:
         return ParseState()
 
 
-def print_rule(file, grammar_encoding, index, symbol_id_names):
+###################################
+# EBNF Grammar Parsing ends here  #
+###################################
+
+
+def break_grammar_into_rules(grammar_encoding: List[int]) -> List[List[int]]:
+    offset = 0
+    # we loop until we reach the end of the grammar_encoding
+    rule_encodings = []
+    i = 0
+    while i < len(grammar_encoding) - 2:
+        if (
+            grammar_encoding[i] == END_OF_ALTERNATE_MARKER
+            and grammar_encoding[i + 1] == END_OF_RULE_MARKER
+        ):
+            rule_encodings.append(grammar_encoding[offset : i + 2])
+            offset = i + 2
+            # skip the END_OF_RULE_MARKER
+            # This is mandatory because if we do not skip the END_OF_RULE_MARKER
+            # we fail in the case where the next rule has rule_id 0
+            i += 1
+        i += 1
+    return rule_encodings
+
+
+def break_rule_into_elements(rule_encoding: List[int]) -> List[List[int]]:
+    rule_id = rule_encoding.pop(0)
+    end_of_rule_marker = rule_encoding.pop(-1)
+    assert (
+        end_of_rule_marker == END_OF_RULE_MARKER
+    ), f"rule should end with {END_OF_RULE_MARKER}, but got {end_of_rule_marker}"
+
+    offset = 0
+    elements = []
+    while offset < len(rule_encoding):
+        element_size = rule_encoding[offset]
+        assert (
+            rule_encoding[offset + element_size] == END_OF_ALTERNATE_MARKER
+        ), f"element should end with {END_OF_ALTERNATE_MARKER}, but got {rule_encoding[offset + element_size]}"
+        elements.append(rule_encoding[offset : offset + element_size + 1])
+        offset += element_size + 1
+    return elements
+
+
+def _print_annotated_grammar(file, grammar_encoding, symbol_id_names, index=0):
     rule_id = grammar_encoding[index]
     print(f"<{index}>{symbol_id_names[rule_id]} ::=", end=" ", file=file)
     pos = index + 1
@@ -461,26 +473,58 @@ def print_grammar(file, state):
     pos = 0
     symbol_id_names = {v: k for k, v in state.symbol_table.items()}
     print("Grammar Rules:", file=file)
-
-    while state.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER:
-        pos = print_rule(file, state.grammar_encoding, pos, symbol_id_names)
+    while (
+        pos < len(state.grammar_encoding)
+        and state.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER
+    ):
+        pos = _print_annotated_grammar(
+            file, state.grammar_encoding, symbol_id_names, pos
+        )
+    if pos > len(state.grammar_encoding):
+        raise Warning(f"grammar_encoding is not ended with {END_OF_GRAMMAR_MARKER}")
     pos = 0
-    print("\nHex representation:", file=file)
-    while state.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER:
+    print("\nGrammar Hex representation:", file=file)
+    while (
+        pos < len(state.grammar_encoding)
+        and state.grammar_encoding[pos] != END_OF_GRAMMAR_MARKER
+    ):
         print(f"{state.grammar_encoding[pos]:04x}", end=" ", file=file)
         pos += 1
-    print("ffff\n")
+    if pos > len(state.grammar_encoding):
+        raise Warning(f"grammar_encoding is not ended with {END_OF_GRAMMAR_MARKER}")
+    else:
+        print("ffff\n")
 
-    offset = 0
-    print("Grammar Rule Sizes:", file=file)
-    for i, rule_size in enumerate(state.grammar_encoding_rule_size):
+    print("Rules Decimal representation:", file=file)
+    # we loop until we reach the end of the grammar_encoding
+    rule_encodings = break_grammar_into_rules(state.grammar_encoding)
+    for rule_encoding in rule_encodings:
+        rule_id = rule_encoding[0]
         print(
-            f"<{i}> {rule_size} {state.grammar_encoding[offset:offset+rule_size]}",
+            f"<{rule_id}> {break_rule_into_elements(rule_encoding)}",
             file=file,
         )
-        offset += rule_size
 
 
-###################################
-# EBNF Grammar Parsing ends here  #
-###################################
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Parse EBNF grammar files.")
+    parser.add_argument(
+        "-g",
+        "--grammar-file",
+        nargs="?",
+        default="examples/grammars/json.ebnf",
+        help="Path to the grammar file (default: examples/grammars/json.ebnf)",
+    )
+
+    args = parser.parse_args()
+
+    # set logging level
+    logging.basicConfig(level=logging.DEBUG)
+
+    with open(args.grammar_file, "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    parsed_grammar.print()
+    print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
+
+    start_rule_id = parsed_grammar.symbol_table["root"]

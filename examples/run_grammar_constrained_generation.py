@@ -18,7 +18,7 @@
 # import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.recognizer import IncrementalGrammarConstraint
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
 
