@@ -136,33 +136,34 @@ class GrammarRecognizer:
 
         return new_stacks
 
+    def _accept_char(self, byte, stacks):
+        new_stacks = self._consume_char(byte, stacks)
+        return len(new_stacks) > 0
+
     def _consume_string(self, string: str, stacks: List[List[int]]):
         _bytes = bytes(string, "utf-8")
         for byte in _bytes:
             stacks = self._consume_char(byte, stacks)
         return stacks
 
+    def _accept_string(self, string: str, stacks: List[List[int]]):
+        new_stacks = self._consume_string(string, stacks)
+        return len(new_stacks) > 0
+
 
 if __name__ == "__main__":
     # set logging level
     logging.basicConfig(level=logging.DEBUG)
 
-    try:
-        with open("examples/grammars/debug/plus.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-        parsed_grammar.print()
-        print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
+    with open("examples/grammars/debug/plus.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    parsed_grammar.print()
+    print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
 
-        start_rule_id = parsed_grammar.symbol_table["root"]
-        json_automaton = GrammarRecognizer(
-            parsed_grammar.grammar_encoding, start_rule_id
-        )
-        print(f"rule_offsets: \n{json_automaton.rule_offsets}")
-        print(f"stacks: \n{json_automaton.stacks}")
-        out_stacks = json_automaton._consume_char(ord("1"), json_automaton.stacks)
-        print(f"out_stacks: \n{out_stacks}")
-    except FileNotFoundError:
-        print("Error: File 'grammar.ebnf' not found.")
-    except IOError as e:
-        print("Error reading file 'grammar.ebnf':", e)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    res = recognizer._accept_string("12222", recognizer.stacks)
+    print(f"12222: {res}")
+    res = recognizer._accept_string("12222+", recognizer.stacks)
+    print(f"12222+: {res}")
