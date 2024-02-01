@@ -105,7 +105,13 @@ class GrammarRecognizer:
 
             return new_stacks
 
-    def _consume_char(self, byte, stacks):
+    def _consume_char(self, byte: int, stacks: List[List[int]]):
+        # TODO, the below code will raise an error when the stack is empty, but why is this happening?
+        # if len(stacks) == 0:
+        #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
+        # byte = 0 is a special case for EOS token, which should be handled by the _consume_token method
+        if byte == 0:
+            raise ValueError("byte cannot be 0")
         new_stacks = []
         for stack in stacks:
             # stack is empty
@@ -133,22 +139,52 @@ class GrammarRecognizer:
             if self.grammar_encoding[element_offset]:
                 new_stack.append(element_offset)
             new_stacks.extend(self.advance_stack(tuple(new_stack)))
-
         return new_stacks
 
-    def _accept_char(self, byte, stacks):
+    def _accept_char(self, byte: int, stacks: List[List[int]]):
         new_stacks = self._consume_char(byte, stacks)
         return len(new_stacks) > 0
 
     def _consume_string(self, string: str, stacks: List[List[int]]):
         _bytes = bytes(string, "utf-8")
-        for byte in _bytes:
+        for i, byte in enumerate(_bytes):
             stacks = self._consume_char(byte, stacks)
+            if len(stacks) > 0:
+                decoded_string = _bytes[: i + 1].decode("utf-8")
+                logging.debug(f"{decoded_string} is accepted")
         return stacks
 
     def _accept_string(self, string: str, stacks: List[List[int]]):
         new_stacks = self._consume_string(string, stacks)
         return len(new_stacks) > 0
+
+    def _can_stop(self, stacks: List[List[int]]):
+        # This happens in practice, but maybe it shouldn't? TODO
+        if len(stacks) == 0:
+            return True
+        # if any of the stack is empty, we can stop
+        for stack in stacks:
+            if len(stack) == 0:
+                return True
+        else:
+            return False
+
+    # For each sub-rule in the grammar, cache whether each byte is accepted.
+    @lru_cache(maxsize=None)
+    def char_acceptance_at_rule_pos(self, rule_offset):
+        # every time this function is called, the result is cached
+        # next time when the same pos is called, the result is returned directly
+        # Here the pos corresponds to the literal or char range rule
+        # it doesn't handle the rule reference
+        acceptance = [False] * 256
+        num_chars = self.grammar_encoding[rule_offset]
+        rule_offset += 1
+        for i in range(0, num_chars, 2):
+            start = self.grammar_encoding[rule_offset + i]
+            end = self.grammar_encoding[rule_offset + i + 1]
+            for j in range(start, end + 1):
+                acceptance[j] = True
+        return acceptance
 
 
 if __name__ == "__main__":

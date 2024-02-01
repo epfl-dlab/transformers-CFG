@@ -8,32 +8,75 @@ import torch
 
 from transformers_cfg.recognizer import GrammarRecognizer
 from transformers_cfg.parser import parse_ebnf
-from .vocab_struct import LEAF, TokenTrie
+from .vocab_struct import LEAF, TokenTrie, get_substitution
 
 logger = logging.getLogger(__name__)
 
 
-class AbsLLMGrammarRecognizer(ABC):
+def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
+
+    for byte, next_trie in trie.items():
+        if byte == LEAF:
+            token_id = next_trie
+            if token_id != eos_token_id:
+                # if the stacks is not empty, it means we can still continue to parse
+                # so we should accept the token
+                accepts[token_id] = bool(stacks)
+            continue
+
+        new_stacks = []
+        for stk in stacks:
+            if not stk:
+                continue
+
+            next_rule_pos = stk[-1]
+            num_chars = grammar.grammar_encoding[next_rule_pos]
+
+            if not grammar.char_acceptance_at_rule_pos(next_rule_pos)[byte]:
+                # if the current byte is not accepted by the current rule, we need to try next rule
+                continue
+
+            next_rule_pos += num_chars + 1
+            new_stack = stk[:-1]
+            if grammar.grammar_encoding[next_rule_pos]:
+                new_stack.append(next_rule_pos)
+            new_stacks.extend(grammar.advance_stack(tuple(new_stack)))
+
+        if new_stacks:
+            check_token_acceptance_in_trie(
+                next_trie, new_stacks, grammar, eos_token_id, accepts
+            )
+
+    return accepts
+
+
+class AbsTokenGrammarRecognizer(ABC):
     def __init__(self, grammar_str, tokenizer, start_rule_name="root"):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
 
         self.eos_token_id = tokenizer.eos_token_id
+        self.mapping = get_substitution(tokenizer)
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
+        assert len(self.mapping) == len(
+            self.token_trie
+        ), f"{len(self.mapping)}, {len(self.token_trie)}"
         self.grammar = GrammarRecognizer(grammar_encoding, self.start_rule_id)
 
     def _consume_token_id(self, token_id: int, stacks: List[List[int]]):
         if token_id == self.eos_token_id:
-            if stacks and all(len(stack) != 0 for stack in stacks):
-                raise Exception(
+            if self.grammar._can_stop(stacks):
+                # if at least one of the stack is empty, we can stop
+                # we clear all the stacks, meaning that we don't accept any token after EOS
+                return []
+            else:
+                raise ValueError(
                     f"At least one of the stack should be empty when EOS is reached. However, "
                     f"the stacks are {stacks}"
                 )
-            return []
-
-        for byte in self.token_trie.id2str(token_id):
+        for byte in self.mapping.map(token_id):
             stacks = self.grammar._consume_char(byte, stacks)
             # check updated stacks
             # TODO, I commented this out because it will fail when the stack is empty
@@ -41,6 +84,11 @@ class AbsLLMGrammarRecognizer(ABC):
             # assert stacks != []
 
         return stacks
+
+    # Newly added
+    # def accept_token_id(self, token_id: int, stacks: List[List[int]]):
+    #     new_stacks = self._consume_token_id(token_id, stacks)
+    #     return len(new_stacks) > 0
 
     def advance_token_ids(self, *args, **kwargs):
         """Process a list of tokens according to the grammar rules."""
@@ -56,7 +104,7 @@ class AbsLLMGrammarRecognizer(ABC):
         if not stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.token_trie)
+            vocab_size = len(self.mapping)
             logger.debug(f"Empty stack, sum of acceptance: {0}")
             return torch.zeros(vocab_size, dtype=torch.bool, device=device)
 
@@ -66,23 +114,6 @@ class AbsLLMGrammarRecognizer(ABC):
         # Merge stacks: any True => True
         acceptance = acceptance_matrix.reshape(len(stacks), -1).any(dim=0)
         logger.debug(f"sum of acceptance: {acceptance.sum()}")
-        return acceptance
-
-    # For each sub-rule in the grammar, cache whether each byte is accepted.
-    @lru_cache(maxsize=None)
-    def char_acceptance_at_rule_pos(self, rule_offset):
-        # every time this function is called, the result is cached
-        # next time when the same pos is called, the result is returned directly
-        # Here the pos corresponds to the literal or char range rule
-        # it doesn't handle the rule reference
-        acceptance = [False] * 256
-        num_chars = self.grammar.grammar_encoding[rule_offset]
-        rule_offset += 1
-        for i in range(0, num_chars, 2):
-            start = self.grammar.grammar_encoding[rule_offset + i]
-            end = self.grammar.grammar_encoding[rule_offset + i + 1]
-            for j in range(start, end + 1):
-                acceptance[j] = True
         return acceptance
 
     # Probably this should be configurable. If the grammar has an exceedingly
@@ -95,49 +126,21 @@ class AbsLLMGrammarRecognizer(ABC):
     def token_acceptance_for_stack(self, stack, device):
         stack = list(stack)  # needs to come in as a tuple for lru_cache
 
-        accepts = [False] * len(self.token_trie)
+        # size of the vocab
+        accepts = [False] * len(self.mapping)
         accepts[self.eos_token_id] = len(stack) == 0
         if len(stack) == 0:
             logger.debug("empty stack")
 
-        def traverse_trie(trie, stacks):
-            for byte, next_trie in trie.items():
-                if byte == LEAF:
-                    token_id = next_trie
-                    if token_id != self.eos_token_id:
-                        # if the stacks is not empty, it means we can still continue to parse
-                        # so we should accept the token
-                        accepts[token_id] = bool(stacks)
-                    continue
-
-                new_stacks = []
-                for stk in stacks:
-                    if not stk:
-                        continue
-
-                    next_rule_pos = stk[-1]
-                    num_chars = self.grammar.grammar_encoding[next_rule_pos]
-
-                    if not self.char_acceptance_at_rule_pos(next_rule_pos)[byte]:
-                        # if the current byte is not accepted by the current rule, we need to try next rule
-                        continue
-
-                    next_rule_pos += num_chars + 1
-                    new_stack = stk[:-1]
-                    if self.grammar.grammar_encoding[next_rule_pos]:
-                        new_stack.append(next_rule_pos)
-                    new_stacks.extend(self.grammar.advance_stack(tuple(new_stack)))
-
-                if new_stacks:
-                    traverse_trie(next_trie, new_stacks)
-
-        traverse_trie(self.token_trie.trie, [stack])
+        accepts = check_token_acceptance_in_trie(
+            self.token_trie.trie, [stack], self.grammar, self.eos_token_id, accepts
+        )
 
         x = torch.tensor(accepts, dtype=torch.bool, device=device)
         return x
 
 
-class IncrementalLLMGrammarRecognizer(AbsLLMGrammarRecognizer):
+class IncrementalTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
     def __init__(self, grammar_str, start_rule_name, tokenizer):
         super().__init__(grammar_str, tokenizer, start_rule_name)
         self.last_size = None
@@ -201,7 +204,7 @@ class IncrementalLLMGrammarRecognizer(AbsLLMGrammarRecognizer):
         return stacks
 
 
-class VanillaLLMGrammarRecognizer(AbsLLMGrammarRecognizer):
+class VanillaTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
     # TODO, this class may have been broken because of the recent refactoring, in particular, the stacks is bound to the
     # parser class
     def __init__(self, grammar_str, start_rule_name, tokenizer):

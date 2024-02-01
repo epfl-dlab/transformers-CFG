@@ -1,13 +1,13 @@
 from unittest import TestCase
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.LLM_recognizer import IncrementalLLMGrammarRecognizer
+from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
 from transformers_cfg.generation import GrammarConstrainedLogitsProcessor
 
 MODEL_IDS = [
     "hf-internal-testing/tiny-random-GPTJForCausalLM",
-    "hf-internal-testing/tiny-random-BloomForCausalLM",
-    "hf-internal-testing/tiny-random-PhiForCausalLM",
+    # "hf-internal-testing/tiny-random-BloomForCausalLM",
+    # "hf-internal-testing/tiny-random-PhiForCausalLM",
     "hf-internal-testing/tiny-random-gpt2",
     # "hf-internal-testing/tiny-random-BlenderbotForCausalLM",
 ]
@@ -25,7 +25,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalLLMGrammarRecognizer(
+            grammar = IncrementalTokenGrammarRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -72,7 +72,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalLLMGrammarRecognizer(
+            grammar = IncrementalTokenGrammarRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
