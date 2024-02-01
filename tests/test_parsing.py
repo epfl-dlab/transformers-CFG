@@ -1,20 +1,15 @@
-import os
-import sys
 from unittest import TestCase
+
 from transformers_cfg.parser import (
     remove_leading_white_space,
     parse_name,
     _parse_rhs_char_ranges,
     _parse_rhs_literal_string,
-    parse_rule,
     ParseState,
     parse_simple_rhs,
     END_OF_RULE_MARKER,
     _parse_rhs_symbol_reference,
     REF_RULE_MARKER,
-    _parse_rhs_grouping,
-    _parse_rhs_repetition_operators,
-    parse_ebnf,
     parse_rhs,
     END_OF_ALTERNATE_MARKER,
 )
