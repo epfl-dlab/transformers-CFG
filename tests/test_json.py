@@ -1,0 +1,86 @@
+from unittest import TestCase
+from json import loads
+
+import json
+import logging
+from transformers_cfg.parser import parse_ebnf
+from transformers_cfg.recognizer import GrammarRecognizer
+
+# logging.basicConfig(level=logging.DEBUG)
+
+json_examples = {
+    # Simple Nested Object
+    "simple_nested": '{"name": "John", "age": 30, "address": {"street": "21 2nd Street", "city": "New York"}}',
+    # Array of Objects
+    "array_of_objects": '{"employees": [{"firstName": "John", "lastName": "Doe"}, {"firstName": "Anna", "lastName": "Smith"}]}',
+    # Nested Arrays and Objects
+    "nested_arrays_objects": '{"company": "OpenAI", "departments": [{"name": "Research", "members": [{"name": "Alice"}, {"name": "Bob"}]}, {"name": "Engineering", "members": [{"name": "Charlie"}]}]}',
+    # Mixed Data Types
+    "mixed_types": '{"name": "Alice", "age": 25, "isEmployee": true, "salary": null, "projects": ["NLP", "AI"]}',
+    # Empty Object
+    "empty_object": "{}",
+    # Deeply Nested Object
+    "deeply_nested": '{"level1": {"level2": {"level3": {"level4": {"message": "Deep"}}}}}',
+    # Object with Numbers and Booleans
+    "numbers_booleans": '{"temperature": 22.5, "isActive": false, "count": 10}',
+    # Object with Array of Mixed Types
+    "array_mixed_types": '{"data": [1, "two", true, null, {"nested": "object"}]}',
+    # Complex Object with All Elements
+    "complex_all_elements": '{"id": 101, "isActive": true, "info": {"name": "John Doe", "emails": ["john@example.com", "doe@example.com"], "address": {"city": "New York", "zip": "10001"}}, "tags": ["admin", "user"], "history": [{"login": "2023-01-01", "duration": 3600}, {"login": "2023-01-02", "duration": 2700}]}',
+    # Object with Special Characters in Strings TODO fails
+    # "escape_characters": '{"greeting": "Hello, \\"World\\"!", "path": "C:\\\\Program Files\\\\Test"}',
+}
+
+
+def is_json_parsable(string):
+    try:
+        json.loads(string)
+        return True
+    except json.JSONDecodeError:
+        return False
+    except Exception as e:
+        # You might want to handle or log other exceptions as well
+        return False
+
+
+class Test(TestCase):
+    # def test_minimal_json_array(self):
+    #     """
+    #     Test that we can load a JSON array
+    #     """
+    #     # json = '["foo", {"bar":["baz", null, 1.0, 2]}]'
+    #     jsons = [
+    #         "[]",
+    #         "[1]",
+    #         "[1,2]",
+    #         "[1,2,3]",
+    #     ]
+    #     for json in jsons:
+    #         recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    #         self.assertEqual(is_json_parsable(json), recognizer._accept_string(json, recognizer.stacks))
+
+    def test_minimal_json_object(self):
+        """
+        Test that we can load a JSON object
+        """
+        json = '{"foo": "bar", "baz": "bat"}'
+
+        with open("examples/grammars/json.ebnf", "r") as file:
+            input_text = file.read()
+        parsed_grammar = parse_ebnf(input_text)
+
+        start_rule_id = parsed_grammar.symbol_table["root"]
+        #
+        # res = recognizer._accept_string("12222", recognizer.stacks)
+
+        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        self.assertEqual(
+            is_json_parsable(json), recognizer._accept_string(json, recognizer.stacks)
+        )
+
+        for name, json_object in json_examples.items():
+            self.assertEqual(
+                is_json_parsable(json_object),
+                recognizer._accept_string(json_object, recognizer.stacks),
+                msg=f"Failed on {name}, {json_object}",
+            )

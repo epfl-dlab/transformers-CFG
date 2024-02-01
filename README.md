@@ -26,7 +26,7 @@ pip install git+https://github.com/epfl-dlab/transformers-CFG.git
 
 ## QuickStart: Force LLM to generate a valid json object
 
-The below example can be found in `examples/run_grammar_constrained_generation.py`
+The below example can be found in `examples/generate_json.py`
 
 ```python
 
@@ -34,9 +34,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
-
 if __name__ == "__main__":
-
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     tokenizer.pad_token = tokenizer.eos_token
@@ -47,7 +45,6 @@ if __name__ == "__main__":
         grammar_str = file.read()
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
-
 
     # Generate
     prefix1 = "This is a valid json string for http request:"

@@ -1,5 +1,6 @@
-
-
+examples/grammars/debug
+examples/grammars/wip
+examples/jupyter
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
