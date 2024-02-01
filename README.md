@@ -26,7 +26,7 @@ pip install git+https://github.com/Saibo-creator/transformers-CFG.git
 
 ## QuickStart: Force LLM to generate a valid json object
 
-The below example can be found in `examples/run_grammar_constrained_generation.py`
+The below example can be found in `examples/generate_json.py`
 
 ```python
 
