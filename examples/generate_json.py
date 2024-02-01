@@ -1,22 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-# Copyright 2022 University of Cambridge, Tencent AI Lab, DeepMind and The University of Hong Kong Authors and The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
-# import torch
-
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
@@ -45,11 +26,10 @@ if __name__ == "__main__":
     output = model.generate(
         input_ids,
         do_sample=False,
-        max_length=50,
-        num_beams=4,
+        max_new_tokens=60,
         logits_processor=[grammar_processor],
-        repetition_penalty=5.0,
-        num_return_sequences=4,
+        repetition_penalty=1.1,
+        num_return_sequences=1,
     )
     # decode output
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)
