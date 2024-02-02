@@ -66,6 +66,11 @@ class AbsTokenGrammarRecognizer(ABC):
         self.grammar = GrammarRecognizer(grammar_encoding, self.start_rule_id)
 
     def _consume_token_id(self, token_id: int, stacks: List[List[int]]):
+        if self.grammar._must_stop(stacks):
+            if token_id == self.eos_token_id:
+                return []
+            else:
+                raise ValueError(f"All stacks are empty, so the only token accepted is EOS, but got {token_id}")
         if token_id == self.eos_token_id:
             if self.grammar._can_stop(stacks):
                 # if at least one of the stack is empty, we can stop
@@ -199,8 +204,13 @@ class IncrementalTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
             string = self.tokenizer.decode(token_ids)
             stacks = self.grammar._consume_string(string, stacks)
         else:
-            for token_id in token_ids:
+            for i, token_id in enumerate(token_ids):
                 stacks = self._consume_token_id(token_id, stacks)
+                if len(stacks) > 0:
+                    cur_token_ids = token_ids[: i + 1]
+                    logging.debug(f"{cur_token_ids} is accepted")
+                    decoded_string = self.tokenizer.decode(cur_token_ids)
+                    logging.debug(f"The decoded string is {decoded_string}")
         return stacks
 
 
@@ -246,17 +256,22 @@ class VanillaTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
 
 
 if __name__ == "__main__":
+    from transformers import AutoTokenizer
     # set logging level
     logging.basicConfig(level=logging.DEBUG)
 
-    try:
-        with open("examples/grammars/json.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-        parsed_grammar.print()
-        print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
+    with open("examples/grammars/json.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    parsed_grammar.print()
 
-    except FileNotFoundError:
-        print("Error: File 'grammar.ebnf' not found.")
-    except IOError as e:
-        print("Error reading file 'grammar.ebnf':", e)
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+    tokenRecognizer = IncrementalTokenGrammarRecognizer(grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer)
+
+    valid_json = '{"foo": "bar", "baz": "bat"}'
+    token_ids = tokenizer.encode(valid_json)
+    stacks = tokenRecognizer._consume_token_ids(token_ids, tokenRecognizer.grammar.stacks, as_string=False)
+    # the json object is complete, so the stacks should be empty
+    assert stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty"
+

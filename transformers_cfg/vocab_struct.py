@@ -24,12 +24,21 @@ def get_substitution(tokenizer):
 class Substitution:
     def __init__(self, tokenizer):
         self.eos_token_id = tokenizer.eos_token_id
+        self.bos_token_id = tokenizer.bos_token_id
         self.tokenizer = tokenizer
+        self.special = tokenizer.all_special_ids
+        self.last_token_id = None
 
     def __len__(self):
         return len(self.tokenizer.get_vocab())
 
     def map(self, token_id: int) -> bytes:
+        at_bos = False
+        if self.last_token_id is not None and self.last_token_id == self.bos_token_id:
+            at_bos = True
+        self.last_token_id = token_id
+        if token_id in self.special:
+            return bytes()
         # if token_id is tensor, convert it to int
         if hasattr(token_id, "item"):
             token_id = token_id.item()
@@ -39,18 +48,24 @@ class Substitution:
         if raw_token.startswith("<0x"):
             hex_value = raw_token[4:-1]
             raw_token = chr(int(hex_value, 16))
-        raw_token = raw_token.replace("▁", " ")
+        if raw_token.startswith("▁"):
+            raw_token = raw_token.replace("▁", " ")
+            if at_bos:
+                # remove space at the beginning of the sentence
+                raw_token = raw_token[1:]
         return bytes(raw_token, "utf-8")
 
 
 class BPESubstitution(Substitution):
     def __init__(self, tokenizer):
         super().__init__(tokenizer)
-        self.special = tokenizer.additional_special_tokens_ids
 
     def map(self, token_id: int) -> bytes:
+        # This is the case for BOS,
+        # It should not be mapped to any token
+        # if we decode it, it will be like <s>
         if token_id in self.special:
-            return None
+            return bytes()
         return bytes(
             self.tokenizer.decode([token_id], clean_up_tokenization_spaces=False),
             "utf-8",
