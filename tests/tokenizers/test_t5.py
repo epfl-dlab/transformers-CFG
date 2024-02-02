@@ -5,6 +5,7 @@ from transformers import T5Tokenizer
 from tests.tokenizer_common import TokenizerTesterMixin
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -15,4 +16,3 @@ class GPT2TokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-

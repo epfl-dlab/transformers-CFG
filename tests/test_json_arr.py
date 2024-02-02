@@ -8,6 +8,7 @@ from tests.test_json import is_json_parsable
 
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import GrammarRecognizer
+
 # class Test(TestCase):
 #     def test_minimal_json_array(self):
 #         """

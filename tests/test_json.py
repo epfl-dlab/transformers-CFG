@@ -44,7 +44,6 @@ def is_json_parsable(string):
 
 
 class Test(TestCase):
-
     def setUp(self):
 
         with open("examples/grammars/json.ebnf", "r") as file:
@@ -53,7 +52,9 @@ class Test(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        self.recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        self.recognizer = GrammarRecognizer(
+            parsed_grammar.grammar_encoding, start_rule_id
+        )
 
     def test_minimal_json_object(self):
         """
@@ -62,7 +63,8 @@ class Test(TestCase):
         json = '{"foo": "bar", "baz": "bat"}'
 
         self.assertEqual(
-            is_json_parsable(json), self.recognizer._accept_string(json, self.recognizer.stacks)
+            is_json_parsable(json),
+            self.recognizer._accept_string(json, self.recognizer.stacks),
         )
 
     def test_systematic_examples(self):

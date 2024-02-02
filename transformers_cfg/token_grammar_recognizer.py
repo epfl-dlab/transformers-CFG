@@ -70,7 +70,9 @@ class AbsTokenGrammarRecognizer(ABC):
             if token_id == self.eos_token_id:
                 return []
             else:
-                raise ValueError(f"All stacks are empty, so the only token accepted is EOS, but got {token_id}")
+                raise ValueError(
+                    f"All stacks are empty, so the only token accepted is EOS, but got {token_id}"
+                )
         if token_id == self.eos_token_id:
             if self.grammar._can_stop(stacks):
                 # if at least one of the stack is empty, we can stop
@@ -257,6 +259,7 @@ class VanillaTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
 
 if __name__ == "__main__":
     from transformers import AutoTokenizer
+
     # set logging level
     logging.basicConfig(level=logging.DEBUG)
 
@@ -267,11 +270,14 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
-    tokenRecognizer = IncrementalTokenGrammarRecognizer(grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer)
+    tokenRecognizer = IncrementalTokenGrammarRecognizer(
+        grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer
+    )
 
     valid_json = '{"foo": "bar", "baz": "bat"}'
     token_ids = tokenizer.encode(valid_json)
-    stacks = tokenRecognizer._consume_token_ids(token_ids, tokenRecognizer.grammar.stacks, as_string=False)
+    stacks = tokenRecognizer._consume_token_ids(
+        token_ids, tokenRecognizer.grammar.stacks, as_string=False
+    )
     # the json object is complete, so the stacks should be empty
     assert stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty"
-

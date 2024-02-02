@@ -33,22 +33,26 @@ class TokenizerTesterMixin:
 
     def get_tokenizer(self, **kwargs) -> PreTrainedTokenizer:
         use_fast = kwargs.pop("use_fast", True)
-        return self.tokenizer_class.from_pretrained(self.pretrained_name, use_fast=use_fast, **kwargs)
+        return self.tokenizer_class.from_pretrained(
+            self.pretrained_name, use_fast=use_fast, **kwargs
+        )
 
     def test_json_parsable(self):
         # Test that we can load a JSON object
         with open("examples/grammars/json.ebnf", "r") as file:
             input_text = file.read()
-        JsontokenRecognizer = IncrementalTokenGrammarRecognizer(grammar_str=input_text, start_rule_name="root",
-                                                            tokenizer=self.tokenizer)
+        JsontokenRecognizer = IncrementalTokenGrammarRecognizer(
+            grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
+        )
 
         valid_json = '{"foo": "bar", "baz": "bat"}'
         token_ids = self.tokenizer.encode(valid_json)
         pprint_token_ids(self.tokenizer, token_ids)
-        stacks = JsontokenRecognizer._consume_token_ids(token_ids, JsontokenRecognizer.grammar.stacks, as_string=False)
+        stacks = JsontokenRecognizer._consume_token_ids(
+            token_ids, JsontokenRecognizer.grammar.stacks, as_string=False
+        )
         # the json object is complete, so the stacks should be empty
         assert stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty"
-
 
     # def test_beam_search_low_memory(self):
     #     # Check that choosing 'low_memory' does not change the model output

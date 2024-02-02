@@ -1,5 +1,6 @@
 from termcolor import colored
 
+
 def pprint_token_ids(tokenizer, token_ids=None, text=None):
     if token_ids is None and text is None:
         raise ValueError("Either token_ids or text should be provided")
@@ -15,9 +16,7 @@ def pprint_token_ids(tokenizer, token_ids=None, text=None):
 
     for token_id in token_ids:
         if token_id in special_id2token:
-            colored_token_ids.append(
-                colored(token_id, "red", attrs=["bold"])
-            )
+            colored_token_ids.append(colored(token_id, "red", attrs=["bold"]))
         else:
             colored_token_ids.append(str(token_id))
     print("[" + ", ".join(colored_token_ids) + "]")

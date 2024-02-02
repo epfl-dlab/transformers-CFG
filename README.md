@@ -76,21 +76,21 @@ if __name__ == "__main__":
 
 ## What is grammar ?
 
-TL;DR: Think of it as an enhanced version of regular expressions. 
+TL;DR: Think of it as an enhanced version of regular expressions.
 
 Here is an example of a simplified JSON grammar:
 ```bnf
 # A JSON object is the root of the grammar
-root ::= object 
+root ::= object
 
 # An object starts with "{" and ends with "}" and contains pairs separated by ","
-object ::= "{" pair ("," pair)* "}" 
+object ::= "{" pair ("," pair)* "}"
 
 # A pair is a string followed by a ":" and a value
 pair ::= string ":" value
 
 # A string is a sequence of alphanumeric characters enclosed in double quotes
-string ::= '"' [a-zA-Z0-9]* '"' 
+string ::= '"' [a-zA-Z0-9]* '"'
 
 # A value can be a string, another object, or a boolean value
 value ::= string | object | "true" | "false" | "null"
