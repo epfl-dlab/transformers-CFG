@@ -9,8 +9,6 @@ This integration enables users to utilize our CFG capabilities within the popula
 For more details, see [Relevent Pull Request](https://github.com/oobabooga/text-generation-webui/pull/4953)
 
 
-
-
 ## Introduction
 `transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG).
 This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
@@ -66,38 +64,69 @@ if __name__ == "__main__":
 
     """
     'This is a valid json string for http request:{ "request": { "method": "GET", "headers": [], "content": "Content","type": "application" }}
-    'This is a valid json string for shopping cart:This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }
+    'This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }
     """
 
 ```
-
-## Grammar Collection
-
-We provide a collection of grammars in the `examples/grammars` folder, which are mostly identical to the grammars in llama-cpp project.
-We try to keep the grammars up-to-date with the original grammars from llama-cpp project.
-But up to now, we can not yet guarantee that all grammars from llama-cpp project can be directly used in transformers-CFG.
-
-The list of grammars contains:
-- `json.ebnf`: A grammar for generating valid json objects.
-- `c.ebnf`: A grammar for generating valid C programs.
-- `chess.ebnf`: A grammar for generating valid chess moves.
-- `arithmetic.ebnf`: A grammar for generating valid arithmetic expressions.
-
 
 ## Why should I use transformers-CFG?
 
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 
+## What is grammar ?
+
+TL;DR: Think of it as an enhanced version of regular expressions. 
+
+Here is an example of a simplified JSON grammar:
+```bnf
+# A JSON object is the root of the grammar
+root ::= object 
+
+# An object starts with "{" and ends with "}" and contains pairs separated by ","
+object ::= "{" pair ("," pair)* "}" 
+
+# A pair is a string followed by a ":" and a value
+pair ::= string ":" value
+
+# A string is a sequence of alphanumeric characters enclosed in double quotes
+string ::= '"' [a-zA-Z0-9]* '"' 
+
+# A value can be a string, another object, or a boolean value
+value ::= string | object | "true" | "false" | "null"
+```
+
+This grammar describes the structure of a JSON object. It specifies that a JSON object is a pair of key-value pairs, where the key is a string and the value can be a string, another object, or a boolean value.
+
+Grammar doesn't need to be complicated.
+You can use it to describe very simple but useful things, like a valid email address, a valid URL, or phone number.
+```
+phone_number ::= "+" [0-9]+
+```
+
+More details can be found in this [doc from llama-cpp](https://github.com/ggerganov/llama.cpp/tree/master/grammars)
+
+### Automatic Grammar Generation
+Here is an awesome tool to generate grammars for you: [Grammar Builder](https://grammar.intrinsiclabs.ai/)
+
+### Grammar Collection
+
+We provide a collection of grammars in the `examples/grammars` folder, which are mostly identical to the grammars in llama-cpp project.
+We try to keep the grammars up-to-date with the original grammars from llama-cpp project.
+But up to now, we can not yet guarantee that all grammars from llama-cpp project can be directly used in transformers-CFG.
+
+The list of grammars contains:
+- [json.ebnf](examples%2Fgrammars%2Fjson.ebnf): A grammar for generating valid json objects.
+- [json_arr.ebnf](examples%2Fgrammars%2Fjson_arr.ebnf): A grammar for generating valid json arrays.
+- [c.ebnf](examples%2Fgrammars%2Fc.ebnf): A grammar for generating valid C programs.
+- [chess.ebnf](examples%2Fgrammars%2Fchess.ebnf): A grammar for generating valid chess moves.
+- [arithmetic.ebnf](examples%2Fgrammars%2Farithmetic.ebnf): A grammar for generating valid arithmetic expressions.
+
+
 ## Supported Models
 
 `Transformers-CFG` is tokenizer-dependent and model-agnostic.
 All models with the same tokenizer should naturally be supported.
-
-We have tested the following models:
-- `gpt2`
-- `LLaMa` (and its variants and `LLaMa-2`)
-- `t5` (in progress)
 
 If you find any model that is not supported, please open an issue or submit a pull request.
 
