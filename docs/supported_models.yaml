@@ -1,0 +1,96 @@
+transformers.models.bloom.tokenization_bloom_fast.BloomTokenizerFast:
+- bigscience/bloom-560m
+- bigscience/bloomz-560m
+- bigscience/bloom-7b1
+- bigscience/bloom-1b1
+- bigscience/bloom-1b7
+- bigscience/bloomz-3b
+- bigscience/bloom-3b
+- bigscience/bloomz-7b1
+- bigscience/bloomz-1b1
+transformers.models.codegen.tokenization_codegen_fast.CodeGenTokenizerFast:
+- microsoft/phi-1_5
+transformers.models.gpt2.tokenization_gpt2_fast.GPT2TokenizerFast:
+- gpt2
+- distilgpt2
+- facebook/opt-125m
+- openai-community/gpt2-large
+- openai-community/gpt2-xl
+- openai-community/gpt2-medium
+- EleutherAI/gpt-neo-125m
+- microsoft/DialoGPT-medium
+- nferruz/ProtGPT2
+- sshleifer/tiny-gpt2
+- facebook/opt-2.7b
+- tiiuae/falcon-rw-1b
+- EleutherAI/gpt-neo-1.3B
+- EleutherAI/gpt-j-6b
+- microsoft/DialoGPT-large
+- facebook/opt-350m
+- EleutherAI/gpt-neo-2.7B
+- togethercomputer/GPT-JT-6B-v1
+- facebook/opt-1.3b
+- facebook/opt-13b
+- KoboldAI/GPT-J-6B-Janeway
+- KoboldAI/OPT-6B-nerys-v2
+- succinctly/text2image-prompt-generator
+- KoboldAI/OPT-13B-Erebus
+- KoboldAI/OPT-6.7B-Erebus
+- ai-forever/mGPT
+transformers.models.gpt_neox.tokenization_gpt_neox_fast.GPTNeoXTokenizerFast:
+- EleutherAI/pythia-160m-deduped
+- mosaicml/mpt-7b
+- EleutherAI/pythia-70m-deduped
+transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast:
+- mistralai/Mistral-7B-v0.1
+- teknium/OpenHermes-2-Mistral-7B
+- davidkim205/komt-mistral-7b-v1
+- h2oai/h2ogpt-4096-llama2-7b-chat
+- HuggingFaceM4/tiny-random-LlamaForCausalLM
+- lmsys/vicuna-7b-v1.5
+- TinyPixel/Llama-2-7B-bf16-sharded
+- OpenAssistant/llama2-13b-orca-8k-3319
+- mistralai/Mistral-7B-Instruct-v0.2
+- mistralai/Mistral-7B-Instruct-v0.1
+- NousResearch/Llama-2-7b-chat-hf
+- NousResearch/Nous-Hermes-Llama2-13b
+- HuggingFaceH4/zephyr-7b-beta
+- TheBloke/Llama-2-13B-chat-GPTQ
+- NousResearch/Llama-2-7b-hf
+- echarlaix/tiny-random-mistral
+- NousResearch/Yarn-Mistral-7b-128k
+- fxmarty/tiny-llama-fast-tokenizer
+- liuhaotian/llava-v1.5-7b
+- Gryphe/MythoMax-L2-13b
+- TheBloke/Llama-2-7B-Chat-GPTQ
+- Open-Orca/Mistral-7B-OpenOrca
+- cognitivecomputations/dolphin-2.2.1-mistral-7b
+- DiscoResearch/mixtral-7b-8expert
+- lmsys/vicuna-13b-v1.5
+- huggyllama/llama-7b
+- TinyPixel/CodeLlama-7B-Python-bf16-sharded
+- HuggingFaceH4/zephyr-7b-alpha
+- Riiid/sheep-duck-llama-2
+- liuhaotian/llava-v1.5-13b
+- togethercomputer/LLaMA-2-7B-32K
+- teknium/OpenHermes-2.5-Mistral-7B
+- JackFram/llama-68m
+- openlm-research/open_llama_7b_v2
+- TinyLlama/TinyLlama-1.1B-Chat-v0.3
+- NousResearch/Nous-Hermes-llama-2-7b
+- TheBloke/Llama-2-7B-Chat-AWQ
+- garage-bAInd/Platypus2-7B
+- h2oai/h2ogpt-4096-llama2-13b-chat
+- TinyLlama/TinyLlama-1.1B-intermediate-step-715k-1.5T
+- togethercomputer/Llama-2-7B-32K-Instruct
+- TheBloke/Llama-2-7B-GPTQ
+- LeoLM/leo-hessianai-7b
+transformers.models.t5.tokenization_t5_fast.T5TokenizerFast:
+- Vamsi/T5_Paraphrase_Paws
+transformers.models.xglm.tokenization_xglm_fast.XGLMTokenizerFast:
+- facebook/xglm-564M
+transformers.tokenization_utils_fast.PreTrainedTokenizerFast:
+- tiiuae/falcon-40b-instruct
+- tiiuae/falcon-7b-instruct
+- tiiuae/falcon-7b
+- fxmarty/really-tiny-falcon-testing

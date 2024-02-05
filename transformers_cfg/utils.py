@@ -1,3 +1,6 @@
+import json
+import warnings
+
 from termcolor import colored
 
 
@@ -20,3 +23,41 @@ def pprint_token_ids(tokenizer, token_ids=None, text=None):
         else:
             colored_token_ids.append(str(token_id))
     print("[" + ", ".join(colored_token_ids) + "]")
+
+
+def get_tokenizer_model_type(model: str = "gpt2"):
+    """
+    reference https://github.com/huggingface/transformers/blob/main/src/transformers/tokenization_utils_fast.py#L729
+    :param model:
+    :return: BPE, Unigram, WordPiece, WordLevel
+    SentencePiece is used in conjunction with Unigram
+    """
+    from transformers import AutoTokenizer
+
+    # if the tokenizer is not in the repo, it will raise OSError
+    # OSError: Can't load tokenizer for 'xxx'
+    # This happens when the model reuses the tokenizer of another model
+    if type(model) == str:
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True)
+            # check if the tokenizer is fast
+        except OSError:
+            return None
+    else:
+        tokenizer = model
+
+    if not tokenizer.is_fast:
+        raise ValueError(f"The tokenizer {model} is not fast tokenizer")
+    tokenizer_json = json.loads(tokenizer._tokenizer.to_str())
+    model_type = tokenizer_json["model"]["type"]
+    if (
+        model_type == "BPE"
+        and tokenizer_json["pre_tokenizer"] is not None
+        and (
+            tokenizer_json["pre_tokenizer"]["type"] == "ByteLevel"
+            or tokenizer_json["pre_tokenizer"]["pretokenizers"][1]["type"]
+            == "ByteLevel"
+        )
+    ):
+        model_type = "ByteLevelBPE"
+    return model_type

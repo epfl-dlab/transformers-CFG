@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 from transformers import PreTrainedTokenizer
 from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
@@ -48,11 +49,20 @@ class TokenizerTesterMixin:
         valid_json = '{"foo": "bar", "baz": "bat"}'
         token_ids = self.tokenizer.encode(valid_json)
         pprint_token_ids(self.tokenizer, token_ids)
+
+        # check if there is unk token
+        for token_id in token_ids:
+            if token_id == self.tokenizer.unk_token_id:
+                warnings.warn(
+                    f"unk token found in input_token_ids: {token_ids}, skipping test"
+                )
+                return
+
         stacks = JsontokenRecognizer._consume_token_ids(
             token_ids, JsontokenRecognizer.grammar.stacks, as_string=False
         )
         # the json object is complete, so the stacks should be empty
-        assert stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty"
+        self.assertTrue(stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty")
 
     # def test_beam_search_low_memory(self):
     #     # Check that choosing 'low_memory' does not change the model output

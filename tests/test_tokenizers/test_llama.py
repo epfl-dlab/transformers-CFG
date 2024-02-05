@@ -1,8 +1,8 @@
 import unittest
 
-from transformers import T5Tokenizer
+from transformers import LlamaTokenizerFast
 
-from tests.tokenizer_common import TokenizerTesterMixin
+from tests._tokenizer_common import TokenizerTesterMixin
 
 import logging
 
@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 class GPT2TokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
-    tokenizer_class = T5Tokenizer
-    pretrained_name = "t5-small"
+    tokenizer_class = LlamaTokenizerFast
+    pretrained_name = "saibo/llama-1B"
 
     def setUp(self):
         super().setUp()

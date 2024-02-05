@@ -8,7 +8,8 @@ import torch
 
 from transformers_cfg.recognizer import GrammarRecognizer
 from transformers_cfg.parser import parse_ebnf
-from .vocab_struct import LEAF, TokenTrie, get_substitution
+from .vocab_struct import LEAF, TokenTrie
+from transformers_cfg.mapping import get_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class AbsTokenGrammarRecognizer(ABC):
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
 
         self.eos_token_id = tokenizer.eos_token_id
-        self.mapping = get_substitution(tokenizer)
+        self.mapping = get_mapping(tokenizer)
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
         assert len(self.mapping) == len(
