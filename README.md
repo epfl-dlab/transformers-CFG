@@ -76,21 +76,21 @@ if __name__ == "__main__":
 
 ## What is grammar ?
 
-TL;DR: Think of it as an enhanced version of regular expressions. 
+TL;DR: Think of it as an enhanced version of regular expressions.
 
 Here is an example of a simplified JSON grammar:
 ```bnf
 # A JSON object is the root of the grammar
-root ::= object 
+root ::= object
 
 # An object starts with "{" and ends with "}" and contains pairs separated by ","
-object ::= "{" pair ("," pair)* "}" 
+object ::= "{" pair ("," pair)* "}"
 
 # A pair is a string followed by a ":" and a value
 pair ::= string ":" value
 
 # A string is a sequence of alphanumeric characters enclosed in double quotes
-string ::= '"' [a-zA-Z0-9]* '"' 
+string ::= '"' [a-zA-Z0-9]* '"'
 
 # A value can be a string, another object, or a boolean value
 value ::= string | object | "true" | "false" | "null"
@@ -125,9 +125,16 @@ The list of grammars contains:
 
 ## Supported Models
 
-`Transformers-CFG` is tokenizer-dependent and model-agnostic.
-All models with the same tokenizer should naturally be supported.
+- [LLaMa family models](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf)
+- [GPT family models](https://huggingface.co/openai-community/gpt2)
+- [Bloom family models](https://huggingface.co/bigscience/bloom)
+- [Mistral family models](https://huggingface.co/mistralai/Mistral-7B-v0.1)
+- [Falcon family models](https://huggingface.co/tiiuae/falcon-7b)
+- ...
 
+See [supported_models.yaml](docs%2Fsupported_models.yaml) for the full list of supported models.
+
+As a rule of thumb, all models with the same tokenizer should naturally be supported.
 If you find any model that is not supported, please open an issue or submit a pull request.
 
 ## License

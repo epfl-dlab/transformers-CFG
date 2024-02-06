@@ -169,6 +169,9 @@ class GrammarRecognizer:
         else:
             return False
 
+    def _must_stop(self, stacks: List[List[int]]):
+        return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
+
     # For each sub-rule in the grammar, cache whether each byte is accepted.
     @lru_cache(maxsize=None)
     def char_acceptance_at_rule_pos(self, rule_offset):
