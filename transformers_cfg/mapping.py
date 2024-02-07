@@ -16,17 +16,11 @@ def get_mapping(tokenizer):
         or "gptneox" in tokenizer.__class__.__name__.lower()
     ):
         return BBPEMapping(tokenizer)
-    elif (
-        "t5" in tokenizer.__class__.__name__.lower()
-        or "phi" in tokenizer.__class__.__name__.lower()
-    ):
+    elif "t5" in tokenizer.__class__.__name__.lower():
         return BPEMapping(tokenizer)
     elif "llama" in tokenizer.__class__.__name__.lower():
         return LlamaBPEMapping(tokenizer)
-    elif (
-        "xlnet" in tokenizer.__class__.__name__.lower()
-        or "xglm" in tokenizer.__class__.__name__.lower()
-    ):
+    elif "xglm" in tokenizer.__class__.__name__.lower():
         return UniGramMapping(tokenizer)
     else:
         raise ValueError(f"Unknown tokenizer type: {tokenizer.__class__.__name__}")
@@ -49,7 +43,7 @@ class Mapping:
         # if token_id is tensor, convert it to int
         if hasattr(token_id, "item"):
             token_id = token_id.item()
-        raw_token = self.tokenizer.convert_ids_to_tokens(token_id)
+        raw_token = self.tokenizer.decode(token_id)
         return raw_token
 
     def map(self, token_id: int) -> bytes:
