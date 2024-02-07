@@ -146,12 +146,15 @@ class GrammarRecognizer:
         return len(new_stacks) > 0
 
     def _consume_string(self, string: str, stacks: List[List[int]]):
-        _bytes = bytes(string, "utf-8")
-        for i, byte in enumerate(_bytes):
-            stacks = self._consume_char(byte, stacks)
+        # _bytes = bytes(string, "utf-8")
+
+        for i, char in enumerate(string):
+            code_pt = ord(char)
+            print(f"char: {char}, code_pt: {code_pt}")
+            stacks = self._consume_char(code_pt, stacks)
             if len(stacks) > 0:
-                decoded_string = _bytes[: i + 1].decode("utf-8")
-                logging.debug(f"{decoded_string} is accepted")
+                accepted_string = string[: i + 1]
+                logging.debug(f"{accepted_string} is accepted")
         return stacks
 
     def _accept_string(self, string: str, stacks: List[List[int]]):
