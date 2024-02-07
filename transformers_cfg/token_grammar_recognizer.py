@@ -30,17 +30,19 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
             if not stk:
                 continue
 
-            next_rule_pos = stk[-1]
-            num_chars = grammar.grammar_encoding[next_rule_pos]
+            next_element_offset = stk[-1]
+            num_chars = grammar.grammar_encoding[next_element_offset]
 
-            if not grammar.char_acceptance_at_rule_pos(next_rule_pos)[byte]:
+            if not grammar.char_acceptance_at_element(next_element_offset).get(
+                byte, False
+            ):
                 # if the current byte is not accepted by the current rule, we need to try next rule
                 continue
 
-            next_rule_pos += num_chars + 1
+            next_element_offset += num_chars + 1
             new_stack = stk[:-1]
-            if grammar.grammar_encoding[next_rule_pos]:
-                new_stack.append(next_rule_pos)
+            if grammar.grammar_encoding[next_element_offset]:
+                new_stack.append(next_element_offset)
             new_stacks.extend(grammar.advance_stack(tuple(new_stack)))
 
         if new_stacks:

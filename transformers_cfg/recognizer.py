@@ -175,21 +175,29 @@ class GrammarRecognizer:
     def _must_stop(self, stacks: List[List[int]]):
         return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
 
-    # For each sub-rule in the grammar, cache whether each byte is accepted.
     @lru_cache(maxsize=None)
-    def char_acceptance_at_rule_pos(self, rule_offset):
-        # every time this function is called, the result is cached
-        # next time when the same pos is called, the result is returned directly
-        # Here the pos corresponds to the literal or char range rule
-        # it doesn't handle the rule reference
-        acceptance = [False] * 256
-        num_chars = self.grammar_encoding[rule_offset]
-        rule_offset += 1
+    def char_acceptance_at_element(self, element_offset):
+        """
+        Caches and returns a dictionary indicating whether a Unicode character is accepted
+        at a given rule position. This function considers Unicode characters, dynamically
+        inserting accepted ranges into a dictionary to optimize memory usage.
+
+        Args:
+        - rule_offset: The offset in the grammar encoding where the rule starts.
+
+        Returns:
+        - A dictionary where each key is a Unicode character (or range) and the value is True if accepted.
+        """
+        print(f"element_offset: {element_offset}")
+        acceptance = {}
+        num_chars = self.grammar_encoding[element_offset]
+        element_offset += 1
         for i in range(0, num_chars, 2):
-            start = self.grammar_encoding[rule_offset + i]
-            end = self.grammar_encoding[rule_offset + i + 1]
+            start = self.grammar_encoding[element_offset + i]
+            end = self.grammar_encoding[element_offset + i + 1]
             for j in range(start, end + 1):
                 acceptance[j] = True
+        print(acceptance)
         return acceptance
 
 

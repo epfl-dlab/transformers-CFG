@@ -64,6 +64,43 @@ class TokenizerTesterMixin:
         # the json object is complete, so the stacks should be empty
         self.assertTrue(stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty")
 
+    @unittest.skip("Not implemented")
+    def test_emoji(self):
+        """
+        Test that we can accept emoji
+        """
+
+        with open("examples/grammars/emoji.ebnf", "r") as file:
+            input_text = file.read()
+
+        JsontokenRecognizer = IncrementalTokenGrammarRecognizer(
+            grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
+        )
+
+        emoji = "😀😄😂"
+        token_ids = self.tokenizer.encode(emoji)
+        pprint_token_ids(self.tokenizer, token_ids)
+
+        # check if there is unk token
+        for token_id in token_ids:
+            if token_id == self.tokenizer.unk_token_id:
+                warnings.warn(
+                    f"unk token found in input_token_ids: {token_ids}, skipping test"
+                )
+                return
+
+        stacks = JsontokenRecognizer._consume_token_ids(
+            token_ids, JsontokenRecognizer.grammar.stacks, as_string=False
+        )
+
+        # parsed_grammar = parse_ebnf(input_text)
+        #
+        # start_rule_id = parsed_grammar.symbol_table["root"]
+        #
+        # recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        #
+        # self.assertTrue(recognizer._accept_string(emoji, recognizer.stacks))
+
     # def test_beam_search_low_memory(self):
     #     # Check that choosing 'low_memory' does not change the model output
     #     for model_class in self.all_generative_model_classes:
