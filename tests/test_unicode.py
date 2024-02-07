@@ -11,15 +11,14 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
-@unittest.skip("Skip for now")
 class TestUnicode(TestCase):
-    def test_minimal_json_object_with_unicode(self):
+    def test_accept_japanese(self):
         """
-        Test that we can load a JSON array
+        Test that we can accept japanese characters
         """
-        # json = '["foo", {"bar":["baz", null, 1.0, 2]}]'
-        json = '{"foo": "bar", "三": "四"}'
-        with open("examples/grammars/json.ebnf", "r") as file:
+
+        japanese = "こんにちは世界"
+        with open("examples/grammars/japanese.ebnf", "r") as file:
             input_text = file.read()
         parsed_grammar = parse_ebnf(input_text)
 
@@ -27,8 +26,20 @@ class TestUnicode(TestCase):
 
         recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        self.assertEqual(
-            is_json_parsable(json),
-            recognizer._accept_string(json, recognizer.stacks),
-            f"Failed on {json}",
-        )
+        self.assertTrue(recognizer._accept_string(japanese, recognizer.stacks))
+
+    def test_emoji(self):
+        """
+        Test that we can accept emoji
+        """
+
+        emoji = "😀😄😂"
+        with open("examples/grammars/emoji.ebnf", "r") as file:
+            input_text = file.read()
+        parsed_grammar = parse_ebnf(input_text)
+
+        start_rule_id = parsed_grammar.symbol_table["root"]
+
+        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+
+        self.assertTrue(recognizer._accept_string(emoji, recognizer.stacks))
