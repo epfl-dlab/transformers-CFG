@@ -368,30 +368,6 @@ class Test(TestCase):
         name, _ = parse_name(src)
         state = ParseState()
         rhs_src = "[0-9]+"
-        # remaining_src = _parse_rhs_char_ranges(rhs_src, outbuf)
-        # last_sym_start = len(outbuf)
-        # logging.debug(f"outbuf after _parse_rhs_char_ranges: {outbuf}")
-        # _parse_rhs_repetition_operators(remaining_src, state=state, outbuf=outbuf, rule_name=name, last_sym_start=last_sym_start)
-        # logging.debug(f"outbuf after _parse_rhs_repetition_operators: {outbuf}")
-        # logging.debug(f"grammar_encoding: {state.grammar_encoding}")
-        # # import pdb; pdb.set_trace()
-        # logging.debug("-" * 80)
-
-        # state = parse_ebnf(src)
-        # logging.debug(f"parse_ebnf: {state.grammar_encoding}")
-        # state = parse_ebnf(translated_src)
-        # logging.debug(f"parse_translated_ebnf: {state.grammar_encoding}")
-        # import pdb; pdb.set_trace()
-        # state.logging.debug()
-        #
-        # state = ParseState()
-        # parse_rule(state=state, rule_text=src)
-        # logging.debug(f"parse_rule: {state.grammar_encoding}")
-        #
-        # state = ParseState()
-        # parse_rhs(state=state, rhs=rhs_src, rule_name=name,rule_id=999, is_nested=True)
-        # logging.debug(f"parse_rhs: {state.grammar_encoding}")
-        # logging.debug(f"outbuf: {outbuf}")
 
         state = ParseState()
         outbuf2 = []

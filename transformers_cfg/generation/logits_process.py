@@ -75,7 +75,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             print("-" * 80)
 
         logger.debug("input_ids: \n" + pprint.pformat(input_ids))
-        logger.debug("scores: \n" + pprint.pformat(scores))
+        # logger.debug("scores: \n" + pprint.pformat(scores))
         logger.debug("last_size: \n" + pprint.pformat(self.last_size))
         logger.debug(
             "num of stacks: \n"
