@@ -137,6 +137,24 @@ See [supported_models.yaml](docs%2Fsupported_models.yaml) for the full list of s
 As a rule of thumb, all models with the same tokenizer should naturally be supported.
 If you find any model that is not supported, please open an issue or submit a pull request.
 
+## Citation
+
+**Please consider citing our work, if you found the provided resources useful.**<br>
+```
+@inproceedings{geng-etal-2023-grammar,
+	title        = {Grammar-Constrained Decoding for Structured {NLP} Tasks without Finetuning},
+	author       = {Geng, Saibo  and Josifoski, Martin  and Peyrard, Maxime  and West, Robert},
+	year         = 2023,
+	month        = dec,
+	booktitle    = {Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+	publisher    = {Association for Computational Linguistics},
+	address      = {Singapore},
+	url          = {https://aclanthology.org/2023.emnlp-main.674},
+	editor       = {Bouamor, Houda  and Pino, Juan  and Bali, Kalika}
+}
+```
+
+
 ## License
 This project is licensed under the [MIT License](LICENSE).
 
