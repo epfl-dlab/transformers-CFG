@@ -17,18 +17,20 @@ class GrammarRecognizer:
         # but we do it anyway to be safe
         # in case where the grammar is very large, we can consider not copying it
         self.grammar_encoding = copy.deepcopy(grammar_encoding)
-        self.rule_offsets: Dict[int, int] = self.init_rules(start_rule_id)
+        self.rule_offsets: List[int] = self.init_rules(start_rule_id)
         # each stack is a list of indices into grammar_encoding
         # each index points to a rule's
         self.stacks: List[List[int]] = self.init_stack(start_rule_id)
 
-    def init_rules(self, start_rule_id: int) -> Dict[int, int]:
+    def init_rules(self, start_rule_id: int) -> List[int]:
         _rule_offset = 0
-        rule_offsets = {}
-        # Build `rules` as a dictionary of rule IDs to their positions in `grammar_src`
+        rule_offsets = []
+        # Build `rules` as an array of rule IDs to their positions in `grammar_src`
         while self.grammar_encoding[_rule_offset] != 0xFFFF:
             rule_id = self.grammar_encoding[_rule_offset]
             # store the offset idx
+            if len(rule_offsets) <= rule_id:
+                rule_offsets.extend([-1] * (rule_id - len(rule_offsets) + 1))
             rule_offsets[rule_id] = _rule_offset
 
             # Skip rule ID
