@@ -12,15 +12,31 @@ from transformers_cfg.parser import (
 
 
 class GrammarRecognizer:
-    def __init__(self, grammar_encoding: List[int], start_rule_id: int):
+    def __init__(
+        self,
+        grammar_encoding: List[int],
+        start_rule_id: int = None,
+        rule_offsets: List[int] = None,
+        stacks: List[List[int]] = None,
+    ):
         # strictly speaking, we don't need to copy grammar_encoding because we don't modify it
         # but we do it anyway to be safe
         # in case where the grammar is very large, we can consider not copying it
-        self.grammar_encoding = copy.deepcopy(grammar_encoding)
-        self.rule_offsets: List[int] = self.init_rules(start_rule_id)
+        self.grammar_encoding = grammar_encoding
+        if rule_offsets is not None:
+            self.rule_offsets = rule_offsets
+        else:
+            if start_rule_id is None:
+                raise ValueError("start_rule_id cannot be None if rule_offsets is None")
+            self.rule_offsets = self.init_rules(start_rule_id)
         # each stack is a list of indices into grammar_encoding
         # each index points to a rule's
-        self.stacks: List[List[int]] = self.init_stack(start_rule_id)
+        if stacks is not None:
+            self.stacks = stacks
+        else:
+            if start_rule_id is None:
+                raise ValueError("start_rule_id cannot be None if stacks is None")
+            self.stacks: List[List[int]] = self.init_stack(start_rule_id)
 
     def init_rules(self, start_rule_id: int) -> List[int]:
         _rule_offset = 0
