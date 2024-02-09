@@ -11,6 +11,7 @@ class TestDecodeUTF8(unittest.TestCase):
         utf8_bytes = b"\xe2\x82\xac"  # Euro sign
         expected_code_points = [
             8364,
+            0,
         ]  # Euro sign code point followed by terminating 0
         result, _ = decode_utf8(utf8_bytes, PartialUTF8())
         self.assertEqual(result, expected_code_points)
@@ -28,14 +29,15 @@ class TestDecodeUTF8(unittest.TestCase):
             32,
             8364,
             33,
-        ]
+            0,
+        ]  # Including terminating 0
         result, _ = decode_utf8(utf8_bytes, PartialUTF8())
         self.assertEqual(result, expected_code_points)
 
     def test_handle_incomplete_sequence(self):
         """Test handling of an incomplete UTF-8 sequence."""
         utf8_bytes = b"\xe2"  # Incomplete sequence for the Euro sign
-        expected_code_points = []  # Expect a 0 due to incomplete sequence
+        expected_code_points = [0]  # Expect a 0 due to incomplete sequence
         result, partial = decode_utf8(utf8_bytes, PartialUTF8())
         self.assertEqual(result, expected_code_points)
         starting_value = int.from_bytes(b"\xe2", "big")  # 226
@@ -53,14 +55,15 @@ class TestDecodeUTF8(unittest.TestCase):
         )  # Simulate a previous state expecting 2 more bytes
         expected_code_points = [
             8364,
-        ]  # Completed Euro sign code point
+            0,
+        ]  # Completed Euro sign code point followed by terminating 0
         result, _ = decode_utf8(utf8_bytes, partial_start)
         self.assertEqual(result, expected_code_points)
 
     def test_empty_string(self):
         """Test handling of an empty string."""
         utf8_bytes = b""
-        expected_code_points = []
+        expected_code_points = [0]
         result, _ = decode_utf8(utf8_bytes, PartialUTF8())
         self.assertEqual(result, expected_code_points)
 
