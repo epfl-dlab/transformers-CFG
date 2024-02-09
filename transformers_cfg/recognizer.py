@@ -9,6 +9,7 @@ from transformers_cfg.parser import (
     parse_ebnf,
     REF_RULE_MARKER,
 )
+from transformers_cfg.utf8_utils import PartialUTF8
 
 
 class GrammarRecognizer:
@@ -105,12 +106,28 @@ class GrammarRecognizer:
 
             return new_stacks
 
-    def _consume_char(self, byte: int, stacks: List[List[int]]):
+    def _consume_byte_partial_match(
+        self, byte: int, stacks: List[List[int]], partial_utf8: PartialUTF8
+    ):
+        # suppose we have code point 一, ord('一') = 19968, we need to match 3 bytes
+        # we need to match 3 bytes, so we need to call _consume_byte_partial_match 3 times
+        raise NotImplementedError
+
+    def _consume_bytes_partial_match(
+        self, bytes: bytes, stacks: List[List[int]], partial_utf8: PartialUTF8
+    ):
+        raise NotImplementedError
+
+    def _consume_char(self, char_code_point: int, stacks: List[List[int]]):
+        """
+        consume a character from the stack
+        char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
+        """
         # TODO, the below code will raise an error when the stack is empty, but why is this happening?
         # if len(stacks) == 0:
         #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
-        # byte = 0 is a special case for EOS token, which should be handled by the _consume_token method
-        if byte == 0:
+        # code_point = 0 is a special case for EOS token, which should be handled by the _consume_token method
+        if char_code_point == 0:
             raise ValueError("byte cannot be 0")
         new_stacks = []
         for stack in stacks:
@@ -126,8 +143,8 @@ class GrammarRecognizer:
             found = False
             for i in range(0, size, 2):
                 if (
-                    self.grammar_encoding[element_offset + i] <= byte
-                    and byte <= self.grammar_encoding[element_offset + i + 1]
+                    self.grammar_encoding[element_offset + i] <= char_code_point
+                    and char_code_point <= self.grammar_encoding[element_offset + i + 1]
                 ):
                     found = True
                     break
