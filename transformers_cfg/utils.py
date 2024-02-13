@@ -40,7 +40,8 @@ def pprint_token_ids(tokenizer, token_ids=None, text=None):
             colored_token_ids.append(colored(token_id, "red", attrs=["bold"]))
         else:
             colored_token_ids.append(str(token_id))
-    print("[" + ", ".join(colored_token_ids) + "]")
+    colored_token_ids_str = [str(item) for item in colored_token_ids]
+    print("[" + ", ".join(colored_token_ids_str) + "]")
 
 
 def get_tokenizer_model_type(model: str = "gpt2"):
