@@ -261,9 +261,6 @@ class VanillaTokenGrammarRecognizer(AbsTokenGrammarRecognizer):
 if __name__ == "__main__":
     from transformers import AutoTokenizer
 
-    # set logging level
-    logging.basicConfig(level=logging.DEBUG)
-
     with open("examples/grammars/json.ebnf", "r") as file:
         input_text = file.read()
     parsed_grammar = parse_ebnf(input_text)

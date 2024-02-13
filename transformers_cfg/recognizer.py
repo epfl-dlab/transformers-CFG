@@ -192,7 +192,6 @@ class GrammarRecognizer:
 
 if __name__ == "__main__":
     # set logging level
-    logging.basicConfig(level=logging.DEBUG)
 
     with open("examples/grammars/debug/plus.ebnf", "r") as file:
         input_text = file.read()

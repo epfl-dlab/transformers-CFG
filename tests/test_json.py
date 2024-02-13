@@ -6,7 +6,6 @@ import logging
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import GrammarRecognizer
 
-# logging.basicConfig(level=logging.DEBUG)
 
 json_examples = {
     # Simple Nested Object
