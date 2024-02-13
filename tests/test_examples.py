@@ -16,10 +16,6 @@ class TestExampleScripts(unittest.TestCase):
             f"Script {path_to_script} failed with output:\n{result.stdout}\n{result.stderr}",
         )
 
-    @unittest.skipIf(
-        not os.environ.get("GITHUB_ACTIONS", False),
-        "Skipping example tests because they are slow for local testing",
-    )
     def test_all_example_scripts(self):
         """Test that all example scripts can be run without error."""
         for script_path in glob.glob("examples/*.py"):
