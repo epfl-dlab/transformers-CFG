@@ -1,5 +1,8 @@
 # 🤗 Transformers CFG
 
+![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 ## Latest News
 
 **Integration with Text-Generation-WebUI** (2023-12-17)
