@@ -89,8 +89,8 @@ def decode_utf8(
         if n_remain == 0:
             code_points.append(value)
 
-    # Append a terminating value to indicate the end (following llama-cpp implementation)
-    code_points.append(0)
+    # # Append a terminating value to indicate the end (following llama-cpp implementation)
+    # code_points.append(0)
 
     # Return the decoded code points and the state of any partial decoding
     return code_points, PartialUTF8(value, n_remain)
