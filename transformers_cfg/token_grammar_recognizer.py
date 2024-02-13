@@ -87,7 +87,7 @@ class AbsTokenGrammarRecognizer(ABC):
                     f"the stacks are {stacks}"
                 )
         for byte in self.mapping.map(token_id):
-            stacks = self.grammar._consume_char(byte, stacks)
+            stacks = self.grammar._consume_char_code_point(byte, stacks)
             # check updated stacks
             # TODO, I commented this out because it will fail when the stack is empty
             # empty stack means the end of the grammar
