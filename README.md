@@ -71,6 +71,7 @@ if __name__ == "__main__":
 
 ## Why should I use transformers-CFG?
 
+- We support EBNF grammar description format
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 
