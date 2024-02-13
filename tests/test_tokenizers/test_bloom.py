@@ -6,8 +6,6 @@ from tests._tokenizer_common import TokenizerTesterMixin
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class BloomTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 

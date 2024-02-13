@@ -507,6 +507,7 @@ def print_grammar(file, state):
 
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Parse EBNF grammar files.")
     parser.add_argument(
         "-g",
@@ -517,9 +518,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    # set logging level
-    logging.basicConfig(level=logging.DEBUG)
 
     with open(args.grammar_file, "r") as file:
         input_text = file.read()

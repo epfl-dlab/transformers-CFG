@@ -2,8 +2,10 @@
 # DATA STRUCTURES
 #################
 
-
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 LEAF = -1
 
@@ -56,7 +58,9 @@ class TokenTrie:
                 return bytes(token, "utf-8")
 
         else:
-            print("Warning: unrecognized tokenizer: using default token formatting")
+            logger.warning(
+                "Warning: unrecognized tokenizer: using default token formatting"
+            )
 
             def fmt_token(id):
                 token = tokenizer.convert_ids_to_tokens(id)

@@ -13,6 +13,9 @@ from transformers_cfg.parser import (
     parse_rhs,
     END_OF_ALTERNATE_MARKER,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Test(TestCase):
@@ -158,7 +161,7 @@ class Test(TestCase):
         parse_simple_rhs(
             state=state, rhs=rhs_src, rule_name="root", outbuf=outbuf, is_nested=False
         )
-        print(f"outbuf: {outbuf}")
+        logging.debug(f"outbuf: {outbuf}")
         self.assertEqual(
             END_OF_ALTERNATE_MARKER,
             outbuf[-1],
@@ -198,7 +201,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= "2" | null | "4"'
         rhs_src = '"2" | '
@@ -212,7 +215,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= "2" "3" "4"'
         rhs_src = '"2" "3" "4"'
@@ -226,7 +229,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= "234"'
         rhs_src = '"234"'
@@ -240,7 +243,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = "root ::= [234]"
         rhs_src = "[234]"
@@ -254,7 +257,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= [234] | "5"'
         rhs_src = '[234] | "5"'
@@ -268,7 +271,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= [234]"5"'
         rhs_src = '[234]"5"'
@@ -282,7 +285,7 @@ class Test(TestCase):
             state.grammar_encoding[0],
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
         src = 'root ::= ("2" | "3" | "4") | ("5" | "6" | "7")'
         rhs_src = '("2" | "3" | "4") | ("5" | "6" | "7")'
@@ -291,7 +294,7 @@ class Test(TestCase):
         _ = parse_rhs(
             state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
         )
-        print(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
+        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
 
     def test__parse_symbol_reference(self):
         state = ParseState()
@@ -323,8 +326,8 @@ class Test(TestCase):
     #     rhs_src = "(\"0\" | \"1\")"
     #     remaining_src = _parse_rhs_grouping(rhs_src, state=state, outbuf=outbuf,rule_name=name)
     #     self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
-    #     print(f"outbuf: {outbuf}")
-    #     print(f"grammar_encoding: {state.grammar_encoding}")
+    #     logging.debug(f"outbuf: {outbuf}")
+    #     logging.debug(f"grammar_encoding: {state.grammar_encoding}")
     #     import pdb; pdb.set_trace()
 
     # def test_parse_alternative_rhs(self):
@@ -339,7 +342,7 @@ class Test(TestCase):
     #
     #     remaining_src = parse_rhs(state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False)
     #     self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
-    #     print(f"grammar_encoding: {state.grammar_encoding}")
+    #     logging.debug(f"grammar_encoding: {state.grammar_encoding}")
     #     self.assertEqual(9, state.grammar_encoding[0], f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}")
     #
     #     # split the grammar encoding into parts separated by END_OF_SIMPLE_RULE_MARKER
@@ -360,43 +363,43 @@ class Test(TestCase):
         src = 'root ::= "a"+'
         # translated_src = "root ::= ([0-9] root) "
         # translated_src = "root ::= ([0-9] | [1-2]) | "
-        # print(f"\nsrc: {src}")
+        # logging.debug(f"\nsrc: {src}")
         outbuf = []
         name, _ = parse_name(src)
         state = ParseState()
         rhs_src = "[0-9]+"
         # remaining_src = _parse_rhs_char_ranges(rhs_src, outbuf)
         # last_sym_start = len(outbuf)
-        # print(f"outbuf after _parse_rhs_char_ranges: {outbuf}")
+        # logging.debug(f"outbuf after _parse_rhs_char_ranges: {outbuf}")
         # _parse_rhs_repetition_operators(remaining_src, state=state, outbuf=outbuf, rule_name=name, last_sym_start=last_sym_start)
-        # print(f"outbuf after _parse_rhs_repetition_operators: {outbuf}")
-        # print(f"grammar_encoding: {state.grammar_encoding}")
+        # logging.debug(f"outbuf after _parse_rhs_repetition_operators: {outbuf}")
+        # logging.debug(f"grammar_encoding: {state.grammar_encoding}")
         # # import pdb; pdb.set_trace()
-        # print("-" * 80)
+        # logging.debug("-" * 80)
 
         # state = parse_ebnf(src)
-        # print(f"parse_ebnf: {state.grammar_encoding}")
+        # logging.debug(f"parse_ebnf: {state.grammar_encoding}")
         # state = parse_ebnf(translated_src)
-        # print(f"parse_translated_ebnf: {state.grammar_encoding}")
+        # logging.debug(f"parse_translated_ebnf: {state.grammar_encoding}")
         # import pdb; pdb.set_trace()
-        # state.print()
+        # state.logging.debug()
         #
         # state = ParseState()
         # parse_rule(state=state, rule_text=src)
-        # print(f"parse_rule: {state.grammar_encoding}")
+        # logging.debug(f"parse_rule: {state.grammar_encoding}")
         #
         # state = ParseState()
         # parse_rhs(state=state, rhs=rhs_src, rule_name=name,rule_id=999, is_nested=True)
-        # print(f"parse_rhs: {state.grammar_encoding}")
-        # print(f"outbuf: {outbuf}")
+        # logging.debug(f"parse_rhs: {state.grammar_encoding}")
+        # logging.debug(f"outbuf: {outbuf}")
 
         state = ParseState()
         outbuf2 = []
         parse_simple_rhs(
             state=state, rhs=rhs_src, rule_name="root", outbuf=outbuf2, is_nested=True
         )
-        print(f"outbuf: {outbuf2}")
-        print(f"parse_simple_rhs: {state.grammar_encoding}")
+        logging.debug(f"outbuf: {outbuf2}")
+        logging.debug(f"parse_simple_rhs: {state.grammar_encoding}")
 
     # def test_plus_vs_star(self):
     #     src_plus = "root ::= [0-9]+"
@@ -413,5 +416,5 @@ class Test(TestCase):
     #     state = ParseState()
     #     rhs_src = "(\"0\" | \"1\")"
     #     _parse_rhs_grouping(rhs_src, state=state, outbuf=outbuf,rule_name=name)
-    #     print(f"outbuf: {outbuf}")
+    #     logging.debug(f"outbuf: {outbuf}")
     #     import pdb; pdb.set_trace()

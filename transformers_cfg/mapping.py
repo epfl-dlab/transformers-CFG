@@ -2,7 +2,6 @@ from transformers_cfg.utils import get_tokenizer_model_type
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
