@@ -4,6 +4,24 @@ import warnings
 from termcolor import colored
 
 
+def intervals_intersect(low1, high1, low2, high2):
+    """
+    Check if two intervals [low1, high1] and [low2, high2] intersect.
+
+    :param high1: High bound of the first interval.
+    :param low1: Low bound of the first interval.
+    :param high2: High bound of the second interval.
+    :param low2: Low bound of the second interval.
+    :return: True if the intervals intersect, False otherwise.
+    """
+    # Check if one interval is completely to the right of the other
+    if low1 > high2 or low2 > high1:
+        return False
+
+    # If the above condition is not met, the intervals intersect
+    return True
+
+
 def pprint_token_ids(tokenizer, token_ids=None, text=None):
     if token_ids is None and text is None:
         raise ValueError("Either token_ids or text should be provided")
@@ -22,7 +40,8 @@ def pprint_token_ids(tokenizer, token_ids=None, text=None):
             colored_token_ids.append(colored(token_id, "red", attrs=["bold"]))
         else:
             colored_token_ids.append(str(token_id))
-    print("[" + ", ".join(colored_token_ids) + "]")
+    colored_token_ids_str = [str(item) for item in colored_token_ids]
+    print("[" + ", ".join(colored_token_ids_str) + "]")
 
 
 def get_tokenizer_model_type(model: str = "gpt2"):

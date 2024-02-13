@@ -1,0 +1,6 @@
+# This contains the Emoticons Unicode block (U+1F600–U+1F64F) , which represents 80 emoticons(emoji)
+# that are commonly used in text messaging and social media. c.f. https://en.wikipedia.org/wiki/Emoticons_(Unicode_block)
+# This doesn't include the Miscellaneous Symbols and Pictographs block (U+1F300–U+1F5FF) and
+# the Supplemental Symbols and Pictographs block (U+1F900–U+1F9FF).
+root ::= emoji+
+emoji ::= [😀-🙏]

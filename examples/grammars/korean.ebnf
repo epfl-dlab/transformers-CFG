@@ -1,0 +1,5 @@
+root        ::= kr-char+ ([ \t\n] kr-char+)*
+kr-char     ::= hangul | hanja | punctuation
+hangul      ::= [가-힣]
+hanja       ::= [一-鿿]
+punctuation ::= [、-〾] | [!?.,;:()"'`]
