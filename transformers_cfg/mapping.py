@@ -1,5 +1,7 @@
-from transformers_cfg.utils import get_tokenizer_model_type
+from typing import Dict, List
 
+from transformers_cfg.utils import get_tokenizer_model_type, ints2bytes
+from transformers import AutoTokenizer
 import logging
 
 log = logging.getLogger(__name__)
@@ -131,3 +133,57 @@ class XGLMUniGramMapping(Mapping):
         super().__init__(tokenizer)
         self.bos_token_id = tokenizer.eos_token_id
         self.eos_token_id = None
+
+
+class ByteEncoding:
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.byte2char: Dict[int, str] = tokenizer.byte_encoder
+        self.char2byte: Dict[str, int] = tokenizer.byte_decoder
+        # code point to byte
+        self.cdp2byte: Dict[int, int] = {ord(c): b for c, b in self.char2byte.items()}
+        self.byte2cdp: Dict[int, int] = {v: k for k, v in self.cdp2byte.items()}
+
+    def map(self, byte: int) -> int:
+        assert 0 <= byte < 256, f"byte: {byte} is not in the range [0, 256)"
+        return ord(self.byte2char[byte])
+
+    def token_ids2bytes(self, token_ids: List[int]) -> bytes:
+        tokens: List[str] = self.tokenizer.convert_ids_to_tokens(token_ids)
+        bytes: List[List[int]] = [self._token2bytes(token) for token in tokens]
+        # join the bytes
+        return ints2bytes(sum(bytes, []))
+
+    def token_id2bytes(self, token_id: int) -> bytes:
+        token: str = self.tokenizer.convert_ids_to_tokens(token_id)
+        return self._token2bytes(token)
+
+    def _token2bytes(self, token: str) -> bytes:
+        bytes: List[int] = [self.char2byte[c] for c in token]
+        return bytes
+
+
+if __name__ == "__main__":
+    gpt2_tokenizer = AutoTokenizer.from_pretrained("gpt2", use_fast=True)
+
+    gpt2_tokenizer.encode("榴莲")
+    # [162, 99, 112, 164, 236, 110]
+
+    mapping = get_mapping(gpt2_tokenizer)
+
+    x = mapping.map(162)
+    # b'\xef\xbf\xbd'
+    x = mapping.map(99)
+
+    ##################################
+
+    gpt2_tokenizer = AutoTokenizer.from_pretrained("gpt2", use_fast=False)
+
+    token_ids = gpt2_tokenizer.encode("榴莲")
+
+    print(token_ids)
+    utf8_encoding = "榴莲".encode("utf-8")
+    print("utf8_encoding: ", utf8_encoding)
+    mapping = ByteEncoding(gpt2_tokenizer)
+    print(mapping.token_ids2bytes(token_ids))
+    # b'\xef\xbf\xbd'
