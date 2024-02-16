@@ -13,8 +13,6 @@ from transformers_cfg.utf8_utils import PartialUTF8, decode_utf8
 from transformers_cfg.utils import intervals_intersect
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class GrammarRecognizer:
     def __init__(
@@ -318,7 +316,6 @@ if __name__ == "__main__":
     with open("examples/grammars/japanese.ebnf", "r") as file:
         input_text = file.read()
     parsed_grammar = parse_ebnf(input_text)
-    parsed_grammar.logging.debug()
     logging.debug(f"symbol_ids: \n{parsed_grammar.symbol_table}")
 
     start_rule_id = parsed_grammar.symbol_table["root"]
