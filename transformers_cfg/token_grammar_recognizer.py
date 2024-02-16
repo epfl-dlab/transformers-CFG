@@ -86,8 +86,8 @@ class AbsTokenGrammarRecognizer(ABC):
                     f"At least one of the stack should be empty when EOS is reached. However, "
                     f"the stacks are {stacks}"
                 )
-        for byte in self.mapping.map(token_id):
-            stacks = self.grammar._consume_char_code_point(byte, stacks)
+        for code_point in self.mapping.map(token_id):
+            stacks = self.grammar._consume_char_code_point(code_point, stacks)
             # check updated stacks
             # TODO, I commented this out because it will fail when the stack is empty
             # empty stack means the end of the grammar
