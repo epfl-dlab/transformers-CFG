@@ -8,8 +8,6 @@ from tests.json_utils import is_json_parsable
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class TestUnicode(TestCase):
     def test_accept_japanese(self):
