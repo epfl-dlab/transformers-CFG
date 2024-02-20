@@ -200,7 +200,8 @@ class GrammarRecognizer:
                 new_new_stacks.append(stack)
         return AcceptState(new_new_stacks, new_partial_utf8)
 
-    def _consume_char_code_point(self, char_code_point: int, stacks: List[List[int]]):
+    @lru_cache(maxsize=30000)
+    def _consume_char_code_point(self, char_code_point: int, stacks: Tuple[Tuple[int]]):
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
@@ -211,6 +212,8 @@ class GrammarRecognizer:
         # code_point = 0 is a special case when the uf8 sequence is not complete, we return an empty stack
         # to indicate that the character is not accepted
         new_stacks = []
+
+        stacks: List[List[int]] = list([list(stack) for stack in stacks])
 
         mode = "new"
 
@@ -345,7 +348,9 @@ class GrammarRecognizer:
         return False
 
     def _accept_char_code_point(self, code_point: int, stacks: List[List[int]]):
-        new_stacks = self._consume_char_code_point(code_point, stacks)
+        # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
+        tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+        new_stacks = self._consume_char_code_point(code_point, tuple_stacks)
         return len(new_stacks) > 0
 
     def _consume_string(self, string: str, accept_state: AcceptState):
@@ -358,7 +363,8 @@ class GrammarRecognizer:
         self, code_points: List[int], stacks: List[List[int]], verbose=False
     ):
         for i, code_point in enumerate(code_points):
-            stacks = self._consume_char_code_point(code_point, stacks)
+            tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+            stacks = self._consume_char_code_point(code_point, tuple_stacks)
             if len(stacks) > 0 and verbose:
                 accepted_code_point = code_points[: i + 1]
                 corresponding_char = chr(code_point)
