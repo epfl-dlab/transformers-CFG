@@ -27,10 +27,20 @@ class PartialUTF8:
         -1
     )  # Default to -1, indicating no bytes are currently expected to complete the character
 
+    def __hash__(self):
+        return hash((self.value, self.n_remain))
+
+    def __eq__(self, other):
+        if not isinstance(other, PartialUTF8):
+            return NotImplemented
+        return self.value == other.value and self.n_remain == other.n_remain
+
 
 from typing import List, Tuple
+from functools import lru_cache
 
 
+@lru_cache(maxsize=3000000)
 def decode_utf8(
     src: bytes, partial_start: PartialUTF8
 ) -> Tuple[List[int], PartialUTF8]:
@@ -47,9 +57,8 @@ def decode_utf8(
         # Check if the continuation byte format is correct (`10xxxxxx`)
         if (next_byte >> 6) != 2:
             # If not, it's an invalid sequence. Abort and return a special error state.
-            # code_points.append(0)
-            raise ValueError("Invalid UTF-8 sequence")
-            # return (code_points, PartialUTF8(0, -1))
+            code_points = [0]
+            return code_points, PartialUTF8(0, -1)
 
         # Accumulate the value by shifting left and adding the relevant 6 bits
         value = (value << 6) + (next_byte & 0x3F)
@@ -68,9 +77,9 @@ def decode_utf8(
 
         # If lookup returns an invalid number, it's an invalid sequence. Abort.
         if n_remain < 0:
-            raise ValueError("Invalid UTF-8 sequence")
-            # code_points = [0]
-            # return (code_points, PartialUTF8(0, n_remain))
+            # raise ValueError("Invalid UTF-8 sequence")
+            code_points = [0]
+            return code_points, PartialUTF8(0, -1)
 
         # Calculate the mask to isolate significant bits from the first byte
         mask = (1 << (7 - n_remain)) - 1

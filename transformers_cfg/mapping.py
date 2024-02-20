@@ -28,6 +28,13 @@ def get_mapping(tokenizer):
         raise ValueError(f"Unknown tokenizer type: {tokenizer.__class__.__name__}")
 
 
+def get_intermediate_encoding(tokenizer):
+    if "gpt2" in tokenizer.__class__.__name__.lower():
+        return ByteEncoding(tokenizer)
+    else:
+        return None
+
+
 class Mapping:
     def __init__(self, tokenizer):
         self.eos_token_id = tokenizer.eos_token_id
@@ -45,24 +52,32 @@ class Mapping:
         # if token_id is tensor, convert it to int
         if hasattr(token_id, "item"):
             token_id = token_id.item()
-        raw_token = self.tokenizer.decode(token_id)
+        raw_token = self.tokenizer.convert_ids_to_tokens(token_id)
         return raw_token
 
-    def map(self, token_id: int) -> bytes:
+    def map(self, token_id: int, verbose=False) -> bytes:
         token = self._map(token_id)
-        log.debug(f"token_id: {token_id}, token: {token}")
+        if verbose:
+            log.debug(f"token_id: {token_id}, token: {token}")
         return bytes(token, "utf-8")
 
 
 class BBPEMapping(Mapping):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.intermediate_encoding = get_intermediate_encoding(self.tokenizer)
 
-    def _map(self, token_id: int) -> str:
+    def _map(self, token_id: int, verbose=False) -> str:
         raw_token = super()._map(token_id)
-        if raw_token.startswith("Ġ"):
-            raw_token = raw_token.replace("Ġ", " ")
+        # if raw_token.startswith("Ġ"):
+        #     raw_token = raw_token.replace("Ġ", " ")
         return raw_token
+
+    def map(self, token_id: int, verbose=False) -> bytes:
+        raw_token = self._map(token_id, verbose)
+        if verbose:
+            log.debug(f"token_id: {token_id}, raw_token: {raw_token}")
+        return self.intermediate_encoding.token2bytes(raw_token)
 
 
 class BPEMapping(Mapping):
@@ -137,6 +152,11 @@ class XGLMUniGramMapping(Mapping):
 
 class ByteEncoding:
     def __init__(self, tokenizer):
+        # check if the tokenizer is fast, if so, convert it to slow
+        if tokenizer.is_fast:
+            tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer.name_or_path, use_fast=False
+            )
         self.tokenizer = tokenizer
         self.byte2char: Dict[int, str] = tokenizer.byte_encoder
         self.char2byte: Dict[str, int] = tokenizer.byte_decoder
@@ -150,17 +170,23 @@ class ByteEncoding:
 
     def token_ids2bytes(self, token_ids: List[int]) -> bytes:
         tokens: List[str] = self.tokenizer.convert_ids_to_tokens(token_ids)
-        bytes: List[List[int]] = [self._token2bytes(token) for token in tokens]
+        # for token id = BOS, the token should be empty string instead of <s>
+        # TODO, this may cause issues because this means that special tokens like BOS can appear at any position
+        tokens = [
+            "" if token in self.tokenizer.all_special_ids else token for token in tokens
+        ]
+        bytes: List[List[int]] = [self.token2bytes(token) for token in tokens]
         # join the bytes
         return ints2bytes(sum(bytes, []))
 
     def token_id2bytes(self, token_id: int) -> bytes:
         token: str = self.tokenizer.convert_ids_to_tokens(token_id)
-        return self._token2bytes(token)
+        return self.token2bytes(token)
 
-    def _token2bytes(self, token: str) -> bytes:
-        bytes: List[int] = [self.char2byte[c] for c in token]
-        return bytes
+    def token2bytes(self, token: str) -> bytes:
+        # import pdb; pdb.set_trace()
+        bytes_seq: List[int] = [self.char2byte[c] for c in token]
+        return bytes(bytes_seq)
 
 
 if __name__ == "__main__":
@@ -187,3 +213,7 @@ if __name__ == "__main__":
     mapping = ByteEncoding(gpt2_tokenizer)
     print(mapping.token_ids2bytes(token_ids))
     # b'\xef\xbf\xbd'
+
+    ###################################
+
+    gpt2_tokenizer.encode("´")

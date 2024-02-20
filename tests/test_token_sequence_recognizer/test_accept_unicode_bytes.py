@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
 
 from transformers_cfg.parser import parse_ebnf
 from tests.json_utils import is_json_parsable
@@ -32,14 +32,12 @@ class TestUnicode(TestCase):
         )
         # こんにちは世界
 
-        partial_utf8 = PartialUTF8()
         head_bytes = bytes_japanese[:8]
         # partial_utf8 = PartialUTF8()
-        new_stacks, new_partial_utf8 = recognizer._consume_bytes_partial_match(
-            head_bytes, recognizer.stacks, partial_utf8
-        )
+        accept_state = recognizer._consume_bytes_partial_match(head_bytes)
+
         # non empty stack means that the bytes were accepted
-        self.assertTrue(len(new_stacks) > 0)
+        self.assertTrue(len(accept_state.stacks) > 0)
 
     def test_accept_japanese_progressive(self):
         #######################
@@ -64,13 +62,12 @@ class TestUnicode(TestCase):
         # cast into bytes
         byte_tokens = [bytes([byte]) for byte in byte_tokens]
 
-        new_partial_utf8 = PartialUTF8()
-        new_stacks = recognizer.stacks
+        accept_state = recognizer.init_accept_state()
+
+        # accept_state = recognizer.init_accept_state
         for i, byte in enumerate(byte_tokens):
-            new_stacks, new_partial_utf8 = recognizer._consume_bytes_partial_match(
-                byte, new_stacks, new_partial_utf8
-            )
-            self.assertTrue(len(new_stacks) > 0)
+            accept_state = recognizer._consume_bytes_partial_match(byte, accept_state)
+            self.assertTrue(len(accept_state.stacks) > 0)
 
     def test_accept_emoji(self):
         """
@@ -90,10 +87,7 @@ class TestUnicode(TestCase):
         logging.debug(f"bytes_emoji: {bytes_emoji} of length {len(bytes_emoji)}")
         # 😀😄😂
 
-        partial_utf8 = PartialUTF8()
         # partial_utf8 = PartialUTF8()
-        new_stacks, new_partial_utf8 = recognizer._consume_bytes_partial_match(
-            bytes_emoji, recognizer.stacks, partial_utf8
-        )
+        accept_state = recognizer._consume_bytes_partial_match(bytes_emoji)
         # non empty stack means that the bytes were accepted
-        self.assertTrue(len(new_stacks) > 0)
+        self.assertTrue(len(accept_state.stacks) > 0)
