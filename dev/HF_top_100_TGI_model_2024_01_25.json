@@ -1,0 +1,502 @@
+[
+  {
+    "id": "gpt2",
+    "likes": 1611,
+    "downloads": 19783506
+  },
+  {
+    "id": "baffo32/decapoda-research-llama-7B-hf",
+    "likes": 20,
+    "downloads": 6589820
+  },
+  {
+    "id": "distilgpt2",
+    "likes": 310,
+    "downloads": 2089200
+  },
+  {
+    "id": "tiiuae/falcon-40b-instruct",
+    "likes": 1139,
+    "downloads": 1301880
+  },
+  {
+    "id": "bigscience/bloom-560m",
+    "likes": 304,
+    "downloads": 1180667
+  },
+  {
+    "id": "meta-llama/Llama-2-7b-chat-hf",
+    "likes": 2499,
+    "downloads": 772056
+  },
+  {
+    "id": "mistralai/Mistral-7B-v0.1",
+    "likes": 2644,
+    "downloads": 646365
+  },
+  {
+    "id": "teknium/OpenHermes-2-Mistral-7B",
+    "likes": 230,
+    "downloads": 636989
+  },
+  {
+    "id": "davidkim205/komt-mistral-7b-v1",
+    "likes": 19,
+    "downloads": 631243
+  },
+  {
+    "id": "h2oai/h2ogpt-4096-llama2-7b-chat",
+    "likes": 12,
+    "downloads": 582804
+  },
+  {
+    "id": "meta-llama/Llama-2-7b-hf",
+    "likes": 1034,
+    "downloads": 547926
+  },
+  {
+    "id": "microsoft/git-base",
+    "likes": 33,
+    "downloads": 418664
+  },
+  {
+    "id": "facebook/opt-125m",
+    "likes": 95,
+    "downloads": 418198
+  },
+  {
+    "id": "openai-community/gpt2-large",
+    "likes": 192,
+    "downloads": 369847
+  },
+  {
+    "id": "HuggingFaceM4/tiny-random-LlamaForCausalLM",
+    "likes": 13,
+    "downloads": 358474
+  },
+  {
+    "id": "lmsys/vicuna-7b-v1.5",
+    "likes": 157,
+    "downloads": 334666
+  },
+  {
+    "id": "TinyPixel/Llama-2-7B-bf16-sharded",
+    "likes": 60,
+    "downloads": 328763
+  },
+  {
+    "id": "openai-community/gpt2-xl",
+    "likes": 236,
+    "downloads": 325584
+  },
+  {
+    "id": "openai-community/gpt2-medium",
+    "likes": 104,
+    "downloads": 324203
+  },
+  {
+    "id": "OpenAssistant/llama2-13b-orca-8k-3319",
+    "likes": 124,
+    "downloads": 324061
+  },
+  {
+    "id": "mistralai/Mistral-7B-Instruct-v0.2",
+    "likes": 716,
+    "downloads": 318196
+  },
+  {
+    "id": "nightdessert/WeCheck",
+    "likes": 2,
+    "downloads": 312690
+  },
+  {
+    "id": "meta-llama/Llama-2-13b-chat-hf",
+    "likes": 803,
+    "downloads": 307418
+  },
+  {
+    "id": "mistralai/Mistral-7B-Instruct-v0.1",
+    "likes": 1280,
+    "downloads": 285324
+  },
+  {
+    "id": "EleutherAI/gpt-neo-125m",
+    "likes": 148,
+    "downloads": 276880
+  },
+  {
+    "id": "tiiuae/falcon-7b-instruct",
+    "likes": 810,
+    "downloads": 272627
+  },
+  {
+    "id": "microsoft/DialoGPT-medium",
+    "likes": 267,
+    "downloads": 266911
+  },
+  {
+    "id": "NousResearch/Llama-2-7b-chat-hf",
+    "likes": 95,
+    "downloads": 247674
+  },
+  {
+    "id": "NousResearch/Nous-Hermes-Llama2-13b",
+    "likes": 265,
+    "downloads": 239862
+  },
+  {
+    "id": "nferruz/ProtGPT2",
+    "likes": 71,
+    "downloads": 231499
+  },
+  {
+    "id": "EleutherAI/pythia-160m-deduped",
+    "likes": 2,
+    "downloads": 215823
+  },
+  {
+    "id": "xlnet/xlnet-base-cased",
+    "likes": 49,
+    "downloads": 215020
+  },
+  {
+    "id": "HuggingFaceH4/zephyr-7b-beta",
+    "likes": 1212,
+    "downloads": 200407
+  },
+  {
+    "id": "sshleifer/tiny-gpt2",
+    "likes": 19,
+    "downloads": 199368
+  },
+  {
+    "id": "TheBloke/Llama-2-13B-chat-GPTQ",
+    "likes": 332,
+    "downloads": 178841
+  },
+  {
+    "id": "tiiuae/falcon-7b",
+    "likes": 973,
+    "downloads": 170254
+  },
+  {
+    "id": "facebook/opt-2.7b",
+    "likes": 54,
+    "downloads": 170248
+  },
+  {
+    "id": "tiiuae/falcon-rw-1b",
+    "likes": 84,
+    "downloads": 168074
+  },
+  {
+    "id": "meta-llama/Llama-2-70b-chat-hf",
+    "likes": 1865,
+    "downloads": 157023
+  },
+  {
+    "id": "EleutherAI/gpt-neo-1.3B",
+    "likes": 219,
+    "downloads": 155198
+  },
+  {
+    "id": "NousResearch/Llama-2-7b-hf",
+    "likes": 105,
+    "downloads": 154817
+  },
+  {
+    "id": "echarlaix/tiny-random-mistral",
+    "likes": 1,
+    "downloads": 142910
+  },
+  {
+    "id": "NousResearch/Yarn-Mistral-7b-128k",
+    "likes": 507,
+    "downloads": 141245
+  },
+  {
+    "id": "EleutherAI/gpt-j-6b",
+    "likes": 1338,
+    "downloads": 139777
+  },
+  {
+    "id": "fxmarty/tiny-llama-fast-tokenizer",
+    "likes": 9,
+    "downloads": 133434
+  },
+  {
+    "id": "meta-llama/Llama-2-13b-hf",
+    "likes": 479,
+    "downloads": 129457
+  },
+  {
+    "id": "microsoft/DialoGPT-large",
+    "likes": 238,
+    "downloads": 123120
+  },
+  {
+    "id": "liuhaotian/llava-v1.5-7b",
+    "likes": 189,
+    "downloads": 120738
+  },
+  {
+    "id": "facebook/opt-350m",
+    "likes": 100,
+    "downloads": 118598
+  },
+  {
+    "id": "EleutherAI/gpt-neo-2.7B",
+    "likes": 371,
+    "downloads": 112405
+  },
+  {
+    "id": "fxmarty/really-tiny-falcon-testing",
+    "likes": 0,
+    "downloads": 112331
+  },
+  {
+    "id": "Gryphe/MythoMax-L2-13b",
+    "likes": 193,
+    "downloads": 108150
+  },
+  {
+    "id": "TheBloke/Llama-2-7B-Chat-GPTQ",
+    "likes": 213,
+    "downloads": 97770
+  },
+  {
+    "id": "Open-Orca/Mistral-7B-OpenOrca",
+    "likes": 575,
+    "downloads": 93009
+  },
+  {
+    "id": "cognitivecomputations/dolphin-2.2.1-mistral-7b",
+    "likes": 156,
+    "downloads": 92449
+  },
+  {
+    "id": "DiscoResearch/mixtral-7b-8expert",
+    "likes": 257,
+    "downloads": 88004
+  },
+  {
+    "id": "lmsys/vicuna-13b-v1.5",
+    "likes": 149,
+    "downloads": 85903
+  },
+  {
+    "id": "huggyllama/llama-7b",
+    "likes": 239,
+    "downloads": 83980
+  },
+  {
+    "id": "TinyPixel/CodeLlama-7B-Python-bf16-sharded",
+    "likes": 0,
+    "downloads": 83760
+  },
+  {
+    "id": "bigscience/bloomz-560m",
+    "likes": 89,
+    "downloads": 82834
+  },
+  {
+    "id": "bigscience/bloom-7b1",
+    "likes": 166,
+    "downloads": 82033
+  },
+  {
+    "id": "bigscience/bloom-1b1",
+    "likes": 49,
+    "downloads": 81966
+  },
+  {
+    "id": "HuggingFaceH4/zephyr-7b-alpha",
+    "likes": 1027,
+    "downloads": 79074
+  },
+  {
+    "id": "bigscience/bloom-1b7",
+    "likes": 105,
+    "downloads": 77401
+  },
+  {
+    "id": "Riiid/sheep-duck-llama-2",
+    "likes": 32,
+    "downloads": 77390
+  },
+  {
+    "id": "microsoft/biogpt",
+    "likes": 189,
+    "downloads": 77134
+  },
+  {
+    "id": "liuhaotian/llava-v1.5-13b",
+    "likes": 369,
+    "downloads": 74956
+  },
+  {
+    "id": "togethercomputer/GPT-JT-6B-v1",
+    "likes": 304,
+    "downloads": 73645
+  },
+  {
+    "id": "facebook/opt-1.3b",
+    "likes": 129,
+    "downloads": 71648
+  },
+  {
+    "id": "togethercomputer/LLaMA-2-7B-32K",
+    "likes": 493,
+    "downloads": 70122
+  },
+  {
+    "id": "teknium/OpenHermes-2.5-Mistral-7B",
+    "likes": 565,
+    "downloads": 66833
+  },
+  {
+    "id": "mosaicml/mpt-7b",
+    "likes": 1118,
+    "downloads": 66399
+  },
+  {
+    "id": "bigscience/bloomz-3b",
+    "likes": 73,
+    "downloads": 65728
+  },
+  {
+    "id": "JackFram/llama-68m",
+    "likes": 7,
+    "downloads": 65656
+  },
+  {
+    "id": "microsoft/phi-1_5",
+    "likes": 1198,
+    "downloads": 65189
+  },
+  {
+    "id": "facebook/opt-13b",
+    "likes": 62,
+    "downloads": 64779
+  },
+  {
+    "id": "meta-llama/Llama-2-70b-hf",
+    "likes": 733,
+    "downloads": 61701
+  },
+  {
+    "id": "openlm-research/open_llama_7b_v2",
+    "likes": 101,
+    "downloads": 61588
+  },
+  {
+    "id": "bigscience/bloom-3b",
+    "likes": 77,
+    "downloads": 61293
+  },
+  {
+    "id": "KoboldAI/GPT-J-6B-Janeway",
+    "likes": 11,
+    "downloads": 60981
+  },
+  {
+    "id": "bigscience/bloomz-7b1",
+    "likes": 117,
+    "downloads": 60663
+  },
+  {
+    "id": "TinyLlama/TinyLlama-1.1B-Chat-v0.3",
+    "likes": 37,
+    "downloads": 60628
+  },
+  {
+    "id": "NousResearch/Nous-Hermes-llama-2-7b",
+    "likes": 59,
+    "downloads": 60604
+  },
+  {
+    "id": "TheBloke/Llama-2-7B-Chat-AWQ",
+    "likes": 11,
+    "downloads": 60558
+  },
+  {
+    "id": "KoboldAI/OPT-6B-nerys-v2",
+    "likes": 21,
+    "downloads": 60104
+  },
+  {
+    "id": "succinctly/text2image-prompt-generator",
+    "likes": 249,
+    "downloads": 59765
+  },
+  {
+    "id": "garage-bAInd/Platypus2-7B",
+    "likes": 4,
+    "downloads": 59733
+  },
+  {
+    "id": "EleutherAI/pythia-70m-deduped",
+    "likes": 20,
+    "downloads": 59199
+  },
+  {
+    "id": "Vamsi/T5_Paraphrase_Paws",
+    "likes": 26,
+    "downloads": 58775
+  },
+  {
+    "id": "h2oai/h2ogpt-4096-llama2-13b-chat",
+    "likes": 11,
+    "downloads": 58708
+  },
+  {
+    "id": "TinyLlama/TinyLlama-1.1B-intermediate-step-715k-1.5T",
+    "likes": 55,
+    "downloads": 57071
+  },
+  {
+    "id": "KoboldAI/OPT-13B-Erebus",
+    "likes": 175,
+    "downloads": 57037
+  },
+  {
+    "id": "togethercomputer/Llama-2-7B-32K-Instruct",
+    "likes": 152,
+    "downloads": 56951
+  },
+  {
+    "id": "TheBloke/Llama-2-7B-GPTQ",
+    "likes": 70,
+    "downloads": 56312
+  },
+  {
+    "id": "LeoLM/leo-hessianai-7b",
+    "likes": 32,
+    "downloads": 54750
+  },
+  {
+    "id": "facebook/xglm-564M",
+    "likes": 33,
+    "downloads": 54643
+  },
+  {
+    "id": "trl-internal-testing/tiny-random-GPTNeoXForCausalLM",
+    "likes": 0,
+    "downloads": 53768
+  },
+  {
+    "id": "KoboldAI/OPT-6.7B-Erebus",
+    "likes": 86,
+    "downloads": 53560
+  },
+  {
+    "id": "bigscience/bloomz-1b1",
+    "likes": 30,
+    "downloads": 53289
+  },
+  {
+    "id": "ai-forever/mGPT",
+    "likes": 203,
+    "downloads": 53113
+  }
+]

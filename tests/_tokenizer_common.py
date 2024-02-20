@@ -58,11 +58,50 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        stacks = JsontokenRecognizer._consume_token_ids(
-            token_ids, JsontokenRecognizer.grammar.stacks, as_string=False
-        )
+        acc_state = JsontokenRecognizer._consume_token_ids(token_ids, as_string=False)
         # the json object is complete, so the stacks should be empty
-        self.assertTrue(stacks == [] or stacks == [[]], f"stacks: {stacks}, not empty")
+        self.assertTrue(
+            acc_state.stacks == [] or acc_state.stacks == [[]],
+            f"stacks: {acc_state.stacks}, not empty",
+        )
+
+    def test_balanced_parentheses(self):
+        # Test that we can recognize a balanced parentheses
+        with open("examples/grammars/balanced_parentheses.ebnf", "r") as file:
+            input_text = file.read()
+        recognizer = IncrementalTokenGrammarRecognizer(
+            grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
+        )
+
+        balanced_parentheses = "((((((((()))))))))"
+        token_ids = self.tokenizer.encode(balanced_parentheses)
+        pprint_token_ids(self.tokenizer, token_ids)
+
+        # check if there is unk token
+        for token_id in token_ids:
+            if token_id == self.tokenizer.unk_token_id:
+                warnings.warn(
+                    f"unk token found in input_token_ids: {token_ids}, skipping test"
+                )
+                return
+
+        accept_state = recognizer._consume_token_ids(token_ids, as_string=False)
+        # the json object is complete, so the stacks should be empty
+        self.assertTrue(
+            accept_state.stacks == [] or accept_state.stacks == [[]],
+            f"stacks: {accept_state.stacks}, not empty",
+        )
+
+        # inbalanced_parentheses = "((((((((()))))))))))))"
+        # token_ids = self.tokenizer.encode(inbalanced_parentheses)
+        # pprint_token_ids(self.tokenizer, token_ids)
+        #
+        # # check if there is unk token
+        # stacks = recognizer._consume_token_ids(
+        #     token_ids, recognizer.grammar.stacks, as_string=False
+        # )
+        #
+        # self.assertTrue(stacks != [] and stacks != [[]], f"stacks: {stacks}, empty")
 
     @unittest.skip("Not implemented")
     def test_emoji(self):

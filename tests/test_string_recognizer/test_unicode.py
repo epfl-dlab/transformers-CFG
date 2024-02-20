@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
 
 from transformers_cfg.parser import parse_ebnf
 from tests.json_utils import is_json_parsable
@@ -24,7 +24,9 @@ class TestUnicode(TestCase):
 
         recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        self.assertTrue(recognizer._accept_string(japanese, recognizer.stacks))
+        # accept_state = AcceptState.empty_state()
+
+        self.assertTrue(recognizer._accept_string(japanese))
 
     def test_emoji(self):
         """
@@ -40,4 +42,4 @@ class TestUnicode(TestCase):
 
         recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        self.assertTrue(recognizer._accept_string(emoji, recognizer.stacks))
+        self.assertTrue(recognizer._accept_string(emoji))

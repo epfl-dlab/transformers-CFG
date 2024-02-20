@@ -18,7 +18,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
     def __init__(self, grammar_constraint, parse_start_index=None):
         self.last_size = None
         self.grammar_constraint = grammar_constraint
-        self.batch_stacks = None
+        self.batch_accept_states = None
         self.parse_start_index = None
 
     def mask_logits(self, logits, device):
@@ -26,7 +26,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # indicating acceptance
         # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
         acceptance = self.grammar_constraint.batch_filter_vocab(
-            self.batch_stacks, device
+            self.batch_accept_states, device
         )
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
@@ -64,10 +64,10 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         :return:
         """
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
-        if self.batch_stacks is None:
-            self.batch_stacks = [
+        if self.batch_accept_states is None:
+            self.batch_accept_states = [
                 # self.grammar_constraint.init_stacks()
-                copy.deepcopy(self.grammar_constraint.grammar.stacks)
+                copy.deepcopy(self.grammar_constraint.grammar.init_accept_state())
                 for _ in range(len(input_ids))
             ]
 
@@ -79,12 +79,14 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         logger.debug("last_size: \n" + pprint.pformat(self.last_size))
         logger.debug(
             "num of stacks: \n"
-            + pprint.pformat([len(stack) for stack in self.batch_stacks])
+            + pprint.pformat(
+                [len(acc_state.stacks) for acc_state in self.batch_accept_states]
+            )
         )
-        logger.debug("stacks: \n" + pprint.pformat(self.batch_stacks))
+        # logger.debug("stacks: \n" + pprint.pformat(self.batch_accept_states.stacks))
 
-        self.batch_stacks = self.grammar_constraint.advance_token_ids(
-            input_ids, self.batch_stacks, self.parse_start_index
+        self.batch_accept_states = self.grammar_constraint.advance_token_ids(
+            input_ids, self.batch_accept_states, self.parse_start_index
         )
 
         self.mask_logits(scores, scores.device)
