@@ -158,16 +158,18 @@ class AbsTokenGrammarRecognizer(ABC):
             ]
         )
         # Merge stacks: any True => True
-        # acceptance_3 = acceptance_matrix.reshape(len(accept_state.stacks), -1).any(dim=0)
+        acceptance_3 = acceptance_matrix.reshape(len(accept_state.stacks), -1).any(
+            dim=0
+        )
         # elif mode == "trie":
-        acceptance_2 = self.check_token_acceptance(accept_state, device)
+        # acceptance_2 = self.check_token_acceptance(accept_state, device)
         # # else:
         #     acceptance_1 = self.check_token_acceptance_old(accept_state, device)
         #     assert torch.equal(acceptance_1, acceptance_2), f"acceptance_1: {acceptance_1}, acceptance_2: {acceptance_2}"
         # assert torch.equal(acceptance_2, acceptance_3), f"acceptance_2: {acceptance_2}, acceptance_3: {acceptance_3}"
 
         # logger.debug(f"sum of acceptance: {acceptance.sum()}")
-        return acceptance_2
+        return acceptance_3
 
     # Probably this should be configurable. If the grammar has an exceedingly
     # large number of states, the correct setting is a tradeoff between GPU
@@ -254,7 +256,7 @@ class AbsTokenGrammarRecognizer(ABC):
         return x_eos
 
     def _check_eos_token_acceptance(self, acceptance: torch.Tensor) -> torch.Tensor:
-        if any(acceptance) == 0:
+        if torch.any(acceptance) == 0:
             acceptance[self.eos_token_id] = True
         else:
             if acceptance[self.eos_token_id]:

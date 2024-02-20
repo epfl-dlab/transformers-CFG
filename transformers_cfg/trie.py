@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from typing import Dict, List, Tuple
 from collections import deque
 
@@ -62,6 +63,7 @@ class Trie:
             trie.insert(byte_repr, token_id)
         return trie
 
+    @lru_cache(maxsize=128)
     def __len__(self):
         return len(self.dfs(verbose=False))
 

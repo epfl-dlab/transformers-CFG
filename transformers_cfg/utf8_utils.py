@@ -100,6 +100,10 @@ def decode_utf8(
 
     # # Append a terminating value to indicate the end (following llama-cpp implementation)
     # code_points.append(0)
+    # the following line is crucial for LRU cache to work, as it reset to the initial state
+    if n_remain == 0:
+        n_remain = -1
+        value = 0
 
     # Return the decoded code points and the state of any partial decoding
     return code_points, PartialUTF8(value, n_remain)
