@@ -4,7 +4,7 @@ from json import loads
 import json
 import logging
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
 from tests.json_utils import is_json_parsable
 
 
@@ -51,16 +51,19 @@ class Test_parsing_json_object(TestCase):
         """
         json = '{"foo": "bar", "baz": "bat"}'
 
+        # accept_state = AcceptState.empty_state()
+
         self.assertEqual(
             is_json_parsable(json),
-            self.recognizer._accept_string(json, self.recognizer.stacks),
+            self.recognizer._accept_string(json),
         )
 
     def test_systematic_examples(self):
 
         for name, json_object in json_examples.items():
+            # accept_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json_object),
-                self.recognizer._accept_string(json_object, self.recognizer.stacks),
+                self.recognizer._accept_string(json_object),
                 msg=f"Failed on {name}, {json_object}",
             )

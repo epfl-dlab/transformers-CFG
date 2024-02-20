@@ -7,7 +7,7 @@ import logging
 from tests.json_utils import is_json_parsable
 
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
 
 
 class TestJsonArray(TestCase):
@@ -31,8 +31,9 @@ class TestJsonArray(TestCase):
         recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         for json in jsons:
+            # accept_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json),
-                recognizer._accept_string(json, recognizer.stacks),
+                recognizer._accept_string(json),
                 f"Failed on {json}",
             )

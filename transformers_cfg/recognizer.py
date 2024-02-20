@@ -14,14 +14,24 @@ from transformers_cfg.utils import intervals_intersect
 import logging
 
 
+class AcceptState:
+    def __init__(self, stacks, partial_utf8):
+        self.stacks = stacks
+        self.partial_utf8 = partial_utf8
+
+    @staticmethod
+    def empty_state():
+        return AcceptState([], PartialUTF8())
+
+
 class GrammarRecognizer:
+    # TODO, rename to Recognizer
     def __init__(
         self,
         grammar_encoding: List[int],
         start_rule_id: int = None,
         rule_offsets: List[int] = None,
         stacks: List[List[int]] = None,
-        partial_utf8: PartialUTF8 = None,
     ):
         # strictly speaking, we don't need to copy grammar_encoding because we don't modify it
         # but we do it anyway to be safe
@@ -41,7 +51,7 @@ class GrammarRecognizer:
             if start_rule_id is None:
                 raise ValueError("start_rule_id cannot be None if stacks is None")
             self.stacks: List[List[int]] = self.init_stack(start_rule_id)
-        self.partial_utf8 = partial_utf8
+        self.start_rule_id = start_rule_id
 
     def init_rules(self, start_rule_id: int) -> List[int]:
         _rule_offset = 0
@@ -88,6 +98,9 @@ class GrammarRecognizer:
             sub_rhs_offset += 1 + self.grammar_encoding[sub_rhs_offset]
         return stacks
 
+    def init_accept_state(self) -> AcceptState:
+        return AcceptState(self.init_stack(self.start_rule_id), PartialUTF8())
+
     @lru_cache(maxsize=32768)
     def advance_stack(self, stack: Tuple[int]) -> List[List[int]]:
         stack = list(stack)
@@ -128,20 +141,55 @@ class GrammarRecognizer:
 
             return new_stacks
 
-    def _consume_byte_partial_match(self, byte: int, stacks: List[List[int]]):
+    def _consume_byte_partial_match(self, byte: int, accept_state: AcceptState):
         # suppose we have code point 一, ord('一') = 19968, we need to match 3 bytes
         # we need to match 3 bytes, so we need to call _consume_byte_partial_match 3 times
-        raise NotImplementedError
+        self._consume_bytes_partial_match(bytes([byte]), accept_state)
+
+    # @lru_cache(maxsize=32768)
+    def _probe_bytes_partial_match(
+        self,
+        byte_seq: bytes,
+        stacks: List[List[int]],
+        partial_utf8: PartialUTF8,
+        verbose=True,
+    ):
+        if type(byte_seq) is list:
+            byte_seq = bytes(byte_seq)
+        code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
+        if verbose:
+            logging.debug(
+                f"code_points: {code_points}; new_partial_utf8: {new_partial_utf8}"
+            )
+        new_stacks = self._consume_code_points(code_points, stacks)
+
+        for stack in new_stacks:
+
+            if len(stack) == 0:
+                continue
+            element_offset = stack[-1]
+            if self.valid_partial_match(element_offset, new_partial_utf8):
+                return True
+        return False
 
     def _consume_bytes_partial_match(
-        self, bytes: bytes, stacks: List[List[int]], partial_utf8: PartialUTF8
+        self,
+        byte_seq: bytes,
+        accept_state: AcceptState = None,
+        verbose=True,
     ):
-        code_points, new_partial_utf8 = decode_utf8(bytes, partial_utf8)
-        logging.debug(
-            f"code_points: {code_points}; new_partial_utf8: {new_partial_utf8}"
-        )
+        if accept_state is None:
+            accept_state = self.init_accept_state()
+        stacks = accept_state.stacks
+        partial_utf8 = accept_state.partial_utf8
+        if type(byte_seq) is list:
+            byte_seq = bytes(byte_seq)
+        code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
+        if verbose:
+            logging.debug(
+                f"code_points: {code_points}; new_partial_utf8: {new_partial_utf8}"
+            )
         new_stacks = self._consume_code_points(code_points, stacks)
-        # pdb.set_trace()
 
         new_new_stacks = []
         for stack in new_stacks:
@@ -150,7 +198,7 @@ class GrammarRecognizer:
             element_offset = stack[-1]
             if self.valid_partial_match(element_offset, new_partial_utf8):
                 new_new_stacks.append(stack)
-        return new_new_stacks, new_partial_utf8
+        return AcceptState(new_new_stacks, new_partial_utf8)
 
     def _consume_char_code_point(self, char_code_point: int, stacks: List[List[int]]):
         """
@@ -160,29 +208,80 @@ class GrammarRecognizer:
         # TODO, the below code will raise an error when the stack is empty, but why is this happening?
         # if len(stacks) == 0:
         #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
-        # code_point = 0 is a special case for EOS token, which should be handled by the _consume_token method
-        if char_code_point == 0:
-            raise ValueError("byte cannot be 0")
+        # code_point = 0 is a special case when the uf8 sequence is not complete, we return an empty stack
+        # to indicate that the character is not accepted
         new_stacks = []
-        for stack in stacks:
-            # stack is empty
-            if not stack:
-                continue
 
-            element_offset = stack[-1]
+        mode = "new"
 
-            found = self.valid_char_code_point_match(char_code_point, element_offset)
-            if not found:
-                continue
+        if mode == "old":
+            if char_code_point == 0:
+                return new_stacks
+            for stack in stacks:
+                # stack is empty
+                if not stack:
+                    continue
 
-            size = self.grammar_encoding[element_offset]
-            element_offset += size + 1
-            new_stack = stack[:-1]
-            if self.grammar_encoding[element_offset]:
-                new_stack.append(element_offset)
-            new_stacks.extend(self.advance_stack(tuple(new_stack)))
+                element_offset = stack[-1]
+
+                found = self.valid_char_code_point_match(
+                    char_code_point, element_offset
+                )
+                if not found:
+                    continue
+
+                size = self.grammar_encoding[element_offset]
+                element_offset += size + 1
+                new_stack = stack[:-1]
+                if self.grammar_encoding[element_offset]:
+                    new_stack.append(element_offset)
+                new_stacks.extend(self.advance_stack(tuple(new_stack)))
+        elif mode == "new":
+            if char_code_point == 0:
+                return new_stacks
+            for stack in stacks:
+                new_stacks.extend(
+                    self._consume_char_code_point_per_stack(
+                        char_code_point, tuple(stack)
+                    )
+                )
         return new_stacks
 
+    @lru_cache(maxsize=30000)
+    def _consume_char_code_point_per_stack(
+        self, char_code_point: int, stack: Tuple[int]
+    ):
+        """
+        consume a character from the stack
+        char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
+        """
+        # TODO, the below code will raise an error when the stack is empty, but why is this happening?
+        # if len(stacks) == 0:
+        #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
+        # code_point = 0 is a special case when the uf8 sequence is not complete, we return an empty stack
+        # to indicate that the character is not accepted
+        stack = list(stack)
+        new_stacks = []
+        if char_code_point == 0:
+            return new_stacks
+        # stack is empty
+        if not stack:
+            return new_stacks
+
+        element_offset = stack[-1]
+
+        found = self.valid_char_code_point_match(char_code_point, element_offset)
+        if not found:
+            return new_stacks
+
+        size = self.grammar_encoding[element_offset]
+        element_offset += size + 1
+        new_stack = stack[:-1]
+        if self.grammar_encoding[element_offset]:
+            new_stack.append(element_offset)
+        return self.advance_stack(tuple(new_stack))
+
+    @lru_cache(maxsize=30000)
     def valid_char_code_point_match(
         self, char_code_point: int, element_offset: int
     ) -> bool:
@@ -206,11 +305,11 @@ class GrammarRecognizer:
         n_remain = partial_utf8.n_remain
 
         # Return False if there are no remaining bytes to process or if it's an invalid UTF-8 sequence.
-        if n_remain < 0 or (n_remain == 1 and partial_value < 2):
+        if n_remain == 1 and partial_value < 2:
             return False
 
         # If there are no remaining bytes, this means we had already consumed a complete UTF-8 sequence.
-        if n_remain == 0:
+        if n_remain <= 0:
             return True
 
         # Calculate the lowest possible Unicode code point that can be formed with the remaining bytes.
@@ -249,16 +348,18 @@ class GrammarRecognizer:
         new_stacks = self._consume_char_code_point(code_point, stacks)
         return len(new_stacks) > 0
 
-    def _consume_string(self, string: str, stacks: List[List[int]]):
+    def _consume_string(self, string: str, accept_state: AcceptState):
         # _bytes = bytes(string, "utf-8")
         code_points = [ord(char) for char in string]
-        stacks = self._consume_code_points(code_points, stacks)
-        return stacks
+        stacks = self._consume_code_points(code_points, accept_state.stacks)
+        return AcceptState(stacks, accept_state.partial_utf8)
 
-    def _consume_code_points(self, code_points: List[int], stacks: List[List[int]]):
+    def _consume_code_points(
+        self, code_points: List[int], stacks: List[List[int]], verbose=False
+    ):
         for i, code_point in enumerate(code_points):
             stacks = self._consume_char_code_point(code_point, stacks)
-            if len(stacks) > 0:
+            if len(stacks) > 0 and verbose:
                 accepted_code_point = code_points[: i + 1]
                 corresponding_char = chr(code_point)
                 logging.debug(
@@ -266,9 +367,11 @@ class GrammarRecognizer:
                 )
         return stacks
 
-    def _accept_string(self, string: str, stacks: List[List[int]]):
-        new_stacks = self._consume_string(string, stacks)
-        return len(new_stacks) > 0
+    def _accept_string(self, string: str, accept_state: AcceptState = None):
+        if accept_state is None:
+            accept_state = self.init_accept_state()
+        new_accept_state = self._consume_string(string, accept_state)
+        return len(new_accept_state.stacks) > 0
 
     def _can_stop(self, stacks: List[List[int]]):
         # This happens in practice, but maybe it shouldn't? TODO
@@ -285,7 +388,7 @@ class GrammarRecognizer:
         return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
 
     @lru_cache(maxsize=None)
-    def char_acceptance_at_element(self, element_offset):
+    def code_point_acceptance_at_element(self, element_offset):
         """
         Caches and returns a dictionary indicating whether a Unicode character is accepted
         at a given rule position. This function considers Unicode characters, dynamically
@@ -306,7 +409,6 @@ class GrammarRecognizer:
             end = self.grammar_encoding[element_offset + i + 1]
             for j in range(start, end + 1):
                 acceptance[j] = True
-        logging.debug(acceptance)
         return acceptance
 
 
@@ -349,14 +451,11 @@ if __name__ == "__main__":
     # cast into bytes
     byte_tokens = [bytes([byte]) for byte in byte_tokens]
 
-    new_partial_utf8 = PartialUTF8()
-    new_stacks = recognizer.stacks
+    accept_state = AcceptState(recognizer.stacks, PartialUTF8())
     for i, byte in enumerate(byte_tokens):
-        new_stacks, new_partial_utf8 = recognizer._consume_bytes_partial_match(
-            byte, new_stacks, new_partial_utf8
-        )
-        logging.debug(f"new partial utf8: {new_partial_utf8}")
-        if len(new_stacks) > 0:
+        new_accept_state = recognizer._consume_bytes_partial_match(byte, accept_state)
+        logging.debug(f"new partial utf8: {new_accept_state.partial_utf8}")
+        if len(new_accept_state.stacks) > 0:
             logging.debug(f"byte {byte} is accepted")
         else:
             logging.debug(f"byte {byte} is not accepted")

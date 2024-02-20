@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # Generate
     prefix1 = "This is a valid json array for student records:"
-    prefix2 = "This is a valid json array for visiting records:"
+    prefix2 = "This is a valid json array for shopping cart:"
     input_ids = tokenizer(
         [prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True
     )["input_ids"].to(
