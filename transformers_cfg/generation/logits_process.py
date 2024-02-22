@@ -67,7 +67,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         if self.batch_accept_states is None:
             self.batch_accept_states = [
                 # self.grammar_constraint.init_stacks()
-                copy.deepcopy(self.grammar_constraint.grammar.init_accept_state())
+                copy.deepcopy(
+                    self.grammar_constraint.string_recognizer.get_initial_accept_state()
+                )
                 for _ in range(len(input_ids))
             ]
 
@@ -88,6 +90,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.batch_accept_states = self.grammar_constraint.advance_token_ids(
             input_ids, self.batch_accept_states, self.parse_start_index
         )
+        logger.debug(f"input_ids: {input_ids}")
 
         self.mask_logits(scores, scores.device)
         return scores

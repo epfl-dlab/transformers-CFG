@@ -4,7 +4,7 @@ from json import loads
 import json
 import logging
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
+from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from tests.json_utils import is_json_parsable
 
 
@@ -41,7 +41,7 @@ class Test_parsing_json_object(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        self.recognizer = GrammarRecognizer(
+        self.recognizer = StringRecognizer(
             parsed_grammar.grammar_encoding, start_rule_id
         )
 

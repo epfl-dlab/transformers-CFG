@@ -7,7 +7,7 @@ import logging
 from tests.json_utils import is_json_parsable
 
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
+from transformers_cfg.recognizer import StringRecognizer, AcceptState
 
 
 class TestJsonArray(TestCase):
@@ -28,7 +28,7 @@ class TestJsonArray(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         for json in jsons:
             # accept_state = AcceptState.empty_state()

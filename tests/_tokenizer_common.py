@@ -2,9 +2,9 @@ import unittest
 import warnings
 
 from transformers import PreTrainedTokenizer
-from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
+from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
 
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import StringRecognizer
 
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.utils import pprint_token_ids
@@ -42,7 +42,7 @@ class TokenizerTesterMixin:
         # Test that we can load a JSON object
         with open("examples/grammars/json.ebnf", "r") as file:
             input_text = file.read()
-        JsontokenRecognizer = IncrementalTokenGrammarRecognizer(
+        JsontokenRecognizer = IncrementalTokenRecognizer(
             grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
         )
 
@@ -69,7 +69,7 @@ class TokenizerTesterMixin:
         # Test that we can recognize a balanced parentheses
         with open("examples/grammars/balanced_parentheses.ebnf", "r") as file:
             input_text = file.read()
-        recognizer = IncrementalTokenGrammarRecognizer(
+        recognizer = IncrementalTokenRecognizer(
             grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
         )
 
@@ -112,7 +112,7 @@ class TokenizerTesterMixin:
         with open("examples/grammars/emoji.ebnf", "r") as file:
             input_text = file.read()
 
-        JsontokenRecognizer = IncrementalTokenGrammarRecognizer(
+        JsontokenRecognizer = IncrementalTokenRecognizer(
             grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
         )
 
@@ -129,7 +129,7 @@ class TokenizerTesterMixin:
                 return
 
         stacks = JsontokenRecognizer._consume_token_ids(
-            token_ids, JsontokenRecognizer.grammar.stacks, as_string=False
+            token_ids, JsontokenRecognizer.string_recognizer.stacks, as_string=False
         )
 
         # parsed_grammar = parse_ebnf(input_text)
