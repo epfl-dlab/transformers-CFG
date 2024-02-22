@@ -1,8 +1,8 @@
-from .token_grammar_recognizer import IncrementalTokenGrammarRecognizer
+from .token_grammar_recognizer import IncrementalTokenRecognizer
 
 
 # Old class name, kept for backward compatibility
-class IncrementalGrammarConstraint(IncrementalTokenGrammarRecognizer):
+class IncrementalGrammarConstraint(IncrementalTokenRecognizer):
     def __init__(self, *args, **kwargs):
         # import warnings
         # warnings.warn(

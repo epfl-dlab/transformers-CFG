@@ -7,7 +7,7 @@ from tests._tokenizer_common import TokenizerTesterMixin
 import logging
 
 
-@unittest.skip("T5TokenizerFast is not implemented in transformers")
+@unittest.skip("T5Tokenizer's mapping is not well defined, not working")
 class T5TokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = T5TokenizerFast

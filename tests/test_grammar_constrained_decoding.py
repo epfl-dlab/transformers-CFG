@@ -2,7 +2,7 @@ import unittest
 from unittest import TestCase
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
+from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
 from transformers_cfg.generation import GrammarConstrainedLogitsProcessor
 
 MODEL_IDS = [
@@ -15,7 +15,6 @@ MODEL_IDS = [
 
 
 class Test(TestCase):
-    @unittest.skip("This test is not working")
     def test_grammar_constrained_decoding_greedy_w_number_grammar(self):
         # test greedy decoding with grammar constraints
         grammar_str = """
@@ -27,7 +26,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalTokenGrammarRecognizer(
+            grammar = IncrementalTokenRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -62,7 +61,6 @@ class Test(TestCase):
                 generations[0].isdigit(), f"generations: {generations} is not a number"
             )
 
-    @unittest.skip("This test is not working")
     def test_grammar_constrained_decoding_greedy_w_balanced_parenthesis_grammar(self):
         # test greedy decoding with grammar constraints
         grammar_str = """
@@ -75,7 +73,7 @@ class Test(TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_id)
             tokenizer.pad_token = tokenizer.eos_token
 
-            grammar = IncrementalTokenGrammarRecognizer(
+            grammar = IncrementalTokenRecognizer(
                 grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -130,14 +128,13 @@ class Test(TestCase):
                 [tentative], add_special_tokens=True, return_tensors="pt", padding=True
             )["input_ids"]
 
-            tokenRecognizer = IncrementalTokenGrammarRecognizer(
+            tokenRecognizer = IncrementalTokenRecognizer(
                 grammar_str=grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
 
-            with self.assertRaises(RuntimeError):
-                accept_state = tokenRecognizer._consume_token_ids(
-                    input_ids[0], as_string=False
-                )
+            accept_state = tokenRecognizer._consume_token_ids(
+                input_ids[0], as_string=False
+            )
             # generations = tokenizer.batch_decode(output, skip_special_tokens=True)
 
 

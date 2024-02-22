@@ -1,7 +1,7 @@
 import unittest
 from unittest import TestCase
 
-from transformers_cfg.recognizer import GrammarRecognizer, AcceptState
+from transformers_cfg.recognizer import StringRecognizer, AcceptState
 
 from transformers_cfg.parser import parse_ebnf
 from tests.json_utils import is_json_parsable
@@ -24,7 +24,7 @@ class TestUnicode(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         bytes_japanese = bytes(japanese, "utf-8")
         logging.debug(
@@ -34,7 +34,7 @@ class TestUnicode(TestCase):
 
         head_bytes = bytes_japanese[:8]
         # partial_utf8 = PartialUTF8()
-        accept_state = recognizer._consume_bytes_partial_match(head_bytes)
+        accept_state = recognizer._consume_bytes(head_bytes)
 
         # non empty stack means that the bytes were accepted
         self.assertTrue(len(accept_state.stacks) > 0)
@@ -51,7 +51,7 @@ class TestUnicode(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         bytes_japanese = bytes(japanese, "utf-8")
         logging.debug(
@@ -62,11 +62,11 @@ class TestUnicode(TestCase):
         # cast into bytes
         byte_tokens = [bytes([byte]) for byte in byte_tokens]
 
-        accept_state = recognizer.init_accept_state()
+        accept_state = recognizer.get_initial_accept_state()
 
         # accept_state = recognizer.init_accept_state
         for i, byte in enumerate(byte_tokens):
-            accept_state = recognizer._consume_bytes_partial_match(byte, accept_state)
+            accept_state = recognizer._consume_bytes(byte, accept_state)
             self.assertTrue(len(accept_state.stacks) > 0)
 
     def test_accept_emoji(self):
@@ -81,13 +81,13 @@ class TestUnicode(TestCase):
 
         start_rule_id = parsed_grammar.symbol_table["root"]
 
-        recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         bytes_emoji = bytes(emoji, "utf-8")
         logging.debug(f"bytes_emoji: {bytes_emoji} of length {len(bytes_emoji)}")
         # 😀😄😂
 
         # partial_utf8 = PartialUTF8()
-        accept_state = recognizer._consume_bytes_partial_match(bytes_emoji)
+        accept_state = recognizer._consume_bytes(bytes_emoji)
         # non empty stack means that the bytes were accepted
         self.assertTrue(len(accept_state.stacks) > 0)

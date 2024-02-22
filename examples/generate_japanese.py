@@ -46,21 +46,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # Profiling
-    profiler = cProfile.Profile()
-    profiler.enable()
-
     main()
-
-    profiler.disable()
-    s = io.StringIO()
-    sortby = "tottime"  # Sort by total time
-    ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    profiling_results = s.getvalue()
-    with open("profiling_japanese.txt", "w") as f:
-        f.write(profiling_results)
-
-    from transformers_cfg.token_grammar_recognizer import AbsTokenGrammarRecognizer
-
-    print(AbsTokenGrammarRecognizer.token_acceptance_for_stack.cache_info())
