@@ -1,6 +1,7 @@
 examples/grammars/debug
 examples/grammars/wip
 examples/jupyter
+profiling
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

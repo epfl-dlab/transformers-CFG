@@ -24,8 +24,7 @@ class AcceptState:
         return AcceptState([], PartialUTF8())
 
 
-class GrammarRecognizer:
-    # TODO, rename to Recognizer
+class StringRecognizer:
     def __init__(
         self,
         grammar_encoding: List[int],
@@ -98,8 +97,11 @@ class GrammarRecognizer:
             sub_rhs_offset += 1 + self.grammar_encoding[sub_rhs_offset]
         return stacks
 
-    def init_accept_state(self) -> AcceptState:
+    def get_initial_accept_state(self) -> AcceptState:
         return AcceptState(self.init_stack(self.start_rule_id), PartialUTF8())
+
+    def get_termination_accept_state(self) -> AcceptState:
+        return AcceptState([], PartialUTF8())
 
     @lru_cache(maxsize=32768)
     def advance_stack(self, stack: Tuple[int]) -> List[List[int]]:
@@ -141,13 +143,13 @@ class GrammarRecognizer:
 
             return new_stacks
 
-    def _consume_byte_partial_match(self, byte: int, accept_state: AcceptState):
+    def _consume_byte(self, byte: int, accept_state: AcceptState):
         # suppose we have code point 一, ord('一') = 19968, we need to match 3 bytes
         # we need to match 3 bytes, so we need to call _consume_byte_partial_match 3 times
-        self._consume_bytes_partial_match(bytes([byte]), accept_state)
+        self._consume_bytes(bytes([byte]), accept_state)
 
     # @lru_cache(maxsize=32768)
-    def _probe_bytes_partial_match(
+    def _probe_bytes(
         self,
         byte_seq: bytes,
         stacks: List[List[int]],
@@ -165,21 +167,22 @@ class GrammarRecognizer:
 
         for stack in new_stacks:
 
+            # stack is empty, meaning that the variables are all consumed
             if len(stack) == 0:
-                continue
+                return True
             element_offset = stack[-1]
             if self.valid_partial_match(element_offset, new_partial_utf8):
                 return True
         return False
 
-    def _consume_bytes_partial_match(
+    def _consume_bytes(
         self,
         byte_seq: bytes,
         accept_state: AcceptState = None,
         verbose=True,
     ):
         if accept_state is None:
-            accept_state = self.init_accept_state()
+            accept_state = self.get_initial_accept_state()
         stacks = accept_state.stacks
         partial_utf8 = accept_state.partial_utf8
         if type(byte_seq) is list:
@@ -201,7 +204,7 @@ class GrammarRecognizer:
         return AcceptState(new_new_stacks, new_partial_utf8)
 
     @lru_cache(maxsize=30000)
-    def _consume_char_code_point(self, char_code_point: int, stacks: Tuple[Tuple[int]]):
+    def _consume_code_point(self, code_point: int, stacks: Tuple[Tuple[int]]):
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
@@ -218,18 +221,16 @@ class GrammarRecognizer:
         mode = "new"
 
         if mode == "old":
-            if char_code_point == 0:
+            if code_point == 0:
                 return new_stacks
             for stack in stacks:
                 # stack is empty
-                if not stack:
+                if len(stack) == 0:
                     continue
 
                 element_offset = stack[-1]
 
-                found = self.valid_char_code_point_match(
-                    char_code_point, element_offset
-                )
+                found = self.accept_code_point_at_element(code_point, element_offset)
                 if not found:
                     continue
 
@@ -240,20 +241,16 @@ class GrammarRecognizer:
                     new_stack.append(element_offset)
                 new_stacks.extend(self.advance_stack(tuple(new_stack)))
         elif mode == "new":
-            if char_code_point == 0:
+            if code_point == 0:
                 return new_stacks
             for stack in stacks:
                 new_stacks.extend(
-                    self._consume_char_code_point_per_stack(
-                        char_code_point, tuple(stack)
-                    )
+                    self._consume_code_point_per_stack(code_point, tuple(stack))
                 )
         return new_stacks
 
     @lru_cache(maxsize=30000)
-    def _consume_char_code_point_per_stack(
-        self, char_code_point: int, stack: Tuple[int]
-    ):
+    def _consume_code_point_per_stack(self, char_code_point: int, stack: Tuple[int]):
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
@@ -268,12 +265,12 @@ class GrammarRecognizer:
         if char_code_point == 0:
             return new_stacks
         # stack is empty
-        if not stack:
+        if len(stack) == 0:
             return new_stacks
 
         element_offset = stack[-1]
 
-        found = self.valid_char_code_point_match(char_code_point, element_offset)
+        found = self.accept_code_point_at_element(char_code_point, element_offset)
         if not found:
             return new_stacks
 
@@ -285,8 +282,8 @@ class GrammarRecognizer:
         return self.advance_stack(tuple(new_stack))
 
     @lru_cache(maxsize=30000)
-    def valid_char_code_point_match(
-        self, char_code_point: int, element_offset: int
+    def accept_code_point_at_element(
+        self, code_point: int, element_offset: int
     ) -> bool:
         size = self.grammar_encoding[element_offset]
         # to make idx point to the range_start of the first range
@@ -294,7 +291,7 @@ class GrammarRecognizer:
         for i in range(0, size, 2):
             if (
                 self.grammar_encoding[element_offset + i]
-                <= char_code_point
+                <= code_point
                 <= self.grammar_encoding[element_offset + i + 1]
             ):
                 return True
@@ -347,11 +344,11 @@ class GrammarRecognizer:
         # If no overlap is found with any of the ranges, return False, indicating no valid partial match.
         return False
 
-    def _accept_char_code_point(self, code_point: int, stacks: List[List[int]]):
-        # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
-        tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-        new_stacks = self._consume_char_code_point(code_point, tuple_stacks)
-        return len(new_stacks) > 0
+    # def _accept_code_point(self, code_point: int, stacks: List[List[int]]):
+    #     # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
+    #     tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+    #     new_stacks: List[List[int]] = self._consume_code_point(code_point, tuple_stacks)
+    #     return len(new_stacks) > 0
 
     def _consume_string(self, string: str, accept_state: AcceptState):
         # _bytes = bytes(string, "utf-8")
@@ -364,7 +361,7 @@ class GrammarRecognizer:
     ):
         for i, code_point in enumerate(code_points):
             tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-            stacks = self._consume_char_code_point(code_point, tuple_stacks)
+            stacks = self._consume_code_point(code_point, tuple_stacks)
             if len(stacks) > 0 and verbose:
                 accepted_code_point = code_points[: i + 1]
                 corresponding_char = chr(code_point)
@@ -373,9 +370,23 @@ class GrammarRecognizer:
                 )
         return stacks
 
+    # def _accept_code_points(
+    #     self, code_points: List[int], stacks: List[List[int]], verbose=False
+    # ):
+    #     for i, code_point in enumerate(code_points):
+    #         tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+    #         stacks = self._accept_code_point(code_point, tuple_stacks)
+    #         if len(stacks) > 0 and verbose:
+    #             accepted_code_point = code_points[: i + 1]
+    #             corresponding_char = chr(code_point)
+    #             logging.debug(
+    #                 f"code point {accepted_code_point} corresponding to {corresponding_char} is accepted"
+    #             )
+    #     return stacks
+
     def _accept_string(self, string: str, accept_state: AcceptState = None):
         if accept_state is None:
-            accept_state = self.init_accept_state()
+            accept_state = self.get_initial_accept_state()
         new_accept_state = self._consume_string(string, accept_state)
         return len(new_accept_state.stacks) > 0
 
@@ -427,7 +438,7 @@ if __name__ == "__main__":
     logging.debug(f"symbol_ids: \n{parsed_grammar.symbol_table}")
 
     start_rule_id = parsed_grammar.symbol_table["root"]
-    recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
     japanese = "こんにちは世界"  # "こんにちは世界" doesn't work
     bytes_japanese = bytes(japanese, "utf-8")
@@ -459,7 +470,7 @@ if __name__ == "__main__":
 
     accept_state = AcceptState(recognizer.stacks, PartialUTF8())
     for i, byte in enumerate(byte_tokens):
-        new_accept_state = recognizer._consume_bytes_partial_match(byte, accept_state)
+        new_accept_state = recognizer._consume_bytes(byte, accept_state)
         logging.debug(f"new partial utf8: {new_accept_state.partial_utf8}")
         if len(new_accept_state.stacks) > 0:
             logging.debug(f"byte {byte} is accepted")
