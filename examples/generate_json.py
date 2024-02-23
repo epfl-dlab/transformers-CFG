@@ -37,7 +37,7 @@ if __name__ == "__main__":
         do_sample=False,
         max_new_tokens=60,
         logits_processor=[grammar_processor],
-        repetition_penalty=1.9,
+        repetition_penalty=1.1,
         num_return_sequences=1,
     )
     # decode output
