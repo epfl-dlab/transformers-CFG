@@ -71,10 +71,6 @@ class Trie:
         result = []
         counter = {"visited": 0, "pruned": 0}
         _dfs(self.root, [], result, accept, counter)
-        if verbose:
-            print(f"This is a dfs search:")
-            print(f"Words visited: {counter['visited']}")
-            print(f"Branches pruned: {counter['pruned']}")
         return result
 
     def bfs(
@@ -96,10 +92,6 @@ class Trie:
                     queue.append((next_node, new_byte_seq))
             else:
                 counter["pruned"] += 1
-        if verbose:
-            print(f"This is a bfs search:")
-            print(f"Words visited: {counter['visited']}")
-            print(f"Branches pruned: {counter['pruned']}")
         return valid_byte_seqs
 
     def get_token_acceptance(

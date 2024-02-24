@@ -17,22 +17,21 @@ logger = logging.getLogger(__name__)
 
 
 class AbsTokenRecognizer(ABC):
-    def __init__(self, grammar_str, tokenizer, start_rule_name="root"):
+    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
+        self.byte_encoding = unicode
 
         self.eos_token_id = tokenizer.eos_token_id
-        self.mapping = get_mapping(tokenizer)
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
+        self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
+        self.trie = Trie.from_tokenizer(tokenizer)
+        self.mapping = get_mapping(tokenizer, unicode=unicode)
         assert len(self.mapping) == len(
             self.token_trie
         ), f"{len(self.mapping)}, {len(self.token_trie)}"
-        self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        # TODO rename to self.recognizer
-        self.trie = Trie.from_tokenizer(tokenizer)
-        # self.partial_utf8 = PartialUTF8()
 
     def _consume_token_id(
         self, token_id: int, accept_state: AcceptState
@@ -54,8 +53,7 @@ class AbsTokenRecognizer(ABC):
                     f"At least one of the stack should be empty when EOS is reached. However, "
                     f"the stacks are {accept_state.stacks}"
                 )
-        # for code_point in self.mapping.map(token_id):
-        #     stacks = self.grammar._consume_char_code_point(code_point, stacks)
+
         bytes_or_codepoints = self.mapping.map(token_id)
         accept_state = self.string_recognizer._consume_bytes(
             bytes_or_codepoints, accept_state
@@ -105,62 +103,11 @@ class AbsTokenRecognizer(ABC):
             accepts[self.eos_token_id] = True
             return torch.tensor(accepts, dtype=torch.bool, device=device)
 
-        mode = "lru"
-
-        if mode == "lru":
-            # Simulate or call the method for LRU cache-based acceptance calculation
-            acceptance = self.get_token_acceptance_array_trie_lru(accept_state, device)
-        elif mode == "trie":
-            # Method for trie-based acceptance calculation
-            acceptance = self.get_token_acceptance_array_via_trie(accept_state, device)
-        elif (
-            mode == "old" or mode == "scan"
-        ):  # Assuming the else block is for the old method
-            # Old method for acceptance calculation
-            acceptance = self.get_token_acceptance_array_old(accept_state, device)
-        else:
-            raise ValueError(f"Invalid mode: {mode}")
+        acceptance = self.get_token_acceptance(accept_state, device)
 
         return acceptance
 
-    def get_token_acceptance_array_old(self, accept_state, device):
-        vocab = self.tokenizer.vocab.values()
-        accepts: List[bool] = [False] * len(vocab)
-        if not accept_state.stacks:
-            accepts[self.eos_token_id] = True
-            return torch.tensor(accepts, dtype=torch.bool, device=device)
-
-        for token_id in vocab:
-            accepts[token_id] = self.probe_token_id(token_id, accept_state)
-        if sum(accepts) == 0:
-            accepts[self.eos_token_id] = True
-
-        x = torch.tensor(accepts, dtype=torch.bool, device=device)
-        return x
-
-    def get_token_acceptance_array_via_trie(self, accept_state, device):
-
-        vocab = self.tokenizer.vocab.values()
-        accepts: List[bool] = [False] * len(vocab)
-        if not accept_state.stacks:
-            accepts[self.eos_token_id] = True
-            return torch.tensor(accepts, dtype=torch.bool, device=device)
-
-        partial_utf8 = accept_state.partial_utf8
-        stacks = accept_state.stacks
-        accepts: List[bool] = self.trie.get_token_acceptance(
-            accept=lambda x: self.string_recognizer._probe_bytes(
-                x, stacks, partial_utf8
-            ),
-            accept_eos=False,
-            eos_token_id=self.eos_token_id,
-        )
-
-        x = torch.tensor(accepts, dtype=torch.bool, device=device)
-        x_eos = self.validate_and_set_eos_acceptance(x)
-        return x_eos
-
-    def get_token_acceptance_array_trie_lru(self, accept_state, device) -> torch.Tensor:
+    def get_token_acceptance(self, accept_state, device) -> torch.Tensor:
         acceptance_matrix = torch.cat(
             [
                 self.get_token_acceptance_array_for_stack(
@@ -179,15 +126,23 @@ class AbsTokenRecognizer(ABC):
         assert isinstance(stack, tuple)
         stack = list(stack)
 
-        # token_acceptance = check_token_acceptance_in_trie(
-        #     self.trie, [stack], self.grammar, partial_utf8, accept_eos=False, eos_token_id=self.eos_token_id
-        # )
-        accept_f = lambda x: self.string_recognizer._probe_bytes(
-            x, [stack], partial_utf8=partial_utf8
-        )
-        token_acceptance = self.trie.get_token_acceptance(
-            accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
-        )
+        if self.byte_encoding:
+
+            accept_f = lambda x: self.string_recognizer._probe_bytes(
+                x, [stack], partial_utf8=partial_utf8
+            )
+            token_acceptance = self.trie.get_token_acceptance(
+                accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
+            )
+        else:
+            accepts = [False] * len(self.mapping)
+            token_acceptance = check_token_acceptance_in_trie(
+                self.token_trie.trie,
+                [stack],
+                self.string_recognizer,
+                self.eos_token_id,
+                accepts,
+            )
         x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
         x_eos = self.validate_and_set_eos_acceptance(x)
         return x_eos
@@ -203,8 +158,8 @@ class AbsTokenRecognizer(ABC):
 
 
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer):
-        super().__init__(grammar_str, tokenizer, start_rule_name)
+    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False):
+        super().__init__(grammar_str, tokenizer, start_rule_name, unicode)
         self.last_size = None
 
         # if self.last_size is not set (which would be the case when processing the first token).
@@ -275,45 +230,43 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         return accept_state
 
 
-class VanillaTokenRecognizer(AbsTokenRecognizer):
-    # TODO, this class may have been broken because of the recent refactoring, in particular, the stacks is bound to the
-    # parser class
-    def __init__(self, grammar_str, start_rule_name, tokenizer):
-        super().__init__(grammar_str, tokenizer, start_rule_name)
-        self.offset = None
+def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
 
-    def advance_token_ids(self, input_ids, batch_stacks, parse_start_index=None):
-        # By design, the batch_stacks should be empty at the beginning, thus it doesn't matter what we pass in.
-        if self.offset is None:
-            self.offset = (
-                len(input_ids[0]) if parse_start_index is None else parse_start_index
+    for byte, next_trie in trie.items():
+        if byte == LEAF:
+            token_id = next_trie
+            if token_id != eos_token_id:
+                # if the stacks is not empty, it means we can still continue to parse
+                # so we should accept the token
+                accepts[token_id] = bool(stacks)
+            continue
+
+        new_stacks = []
+        for stk in stacks:
+            if not stk:
+                continue
+
+            next_element_offset = stk[-1]
+            num_chars = grammar.grammar_encoding[next_element_offset]
+
+            if not grammar.char_acceptance_at_element(next_element_offset).get(
+                byte, False
+            ):
+                # if the current byte is not accepted by the current rule, we need to try next rule
+                continue
+
+            next_element_offset += num_chars + 1
+            new_stack = stk[:-1]
+            if grammar.grammar_encoding[next_element_offset]:
+                new_stack.append(next_element_offset)
+            new_stacks.extend(grammar.advance_stack(tuple(new_stack)))
+
+        if new_stacks:
+            check_token_acceptance_in_trie(
+                next_trie, new_stacks, grammar, eos_token_id, accepts
             )
 
-        # TODO: here may be broken, the deepcopy may not work
-        batch_stacks_from_scratch = [
-            copy.deepcopy(self.string_recognizer.stacks) for _ in range(len(input_ids))
-        ]
-
-        prefix_to_consume = [
-            single_input_ids[self.offset :] for single_input_ids in input_ids
-        ]
-        # self.grammar_acceptor.accept_token_ids(prefix_to_consume, self.stacks)
-        advanced_batch_stacks = [
-            self._consume_token_ids(prefix, stack, as_string=False)
-            for prefix, stack in zip(prefix_to_consume, batch_stacks_from_scratch)
-        ]
-        return advanced_batch_stacks
-
-    def _consume_token_ids(
-        self, token_ids: List[int], accept_state: AcceptState, as_string=True
-    ):
-        if as_string:
-            string = self.tokenizer.decode(token_ids)
-            accept_state = self.string_recognizer._consume_string(string, accept_state)
-        else:
-            for token_id in token_ids:
-                accept_state = self._consume_token_id(token_id, accept_state)
-        return accept_state
+    return accepts
 
 
 if __name__ == "__main__":

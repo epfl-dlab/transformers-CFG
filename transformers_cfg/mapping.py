@@ -7,32 +7,33 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def get_mapping(tokenizer):
+def get_mapping(tokenizer, unicode=False):
     log.debug(f"tokenizer type: {tokenizer.__class__.__name__}")
     log.debug(f"tokenizer model type: {get_tokenizer_model_type(tokenizer)}")
-    if (
-        "gpt2" in tokenizer.__class__.__name__.lower()
-        or "bloom" in tokenizer.__class__.__name__.lower()
-        or "pretrainedtokenizer" in tokenizer.__class__.__name__.lower()
-        or "codegen" in tokenizer.__class__.__name__.lower()
-        or "gptneox" in tokenizer.__class__.__name__.lower()
-    ):
-        return BBPEMapping(tokenizer)
-    elif "t5" in tokenizer.__class__.__name__.lower():
-        return BPEMapping(tokenizer)
-    elif "llama" in tokenizer.__class__.__name__.lower():
-        return LlamaBPEMapping(tokenizer)
-    elif "xglm" in tokenizer.__class__.__name__.lower():
-        return UniGramMapping(tokenizer)
+    if not unicode:
+        if (
+            "gpt2" in tokenizer.__class__.__name__.lower()
+            or "bloom" in tokenizer.__class__.__name__.lower()
+            or "pretrainedtokenizer" in tokenizer.__class__.__name__.lower()
+            or "codegen" in tokenizer.__class__.__name__.lower()
+            or "gptneox" in tokenizer.__class__.__name__.lower()
+        ):
+            return BBPEMapping(tokenizer)
+        elif "t5" in tokenizer.__class__.__name__.lower():
+            return BPEMapping(tokenizer)
+        elif "llama" in tokenizer.__class__.__name__.lower():
+            return LlamaBPEMapping(tokenizer)
+        elif "xglm" in tokenizer.__class__.__name__.lower():
+            return UniGramMapping(tokenizer)
+        else:
+            raise ValueError(f"Unknown tokenizer type: {tokenizer.__class__.__name__}")
     else:
-        raise ValueError(f"Unknown tokenizer type: {tokenizer.__class__.__name__}")
-
-
-def get_intermediate_encoding(tokenizer):
-    if "gpt2" in tokenizer.__class__.__name__.lower():
-        return ByteEncoding(tokenizer)
-    else:
-        return None
+        if "gpt2" in tokenizer.__class__.__name__.lower():
+            return UnicodeBBPEMapping(tokenizer)
+        else:
+            raise NotImplementedError(
+                f"Unicode mapping for {tokenizer.__class__.__name__}"
+            )
 
 
 class Mapping:
@@ -65,7 +66,20 @@ class Mapping:
 class BBPEMapping(Mapping):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.intermediate_encoding = get_intermediate_encoding(self.tokenizer)
+
+    def _map(self, token_id: int) -> str:
+        raw_token = super()._map(token_id)
+        if raw_token.startswith("Ġ"):
+            raw_token = raw_token.replace("Ġ", " ")
+        return raw_token
+
+
+class UnicodeBBPEMapping(Mapping):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.intermediate_encoding = UnicodeBBPEMapping.get_intermediate_encoding(
+            self.tokenizer
+        )
 
     def _map(self, token_id: int, verbose=False) -> str:
         raw_token = super()._map(token_id)
@@ -78,6 +92,13 @@ class BBPEMapping(Mapping):
         if verbose:
             log.debug(f"token_id: {token_id}, raw_token: {raw_token}")
         return self.intermediate_encoding.token2bytes(raw_token)
+
+    @staticmethod
+    def get_intermediate_encoding(tokenizer):
+        if "gpt2" in tokenizer.__class__.__name__.lower():
+            return ByteEncoding(tokenizer)
+        else:
+            return None
 
 
 class BPEMapping(Mapping):
@@ -94,7 +115,6 @@ class BPEMapping(Mapping):
         if self.last_token_id is not None and self.last_token_id == self.bos_token_id:
             at_bos = True
         self.last_token_id = token_id
-
         if raw_token.startswith("▁"):
             raw_token = raw_token.replace("▁", " ")
             if at_bos:
