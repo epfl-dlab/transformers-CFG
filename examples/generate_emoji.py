@@ -19,14 +19,14 @@ def main():
     model = AutoModelForCausalLM.from_pretrained("gpt2")  # Load model to defined device
 
     # Load grammar
-    with open("examples/grammars/japanese.ebnf", "r") as file:
+    with open("examples/grammars/emoji.ebnf", "r") as file:
         grammar_str = file.read()
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer, unicode=True)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate
-    prefix1 = "English: coffee, Japanese: "
-    prefix2 = "English: dog, Japanese: "
+    prefix1 = "Describe your feeling with emoji: "
+    prefix2 = "Write a poem with emoji: "
     input_ids = tokenizer(
         [prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True
     )["input_ids"]
@@ -34,7 +34,7 @@ def main():
     output = model.generate(
         input_ids,
         do_sample=False,
-        max_new_tokens=20,
+        max_new_tokens=100,
         logits_processor=[grammar_processor],
         repetition_penalty=1.1,
         num_return_sequences=1,
@@ -43,6 +43,11 @@ def main():
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)
     print(output)
     print(generations)
+
+    """
+    ['Describe your feeling with emoji: 🙌🙂😍😯😅🙏🙇🙈🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆', 'Write a poem with emoji: 🙏😍🙏🙏🙌🙏🙏🙏🙏😁😅🙏🙏🙏🙏🙏🙏🙇🙏🙏🙏🙏🙏🙏🙏🙏🙏🙋🙏🙏🙏🙏🙏🙏']
+
+    """
 
 
 if __name__ == "__main__":

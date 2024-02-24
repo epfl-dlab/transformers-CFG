@@ -7,7 +7,7 @@ from tests._tokenizer_common import TokenizerTesterMixin
 import logging
 
 
-class GPT2TokenizerTest(TokenizerTesterMixin, unittest.TestCase):
+class LlamaTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = LlamaTokenizerFast
     pretrained_name = "saibo/llama-1B"

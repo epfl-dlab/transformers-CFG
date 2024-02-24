@@ -171,7 +171,7 @@ class StringRecognizer:
             if len(stack) == 0:
                 return True
             element_offset = stack[-1]
-            if self.valid_partial_match(element_offset, new_partial_utf8):
+            if self.partial_utf8_accept_at_element(element_offset, new_partial_utf8):
                 return True
         return False
 
@@ -199,58 +199,39 @@ class StringRecognizer:
             if len(stack) == 0:
                 continue
             element_offset = stack[-1]
-            if self.valid_partial_match(element_offset, new_partial_utf8):
+            if self.partial_utf8_accept_at_element(element_offset, new_partial_utf8):
                 new_new_stacks.append(stack)
         return AcceptState(new_new_stacks, new_partial_utf8)
 
+    ##########################
+    #
+    # Code point recognition
+    #
+    ##########################
+
     @lru_cache(maxsize=30000)
-    def _consume_code_point(self, code_point: int, stacks: Tuple[Tuple[int]]):
+    def _consume_code_point(
+        self, code_point: int, stacks: Tuple[Tuple[int]]
+    ) -> List[List[int]]:
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
         """
-        # TODO, the below code will raise an error when the stack is empty, but why is this happening?
-        # if len(stacks) == 0:
-        #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
-        # code_point = 0 is a special case when the uf8 sequence is not complete, we return an empty stack
-        # to indicate that the character is not accepted
         new_stacks = []
 
         stacks: List[List[int]] = list([list(stack) for stack in stacks])
-
-        mode = "new"
-
-        if mode == "old":
-            if code_point == 0:
-                return new_stacks
-            for stack in stacks:
-                # stack is empty
-                if len(stack) == 0:
-                    continue
-
-                element_offset = stack[-1]
-
-                found = self.accept_code_point_at_element(code_point, element_offset)
-                if not found:
-                    continue
-
-                size = self.grammar_encoding[element_offset]
-                element_offset += size + 1
-                new_stack = stack[:-1]
-                if self.grammar_encoding[element_offset]:
-                    new_stack.append(element_offset)
-                new_stacks.extend(self.advance_stack(tuple(new_stack)))
-        elif mode == "new":
-            if code_point == 0:
-                return new_stacks
-            for stack in stacks:
-                new_stacks.extend(
-                    self._consume_code_point_per_stack(code_point, tuple(stack))
-                )
+        if code_point == 0:
+            return new_stacks
+        for stack in stacks:
+            new_stacks.extend(
+                self._consume_code_point_per_stack(code_point, tuple(stack))
+            )
         return new_stacks
 
     @lru_cache(maxsize=30000)
-    def _consume_code_point_per_stack(self, char_code_point: int, stack: Tuple[int]):
+    def _consume_code_point_per_stack(
+        self, code_point: int, stack: Tuple[int]
+    ) -> List[List[int]]:
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
@@ -262,7 +243,7 @@ class StringRecognizer:
         # to indicate that the character is not accepted
         stack = list(stack)
         new_stacks = []
-        if char_code_point == 0:
+        if code_point == 0:
             return new_stacks
         # stack is empty
         if len(stack) == 0:
@@ -270,7 +251,7 @@ class StringRecognizer:
 
         element_offset = stack[-1]
 
-        found = self.accept_code_point_at_element(char_code_point, element_offset)
+        found = self.accept_code_point_at_element(code_point, element_offset)
         if not found:
             return new_stacks
 
@@ -280,6 +261,27 @@ class StringRecognizer:
         if self.grammar_encoding[element_offset]:
             new_stack.append(element_offset)
         return self.advance_stack(tuple(new_stack))
+
+    def _consume_code_points(
+        self, code_points: List[int], stacks: List[List[int]], verbose=False
+    ) -> List[List[int]]:
+        for i, code_point in enumerate(code_points):
+            # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
+            tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+            stacks = self._consume_code_point(code_point, tuple_stacks)
+            if len(stacks) > 0 and verbose:
+                accepted_code_point = code_points[: i + 1]
+                corresponding_char = chr(code_point)
+                logging.debug(
+                    f"code point {accepted_code_point} corresponding to {corresponding_char} is accepted"
+                )
+        return stacks
+
+    def _accept_code_points(
+        self, code_points: List[int], stacks: List[List[int]], verbose=False
+    ) -> bool:
+        stacks = self._consume_code_points(code_points, stacks, verbose)
+        return len(stacks) > 0
 
     @lru_cache(maxsize=30000)
     def accept_code_point_at_element(
@@ -297,7 +299,19 @@ class StringRecognizer:
                 return True
         return False
 
-    def valid_partial_match(
+    # def _accept_code_point(self, code_point: int, stacks: List[List[int]]):
+    #     # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
+    #     tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+    #     new_stacks: List[List[int]] = self._consume_code_point(code_point, tuple_stacks)
+    #     return len(new_stacks) > 0
+
+    #############################
+    #
+    # Partial UTF-8 recognition
+    #
+    #############################
+
+    def partial_utf8_accept_at_element(
         self, element_offset: int, partial_utf8: PartialUTF8
     ) -> bool:
         # Extract the accumulated value and the number of remaining bytes from the partial_utf8 object.
@@ -344,45 +358,17 @@ class StringRecognizer:
         # If no overlap is found with any of the ranges, return False, indicating no valid partial match.
         return False
 
-    # def _accept_code_point(self, code_point: int, stacks: List[List[int]]):
-    #     # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
-    #     tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-    #     new_stacks: List[List[int]] = self._consume_code_point(code_point, tuple_stacks)
-    #     return len(new_stacks) > 0
+    #############################
+    #
+    # String recognition
+    #
+    #############################
 
     def _consume_string(self, string: str, accept_state: AcceptState):
         # _bytes = bytes(string, "utf-8")
         code_points = [ord(char) for char in string]
         stacks = self._consume_code_points(code_points, accept_state.stacks)
         return AcceptState(stacks, accept_state.partial_utf8)
-
-    def _consume_code_points(
-        self, code_points: List[int], stacks: List[List[int]], verbose=False
-    ):
-        for i, code_point in enumerate(code_points):
-            tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-            stacks = self._consume_code_point(code_point, tuple_stacks)
-            if len(stacks) > 0 and verbose:
-                accepted_code_point = code_points[: i + 1]
-                corresponding_char = chr(code_point)
-                logging.debug(
-                    f"code point {accepted_code_point} corresponding to {corresponding_char} is accepted"
-                )
-        return stacks
-
-    # def _accept_code_points(
-    #     self, code_points: List[int], stacks: List[List[int]], verbose=False
-    # ):
-    #     for i, code_point in enumerate(code_points):
-    #         tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-    #         stacks = self._accept_code_point(code_point, tuple_stacks)
-    #         if len(stacks) > 0 and verbose:
-    #             accepted_code_point = code_points[: i + 1]
-    #             corresponding_char = chr(code_point)
-    #             logging.debug(
-    #                 f"code point {accepted_code_point} corresponding to {corresponding_char} is accepted"
-    #             )
-    #     return stacks
 
     def _accept_string(self, string: str, accept_state: AcceptState = None):
         if accept_state is None:
@@ -404,8 +390,15 @@ class StringRecognizer:
     def _must_stop(self, stacks: List[List[int]]):
         return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
 
+    #############################
+    #
+    # Not Used
+    #
+    #############################
+
+    # For each sub-rule in the grammar, cache whether each byte is accepted.
     @lru_cache(maxsize=None)
-    def code_point_acceptance_at_element(self, element_offset):
+    def char_acceptance_at_element(self, element_offset):
         """
         Caches and returns a dictionary indicating whether a Unicode character is accepted
         at a given rule position. This function considers Unicode characters, dynamically
@@ -426,7 +419,32 @@ class StringRecognizer:
             end = self.grammar_encoding[element_offset + i + 1]
             for j in range(start, end + 1):
                 acceptance[j] = True
+        logging.debug(acceptance)
         return acceptance
+
+    def _consume_code_points_new(
+        self, code_points: List[int], stacks: List[List[int]], verbose=False
+    ) -> List[List[int]]:
+        new_stacks: List[List[int]] = []
+        for stack in stacks:
+            new_stacks.extend(
+                self._consume_code_points_per_stack(
+                    tuple(code_points), tuple(stack), verbose
+                )
+            )
+        return new_stacks
+
+    @lru_cache(maxsize=30000)
+    def _consume_code_points_per_stack(
+        self, code_points: Tuple[int], stack: Tuple[int], verbose=False
+    ) -> List[List[int]]:
+        code_points = list(code_points)
+        stacks = (stack,)
+        for i, code_point in enumerate(code_points):
+            # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
+            stacks = self._consume_code_point(code_point, stacks)
+            stacks = tuple([tuple(stack) for stack in stacks])
+        return [list(stack) for stack in stacks]
 
 
 if __name__ == "__main__":

@@ -7,7 +7,6 @@ from tests._tokenizer_common import TokenizerTesterMixin
 import logging
 
 
-@unittest.skip("GPTNeoXTokenizerFast is not available for testing")
 class GPTNeoXTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = GPTNeoXTokenizerFast
