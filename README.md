@@ -58,7 +58,7 @@ if __name__ == "__main__":
         max_length=50,
         num_beams=2,
         logits_processor=[grammar_processor],
-        repetition_penalty=5.0,
+        repetition_penalty=1.1,
         num_return_sequences=1,
     )
     # decode output
