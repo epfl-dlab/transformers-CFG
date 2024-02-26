@@ -106,6 +106,7 @@ phone_number ::= "+" [0-9]+
 ```
 
 More details can be found in this [doc from llama-cpp](https://github.com/ggerganov/llama.cpp/tree/master/grammars)
+Advanced grammar debugging guide can be found [here](docs/debugging_custom_grammars.md)
 
 ### Automatic Grammar Generation
 Here is an awesome tool to generate grammars for you: [Grammar Builder](https://grammar.intrinsiclabs.ai/)
