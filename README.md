@@ -22,7 +22,7 @@ See relevant discussion [here](https://github.com/huggingface/transformers/pull/
 ## Installation
 
 ```bash
-pip install git+https://github.com/epfl-dlab/transformers-CFG.git
+pip install transformers-cfg
 ```
 
 ## QuickStart: Force LLM to generate a valid json object
