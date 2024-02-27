@@ -30,16 +30,26 @@ pip install git+https://github.com/epfl-dlab/transformers-CFG.git
 The below example can be found in `examples/generate_json.py`
 
 ```python
-
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
 if __name__ == "__main__":
+    # Detect if GPU is available, otherwise use CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    model_id = "mistralai/Mistral-7B-v0.1"
+
     # Load model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained("gpt2")
+
+    model = AutoModelForCausalLM.from_pretrained(model_id).to(
+        device
+    )  # Load model to defined device
+    model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
     # Load json grammar
     with open("examples/grammars/json.ebnf", "r") as file:
@@ -54,9 +64,7 @@ if __name__ == "__main__":
 
     output = model.generate(
         input_ids,
-        do_sample=False,
         max_length=50,
-        num_beams=2,
         logits_processor=[grammar_processor],
         repetition_penalty=1.1,
         num_return_sequences=1,
