@@ -1,0 +1,5 @@
+# An overly simplified grammar for Russian text
+root        ::= ru-char+ ([ \t\n] ru-char+)*
+ru-char     ::= cyrillic | punctuation
+cyrillic    ::= [А-Яа-я]
+punctuation ::= [、-〾] | [!?.,;:()"'`]
