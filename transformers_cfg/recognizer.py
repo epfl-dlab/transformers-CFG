@@ -370,11 +370,20 @@ class StringRecognizer:
         stacks = self._consume_code_points(code_points, accept_state.stacks)
         return AcceptState(stacks, accept_state.partial_utf8)
 
-    def _accept_string(self, string: str, accept_state: AcceptState = None):
+    def _accept_prefix(self, string: str, accept_state: AcceptState = None):
         if accept_state is None:
             accept_state = self.get_initial_accept_state()
         new_accept_state = self._consume_string(string, accept_state)
         return len(new_accept_state.stacks) > 0
+
+    def _accept_string(self, string: str, accept_state: AcceptState = None):
+        if accept_state is None:
+            accept_state = self.get_initial_accept_state()
+        new_accept_state = self._consume_string(string, accept_state)
+        at_least_one_stack_is_empty = any(
+            len(stack) == 0 for stack in new_accept_state.stacks
+        )
+        return at_least_one_stack_is_empty
 
     def _can_stop(self, stacks: List[List[int]]):
         # This happens in practice, but maybe it shouldn't? TODO

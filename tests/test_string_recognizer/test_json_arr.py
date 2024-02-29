@@ -34,6 +34,6 @@ class TestJsonArray(TestCase):
             # accept_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json),
-                recognizer._accept_string(json),
+                recognizer._accept_prefix(json),
                 f"Failed on {json}",
             )

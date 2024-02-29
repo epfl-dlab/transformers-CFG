@@ -87,6 +87,7 @@ If the grammar can be parsed, it means that it is syntactically correct.
 
 After you have checked that the grammar can be parsed, you can test it with a simple input to see if it can generate the expected output.
 We provide a simple script to do this:
+
 ```python
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import GrammarRecognizer
@@ -100,7 +101,7 @@ recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
 # Test the grammar with a simple input
 json_input = '{"foo": "bar", "baz": "bat"}'
-is_accepted = recognizer._accept_string(json_input, recognizer.stacks)
+is_accepted = recognizer._accept_prefix(json_input, recognizer.stacks)
 print(is_accepted)
 ```
 
@@ -108,13 +109,16 @@ If the above script returns `True`, it means that the grammar can recognize the 
 If it returns `False`, it means that the grammar cannot recognize the input string.
 In this case, you need to check in which step the input string is rejected.
 N.B. the recognizer can accept partial input, so you can try the following:
+
 ```python
 json_input = '{"foo": "bar"'
-is_accepted = recognizer._accept_string(json_input, recognizer.stacks)
+is_accepted = recognizer._accept_prefix(json_input, recognizer.stacks)
 print(is_accepted)
 ```
 
 This helps you to see where the grammar fails to recognize the input string.
+
+If you want to check if the sentence is complete or not, you can use `_accept_string` method, which returns `True` if the input string is complete and `False` otherwise.
 
 ## DEBUG mode
 
