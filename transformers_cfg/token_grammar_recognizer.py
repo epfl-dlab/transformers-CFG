@@ -8,7 +8,7 @@ import torch
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.trie import Trie
+from transformers_cfg.trie import ByteTrie
 from transformers_cfg.utf8_utils import PartialUTF8
 from .vocab_struct import LEAF, TokenTrie
 from transformers_cfg.mapping import get_mapping
@@ -27,7 +27,7 @@ class AbsTokenRecognizer(ABC):
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        self.trie = Trie.from_tokenizer(tokenizer)
+        self.unicode_trie = ByteTrie.from_tokenizer(tokenizer, unicode=unicode)
         self.mapping = get_mapping(tokenizer, unicode=unicode)
         assert len(self.mapping) == len(
             self.token_trie
@@ -131,7 +131,7 @@ class AbsTokenRecognizer(ABC):
             accept_f = lambda x: self.string_recognizer._probe_bytes(
                 x, [stack], partial_utf8=partial_utf8
             )
-            token_acceptance = self.trie.get_token_acceptance(
+            token_acceptance = self.unicode_trie.get_token_acceptance(
                 accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
             )
         else:
