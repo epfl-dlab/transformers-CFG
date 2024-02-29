@@ -1,0 +1,5 @@
+# A probably incorrect grammar for Arabic text
+root        ::= ar-char+ ([ \t\n] ar-char+)*
+ar-char     ::= arabic | punctuation
+arabic      ::= [٠-٩]
+punctuation ::= [،-۔]

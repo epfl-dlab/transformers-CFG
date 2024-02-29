@@ -10,7 +10,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model_id = "mistralai/Mistral-7B-v0.1"
+    model_id = "gpt2"
 
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         do_sample=False,
         max_new_tokens=60,
         logits_processor=[grammar_processor],
-        # repetition_penalty=1.3,
+        repetition_penalty=1.1,
         num_return_sequences=1,
     )
     # decode output
