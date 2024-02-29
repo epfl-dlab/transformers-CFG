@@ -1,0 +1,5 @@
+# An overly simplified grammar for Chinese text
+root        ::= cn-char+ ([ \t\n] cn-char+)*
+cn-char     ::= chinese | punctuation
+chinese     ::= [一-鿿]
+punctuation ::= [、-〾] | [!?.,;:()"'`]
