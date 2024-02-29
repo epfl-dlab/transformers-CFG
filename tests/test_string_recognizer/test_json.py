@@ -55,8 +55,18 @@ class Test_parsing_json_object(TestCase):
 
         self.assertEqual(
             is_json_parsable(json),
+            self.recognizer._accept_prefix(json),
+        )
+
+        self.assertEqual(
+            is_json_parsable(json),
             self.recognizer._accept_string(json),
         )
+
+        prefix_json = json[: len(json) // 2]
+        self.assertTrue(self.recognizer._accept_prefix(prefix_json))
+
+        self.assertFalse(self.recognizer._accept_string(prefix_json))
 
     def test_systematic_examples(self):
 
@@ -64,6 +74,6 @@ class Test_parsing_json_object(TestCase):
             # accept_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json_object),
-                self.recognizer._accept_string(json_object),
+                self.recognizer._accept_prefix(json_object),
                 msg=f"Failed on {name}, {json_object}",
             )
