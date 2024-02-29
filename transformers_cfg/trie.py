@@ -24,7 +24,7 @@ class TrieNode:
         self.token_id = None
 
 
-class Trie:
+class ByteTrie:
     def __init__(self):
         self.root = TrieNode()
 
@@ -54,10 +54,10 @@ class Trie:
         return True
 
     @classmethod
-    def from_tokenizer(cls, tokenizer):
+    def from_tokenizer(cls, tokenizer, unicode=True):
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
-        mapping = get_mapping(tokenizer)
+        mapping = get_mapping(tokenizer, unicode=unicode)
         for token_id in vocab.values():
             byte_repr = mapping.map(token_id)
             trie.insert(byte_repr, token_id)
@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2", fast=True)
 
-    trie = Trie.from_tokenizer(tokenizer)
+    trie = ByteTrie.from_tokenizer(tokenizer, unicode=True)
     print(f"length of trie: {len(trie)}=={len(tokenizer.vocab.items())}")
 
     #
