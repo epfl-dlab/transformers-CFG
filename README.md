@@ -5,6 +5,7 @@
 
 ## Latest News
 
+**Support for Unicode(multilingual) grammars** (2024-02-29)
 **Integration with Text-Generation-WebUI** (2023-12-17)
 
 We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project.
@@ -85,6 +86,7 @@ if __name__ == "__main__":
 - We support EBNF grammar description format
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
+- We support multilingual grammars, you can use any character from any language in your grammar, e.g. 中文, 日本語, 한국어, हिन्दी, العربية, עברית, or emoji 🤗.
 
 ## What is grammar ?
 
@@ -115,6 +117,12 @@ You can use it to describe very simple but useful things, like a valid email add
 ```
 phone_number ::= "+" [0-9]+
 ```
+
+You can also force it to [generate only emojis](examples/generate_emoji.py) or [generate only korean characters](examples/generate_korean.py).
+```
+['Describe your feeling with emoji: 🙌🙂😍😯😅🙏🙇🙈🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆', 'Write a poem with emoji: 🙏😍🙏🙏🙌🙏🙏🙏🙏😁😅🙏🙏🙏🙏🙏🙏🙇🙏🙏🙏🙏🙏🙏🙏🙏🙏🙋🙏🙏🙏🙏🙏🙏']
+```
+
 
 More details can be found in this [doc from llama-cpp](https://github.com/ggerganov/llama.cpp/tree/master/grammars)
 Advanced grammar debugging guide can be found [here](docs/debugging_custom_grammars.md)
