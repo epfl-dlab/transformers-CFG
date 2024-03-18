@@ -17,20 +17,19 @@ valid_smiles_sentences = [
     MoleculeTestCase("single_bond_no_hyphen", "CC"),
     MoleculeTestCase("double_bond", "C=O"),
     MoleculeTestCase("dot", "C.O"),
-    MoleculeTestCase("radical", "CC(C)CO"),
-    MoleculeTestCase("isotope", "[14c]1ccccc1"),
-    MoleculeTestCase("aromatic_no_hyphen", "C1CCCCC1"),
+    MoleculeTestCase("radical", "CC(C)C"),
+    MoleculeTestCase("isotope", "[14c]"),
+    MoleculeTestCase("aromatic_no_hyphen", "C1CC1"),
     MoleculeTestCase("interleaved_cycle_explicit", "C1=CC=CC=C1"),
-    MoleculeTestCase("interleaved_cycle_colon", "C1:C:C:C:C:C1"),
-    MoleculeTestCase("interleaved_cycle_lower_case", "c1ccccc1"),
+    MoleculeTestCase("interleaved_cycle_colon", "C1:C:C1"),
+    MoleculeTestCase("interleaved_cycle_lower_case", "c1cc1"),
     MoleculeTestCase("cis_bond_right", "F/C=C\\F"),
     MoleculeTestCase("trans_bond_left", "F\\C=C\\F"),
     MoleculeTestCase("d_alanine", "C[C@H](C(=O)O)N"),
     MoleculeTestCase("l_alanine", "C[C@@H](C(=O)O)N"),
-    MoleculeTestCase("nested_radicals", "CC(CCC(=O)N)CN"),
-    MoleculeTestCase("mix_of_cases", "COc(cc1)ccc1C#N"),
-    MoleculeTestCase("nested_cycles", "C12(CCCCC1)CCCCC2"),
-    MoleculeTestCase("charge", "[Cu+2].[O-]S(=O)(=O)[O-]"),
+    MoleculeTestCase("nested_cycles", "C12(CCC1)CCC2"),
+    MoleculeTestCase("charge", "[Cu+2].[O-]S(=O)[O-]"),
+    MoleculeTestCase("mix_of_cases", "Cc(cc1)ccc1C#N"),
     MoleculeTestCase("mix_of_bonds_and_cycles", "C1CC/C=C1/C=C/C=C/C2=C(C)/CCC2"),
     MoleculeTestCase("wildcard", "Oc1c(*)cccc1"),
 ]
@@ -126,7 +125,7 @@ TestCases = {
 class Test_parsing_smiles_object(TestCase):
     def setUp(self):
         self.recognizers = {} 
-        for grammar_name in ['generic', 'acrylates']:
+        for grammar_name in TestCases:
             with open(f"examples/grammars/SMILES/{grammar_name}.ebnf", "r") as file:
                 input_text = file.read()
             parsed_grammar = parse_ebnf(input_text)

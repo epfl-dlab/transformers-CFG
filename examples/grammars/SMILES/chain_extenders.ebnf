@@ -6,6 +6,10 @@ group_radical_right ::= "(" ( smiles* group_bond? group_symbol_right )+ ")"
 
 group_bond ::= ( "-" | "\\" | "/" )
 
+group_symbol_left ::= "OC" | "N"
+
+group_symbol_right ::= "CO"
+
 smiles ::= atom ( chain | branch )*
 
 chain ::= (dot atom | bond? ( atom | ring_closure ) )+
@@ -24,10 +28,6 @@ atom_spec ::= "[" isotope? ( "se" | "as" | aromatic_symbol | element_symbol | wi
 organic_symbol ::= "Br" | "Cl" | "N" | "O" | "P" | "S" | "F" | "I" | "B" | "C"
 
 aromatic_symbol ::= "b" | "c" | "n" | "o" | "p" | "s"
-
-group_symbol_left ::= "OC" | "N"
-
-group_symbol_right ::= "CO"
 
 wildcard ::= "*"
 
