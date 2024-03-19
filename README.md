@@ -5,8 +5,9 @@
 
 ## Latest News
 
-**Support for Unicode(multilingual) grammars** (2024-02-29)
-**Integration with Text-Generation-WebUI** (2023-12-17)
+- **Support for Unicode(multilingual) grammars** (2024-02-29)
+
+- **Integration with Text-Generation-WebUI** (2023-12-17)
 
 We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project.
 This integration enables users to utilize our CFG capabilities within the popular, 30.5K-starred web interface for text generation.
