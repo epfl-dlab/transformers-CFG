@@ -1,0 +1,202 @@
+root ::= call 
+
+call ::=    event | "(Yield "  org ")" | "(Yield " "(size" org "))" | "(Yield "  event ")" | "(Yield "  weather ")" |
+            "(Yield " "(> " "(size"  event ")" number "))" | "(do " datetime " " call ")" | "(do " call " " call ")" | "(do " org " " call ")"
+
+#root ::= event_constraint
+
+string ::= ESCAPED_STRING
+
+number ::= ( "(longToNum " ( "(Acouple))" | "(Afew))" ) ) | NUMBER | NUMBER "L" | "(+" " " number " " number ")"
+
+OP ::= ( "<=" | ">" | "<" | "+" | ">=" | "=" | "==" | "~=" ) " "
+
+weather ::= ( "(IsCold " | "(WillRain " ) weather ")" |
+            "(WeatherQueryApi " "(AtPlace " "(FindPlace " location ")) " datetime_constraint ")" |
+            "(WeatherQueryApi " "(AtPlace " "(Here)) " datetime_constraint ")" |
+            "(WeatherAggregate " "(WeatherQuantifier.Summarize) " "(temperature) " weather ")"
+
+event ::=   "(CreateCommitEventWrapper " "(CreatePreflightEventWrapper " event_constraint "))" |
+            "(FindEventWrapperWithDefaults " event_constraint ")" |
+            "(QueryEventResponse.results " "(FindEventWrapperWithDefaults " event_constraint "))" |
+            "(singleton " event ")"  |
+            "(FindNumNextEvent " event_constraint " " number ")" |
+            "(FindLastEvent " event_constraint ")" |
+            "(Execute " "(refer " "(^(Dynamic) " "ActionIntensionConstraint)))" |
+            "(Execute " "(refer " "(extensionConstraint " "(^(Event) " "EmptyStructConstraint))))" |
+            "(^(Event) " "EmptyStructConstraint)"
+
+eq_cond ::= "(?=" " "
+
+event_constraint ::=    "(& " event_constraint " " event_constraint ")" |
+                        "(Event.subject_?" " " eq_cond string "))" |
+                        "(Event.subject_?" " " "(?~= " string "))" |
+                        "(Event.start_?" " " datetime_constraint  ")" |
+                        "(Event.end_?" " " datetime_constraint  ")" |
+                        "(Event.location_?" " " location_constraint ")" |
+                        "(Event.duration_?" " "  duration_constraint ")" |
+                        "(Event.showAs_?" " " status_constraint ")" |
+                        "(Event.attendees_?" " " attendee_constraint ")" |
+                        "(EventAllDayForDateRange " event_constraint " " date_range ")" |
+                        "(EventAllDayOnDate " event_constraint " " date ")" |
+                        "(EventAtTime " event_constraint " " time ")" |
+                        "(EventOnDateBeforeTime " date event_constraint " " time ")" |
+                        "(EventForRestOfToday " event_constraint ")" |
+                        "(Event.isAllDay_?" " " eq_cond "true))" |
+                        "(EventAfterDateTime " event " " time ")" |
+                        "(EventDuringRangeTime " event_constraint " " time_range ")" |
+                        "(Event.isOneOnOne_?" " " eq_cond  "true))" |
+                        "(EventOnDate "  date " " event_constraint ")" |
+                        "(EventOnDateTime "  datetime " " event_constraint ")" |
+                        "(EventAllDayOnDate " event_constraint " " date ")" |
+                        "(EventOnDateAfterTime " date " " event_constraint " " time ")" |
+                        "(EventOnDateWithTimeRange " event_constraint " " time ")" |
+                        "(EventDuringRange " event_constraint " " date_range ")" |
+                        "(EventAllDayStartingDateForPeriod " event_constraint " " date " " period ")" |
+                        "(EventBeforeDateTime " datetime " " event_constraint  ")" |
+                        "(FindLastEvent " event_constraint ")" |
+                        "(^(Event) " "EmptyStructConstraint)"
+
+location_constraint ::= "(?= " location ")" | "(roomRequest)" | "(&" location_constraint " " location_constraint ")" 
+
+location ::= "(Event.location " event_constraint ")" | "(LocationKeyphrase.apply " string  ")"
+
+status_constraint ::=   eq_cond "(ShowAsStatus." ( "OutOfOffice" | "Busy" | "Free" | "Tentative" | "WorkingElsewhere" | "Unknown" ) "))"
+
+year ::=    "(FullYearofYear " year ")" | "(toFourDigitYear " number ")" | "(Date.year " date ")" |
+            "(Year.apply " number ")" | "(LastYear)" | "(NextYear)"
+
+DAY ::= "(" ( "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday" | "Yesterday" | "Today" | "Tomorrow" | "Weekdays" ) ")"
+
+HOLIDAY ::= "(Holiday." ( "TaxDay" | "StPatricksDay" | "ValentinesDay" | "EarthDay" | "MothersDay" | "LaborDay" |
+                          "Thanksgiving" | "Halloween" | "NewYearsEve" | "NewYearsDay" | "FathersDay" |
+                          "IndependenceDay" | "AprilFoolsDay" | "MemorialDay" | "Easter" ) ")"
+
+SEASON ::= "(Season" ( "Winter" | "Spring" | "Fall" | "Summer" ) ")"
+
+holiday ::= HOLIDAY | "(previousHoliday " date " " holiday ")" | "(nextHoliday " date " " holiday ")" | "(HolidayYear " holiday " " year ")" | "(NextHolidayFromToday " holiday ")"
+
+MONTH ::= "(" ( "January" | "February" | "March" | "April" | "May" | "June" | "July" | "August" | "September" | "October" | "November" | "December" | "NextMonth") ")"
+
+month ::=   MONTH | "(Date.month " day ")" | "(Date.month " date ")" | "(FullMonthofLastMonth)" | "(FullMonthofMonth " month ")" |
+             "(FullMonthofPreviousMonth " month ")" | "(FullMonthofMonth " month " " year ")" | "(toMonth " number ")"
+
+
+WEEK ::= "(NextWeekList)" | "(ThisWeek)" | "(LastWeekNew)" | "(NextWeekend)" | "(ThisWeekend)"
+
+week ::= WEEK | "(NumberWeekOfMonth " number " " month ")" | "(NumberWeekFromEndOfMonth " number " " month ")" | "(WeekOfDateNew " date ")" | "(WeekendOfMonth " number " " month ")"
+
+time_range ::= "(Morning)"
+
+date_range ::=  SEASON | week | month | year | "(DateAndConstraint " date " " date ")"  | "(DateAndConstraint " day " " day ")" | "(NextPeriod " period ")" |
+                "(EarlyDateRange " date_range ")" | "(LateDateRange " date_range ")" | "(DowToDowOfWeek " day " " day " " week ")" | "(WeekendOfDate " date ")"
+
+# 0. day -> date -> datetime, time -> datetime,  datatime_constraint includes both data_constraint and datatime_constraint
+
+# 1. date_contraint + datatime_constraint
+
+datetime_constraint ::= "(& " datetime_constraint " " datetime_constraint ")" |
+                        "(orConstraint " datetime_constraint " " datetime_constraint ")" |
+                        "(?" OP datetime ")" |
+                        "(DateTime.date_?" " " ( year | week | datetime | date_range | datetime_constraint ) ")" |
+                        "(DateTime.time_?" " " ( datetime | datetime_constraint ) ")" |
+                        "(DateTimeFromDowConstraint " datetime_constraint " " time ")" |
+                        "(OnDateBeforeTime " date " " time ")" |
+                        "(OnDateAfterTime " date " " time ")" |
+                        "(AroundDateTime " datetime ")" |
+                        "(GreaterThanFromStructDateTime " eq_cond datetime "))" |
+                        "(LessThanFromStructDateTime " eq_cond datetime "))" |
+                        "(DateTimeConstraint " "(?" OP " " time ") " date ")" |
+                        "(DateTimeConstraint " time " " date ")" |
+                        "(DateTimeAndConstraint " datetime " " datetime ")" |
+                        "(Date.dayOfWeek_?" " " "(negate " "(Weekend)))" |
+                        "(Date.dayOfWeek_?" " " eq_cond DAY "))" |
+                        "(Date.dayOfWeek_?" " " DAY ")" |
+                        "(negate " "(Weekend))" | "(Later)"
+
+datetime ::=    time | date | "(DateAtTimeWithDefaults " date " " time ")" |
+                "(TimeBeforeDateTime " datetime " " time ")" |
+                "(TimeAfterDateTime " datetime " " time ")" |
+                "(adjustByPeriodDuration " datetime " " "(PeriodDuration.apply " ":duration " duration "))" |
+                "(adjustByPeriodDuration " datetime " " "(PeriodDuration.apply " duration "))" |
+                "(PeriodDurationBeforeDateTime " datetime " " "(PeriodDuration.apply " ":duration " duration "))" |
+                "(PeriodDurationBeforeDateTime " datetime  " " "(PeriodDuration.apply " duration "))" |
+                "(Event.start " event ")" | "(Event.end " event ")"
+
+date ::= day | holiday | "(MD " day " " month ")" | "(MDY " day " " month " " year ")" | "(nextMonthDay " date " " month " " number ")" |
+        "(nextDayOfMonth " day " " number ")" | "(nextDayOfMonth " date " " number ")" | "(DateTime.date " datetime ")" |
+        "(PeriodBeforeDate " date " " period ")" | "(adjustByPeriod " date " " period ")" | "(adjustByDuration " date " " duration ")" |
+        "(^(Date) " "EmptyStructConstraint)" | "(Execute " "(refer " "(extensionConstraint " "(^(Date) " "EmptyStructConstraint))))"
+
+day ::= DAY | number | "(DayOfWeek " week ")" | "(NextDOW " day ")" | "(nextDayOfWeek " datetime " " day ")" | "(DowOfWeekNew " day " " week ")" |
+        "(DowOfWeekNew " day " " month ")" | "(DowOfWeekNew " day " " year ")" | "(ClosestDay " day "(Day.apply " number "))" |
+        "(previousDayOfMonth " date " " number ")" | "(LastWeekendOfMonth " month ")" | "(previousDayOfWeek " date " " date ")" |
+        "(previousMonthDay " day " " month " " number ")" | "(NextDayOfMonth " day " " number ")" | "(LastDayOfMonth " month ")" | "(Date.dayOfWeek " date ")" |
+        "(ClosestDayOfWeek " date " " day ")" | "(adjustByPeriod " day  " " period ")"
+
+
+time ::=    "(NumberAM " number ")" |
+            "(NumberPM " number ")" |
+            "(HourMinuteAm " number " " number ")" |
+            "(HourMinutePm " number " " number ")" |
+            "(HourMilitary " number ")" |
+            "(HourMinuteMilitary " number " " number ")" |
+            "(EndOfWorkDay)" |
+            "(NextTime " time ")" |
+            "(TimeToTime " time " " time ")" |
+            "(TimeAround " time ")" |
+            "(EarlyTimeRange " time ")" |
+            "(LateTimeRange " time ")" |
+            "(DateTime.time " datetime ")" |
+            "(adjustByDuration " time " " duration ")" |
+            "(Breakfast)" | "(Brunch)" | "(Lunch)" | "(Dinner)" | "(Night)" | "(Noon)" | "(Morning)" |
+            "(LateMorning)" | "(Evening)" | "(Early)" | "(LateAfternoon)" | "(Afternoon)" | "(Midnight)" | "(Late)" | "(Now)"
+
+period  ::= duration | "(addPeriods " period " " period ")"
+
+duration_constraint ::= "(?" OP duration ")"
+
+duration ::= "(toHours " number ")" | "(toMinutes " number ")" | "(toDays " number ")" | "(toMonths " number ")" | "(toYear " number ")" |
+             "(toWeeks " number ")" | "(addDurations " duration " " duration ")"
+
+attendee_constraint  ::=    "(AttendeeListHasRecipient " person ")" |
+                            "(AttendeeListHasRecipientConstraint " person ")" |
+                            "(AttendeeListHasPeople " person ")" |
+                            "(AttendeeListExcludesRecipient " eq_cond recipient "))" |
+                            "(AttendeeListHasRecipientWithType " recipient "(AttendeeType.Required))" |
+                            "(AttendeeListHasRecipientWithType " recipient "(AttendeeType.Optional))" |
+                            "(&" " " attendee_constraint " " attendee_constraint ")"
+
+recipient ::=   "(toRecipient " "(CurrentUser))" | "(RecipientWithNameLike " "(^(Recipient) " "EmptyStructConstraint) " "(PersonName.apply " string "))" |
+                "(Execute " "(refer " "(extensionConstraint " recipient ")))" | "(RecipientFromRecipientConstraint " recipient ")" | "(RecipientFromRecipientConstraint " eq_cond recipient "))"
+
+person ::= recipient | ( "(PersonFromRecipient " | "(FindTeamOf " | "(FindManager " | "(FindReports " ) person ")"
+
+team ::= "(FindTeamOf " recipient ")"
+
+org ::= person | attendee_constraint | "(Path.apply " string ")" | "(Person.phoneNumber " person ")" | "(PersonFromRecipient " person ")" |
+         "(PersonOnTeam " person " " team ")" | "(Person.emailAddress " person ")" | "(== " person " " person ")"
+
+LATIN ::= [a-zA-Z]
+
+PUNCTUATION ::= [!?.,;:()'` \t\n]
+
+ESCAPED_STRING ::= "\"" ( LATIN | PUNCTUATION | NUMBER )+ "\""
+
+DIGIT ::= [0-9]
+
+HEXDIGIT ::= ([a-f] | [A-F] | DIGIT)
+
+INT ::= DIGIT+
+
+SIGNED_INT ::=  ["+"|"-"] INT
+
+DECIMAL ::= INT "." INT? | "." INT
+
+_EXP ::= ( "e" | "E" ) SIGNED_INT
+
+FLOAT ::= INT _EXP | DECIMAL _EXP?
+
+SIGNED_FLOAT ::= ["+"|"-"] FLOAT
+
+NUMBER ::= FLOAT | INT
