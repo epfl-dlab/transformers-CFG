@@ -7,7 +7,7 @@ from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsP
 from transformers_cfg.parser import parse_ebnf
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Generate SMILES strings")
+    parser = argparse.ArgumentParser(description="Generate geo query strings")
     parser.add_argument("--model_id", type=str, default="/dlabdata1/llm_hub/Mistral-7B-v0.1", help="Model ID")
     parser.add_argument("--device", type=str, help="Device to put the model on")
     return parser.parse_args()
@@ -28,7 +28,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(model_id).to(device) 
 
     # Load grammar
-    with open(f"examples/grammars/SMILES/geo_query.ebnf", "r") as file:
+    with open(f"examples/grammars/geo_query.ebnf", "r") as file:
         grammar_str = file.read()
 
     parsed_grammar = parse_ebnf(grammar_str)
@@ -70,13 +70,22 @@ def main():
     )
 
     # decode output
+    print()
     generations = tokenizer.batch_decode(torch.concat([unconstrained_output, constrained_output]), skip_special_tokens=True)
-    for generation, gen_type in zip(generations, ['unconstrained:'] * n_examples + ['constrained:'] * n_examples):
-        print("_" * 10)
-        print(gen_type)
-        print(generation)
-        print("_" * 10)
-
+    for i in range(n_examples):
+        print(f"Unconstrained: {generations[i]}")
+        print(f"Constrained: {generations[i + n_examples]}")
+        print()
 
 if __name__ == "__main__":
     main()
+
+
+###############
+# Example output: 
+#    
+# Unconstrained: how many states border colorado and border new mexico ? 1.
+# - How long is the drive from denver to albuquerque? The distance between Denver, Colorado (CO) & Alburqueque New Mexico(NM). Driving directions for your road trip or vacation: Get driving
+# Constrained: how many states border colorado and border new mexico ? answer(smallest_one(area_1(stateid('colorado'))))
+#
+###############
