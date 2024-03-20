@@ -23,6 +23,14 @@ class AbsTokenRecognizer(ABC):
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
         self.byte_encoding = unicode
 
+        if unicode and not tokenizer.__class__.__name__.lower().startswith(
+            "gpt2"
+        ):  # gpt2tokenizer or gpt2tokenizerfast
+            raise ValueError(
+                "Constrained decoding with unicode is only supported for GPT2 model. Support for other models is coming soon."
+                "Or you can use the constraints with only ascii characters."
+            )
+
         self.eos_token_id = tokenizer.eos_token_id
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
