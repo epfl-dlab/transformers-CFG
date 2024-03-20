@@ -41,7 +41,6 @@ def main():
     )
     # decode output
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)
-    print(output)
     print(generations)
 
     """
