@@ -42,9 +42,10 @@ class Mapping:
         self.bos_token_id = tokenizer.bos_token_id
         self.tokenizer = tokenizer
         self.special = tokenizer.all_special_ids
+        self._length = len(self.tokenizer.get_vocab())
 
     def __len__(self):
-        return len(self.tokenizer.get_vocab())
+        return self._length
 
     def _map(self, token_id: int) -> str:
         # This is the case for BOS,

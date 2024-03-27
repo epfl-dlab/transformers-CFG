@@ -177,9 +177,11 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
 
         if self.last_size is None:
             prefix_to_parse = [
-                single_input_ids[parse_start_index:]
-                if parse_start_index is not None
-                else []
+                (
+                    single_input_ids[parse_start_index:]
+                    if parse_start_index is not None
+                    else []
+                )
                 for single_input_ids in input_ids
             ]
 
@@ -269,6 +271,7 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
                 new_stack.append(next_element_offset)
             new_stacks.extend(grammar.advance_stack(tuple(new_stack)))
 
+        new_stacks = list(map(list, set(map(tuple, new_stacks))))
         if new_stacks:
             check_token_acceptance_in_trie(
                 next_trie, new_stacks, grammar, eos_token_id, accepts
