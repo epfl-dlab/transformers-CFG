@@ -61,7 +61,7 @@ class TokenizerTesterMixin:
         acc_state = JsontokenRecognizer._consume_token_ids(token_ids, as_string=False)
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            acc_state.stacks == [] or acc_state.stacks == [[]],
+            acc_state.stacks == set() or acc_state.stacks == set(tuple()),
             f"stacks: {acc_state.stacks}, not empty",
         )
 
@@ -88,7 +88,7 @@ class TokenizerTesterMixin:
         accept_state = recognizer._consume_token_ids(token_ids, as_string=False)
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            accept_state.stacks == [] or accept_state.stacks == [[]],
+            accept_state.stacks == set() or accept_state.stacks == set(tuple()),
             f"stacks: {accept_state.stacks}, not empty",
         )
 
