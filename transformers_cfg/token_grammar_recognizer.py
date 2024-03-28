@@ -2,7 +2,7 @@ import copy
 import logging
 from abc import ABC
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 import torch
 
@@ -222,7 +222,10 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         return batch_accept_states
 
     def _consume_token_ids(
-        self, token_ids: List[int], accept_state: AcceptState = None, as_string=True
+        self,
+        token_ids: List[int],
+        accept_state: Optional[AcceptState] = None,
+        as_string=True,
     ):
         if accept_state is None:
             accept_state = self.string_recognizer.get_initial_accept_state()
@@ -251,7 +254,7 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
                 accepts[token_id] = bool(stacks)
             continue
 
-        new_stacks = []
+        new_stacks = set()
         for stk in stacks:
             if not stk:
                 continue
@@ -266,12 +269,11 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
                 continue
 
             next_element_offset += num_chars + 1
-            new_stack = stk[:-1]
+            new_stack = list(stk[:-1])
             if grammar.grammar_encoding[next_element_offset]:
                 new_stack.append(next_element_offset)
-            new_stacks.extend(grammar.advance_stack(tuple(new_stack)))
+            new_stacks.update(grammar.advance_stack(tuple(new_stack)))
 
-        new_stacks = list(map(list, set(map(tuple, new_stacks))))
         if new_stacks:
             check_token_acceptance_in_trie(
                 next_trie, new_stacks, grammar, eos_token_id, accepts

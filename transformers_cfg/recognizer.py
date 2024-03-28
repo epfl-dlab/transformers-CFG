@@ -1,7 +1,7 @@
 import copy
 import logging
 from functools import lru_cache
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Set, Optional
 
 from transformers_cfg.parser import (
     END_OF_RULE_MARKER,
@@ -21,16 +21,16 @@ class AcceptState:
 
     @staticmethod
     def empty_state():
-        return AcceptState([], PartialUTF8())
+        return AcceptState(set(), PartialUTF8())
 
 
 class StringRecognizer:
     def __init__(
         self,
         grammar_encoding: List[int],
-        start_rule_id: int = None,
-        rule_offsets: List[int] = None,
-        stacks: List[List[int]] = None,
+        start_rule_id: int = -1,
+        rule_offsets: Optional[List[int]] = None,
+        stacks: Optional[Set[Tuple[int]]] = None,
     ):
         # strictly speaking, we don't need to copy grammar_encoding because we don't modify it
         # but we do it anyway to be safe
@@ -39,7 +39,7 @@ class StringRecognizer:
         if rule_offsets is not None:
             self.rule_offsets = rule_offsets
         else:
-            if start_rule_id is None:
+            if start_rule_id == -1:
                 raise ValueError("start_rule_id cannot be None if rule_offsets is None")
             self.rule_offsets = self.init_rules(start_rule_id)
         # each stack is a list of indices into grammar_encoding
@@ -47,14 +47,14 @@ class StringRecognizer:
         if stacks is not None:
             self.stacks = stacks
         else:
-            if start_rule_id is None:
+            if start_rule_id == -1:
                 raise ValueError("start_rule_id cannot be None if stacks is None")
-            self.stacks: List[List[int]] = self.init_stack(start_rule_id)
+            self.stacks = self.init_stack(start_rule_id)
         self.start_rule_id = start_rule_id
 
     def init_rules(self, start_rule_id: int) -> List[int]:
         _rule_offset = 0
-        rule_offsets = []
+        rule_offsets: List = []
         # Build `rules` as an array of rule IDs to their positions in `grammar_src`
         while self.grammar_encoding[_rule_offset] != 0xFFFF:
             rule_id = self.grammar_encoding[_rule_offset]
@@ -82,9 +82,9 @@ class StringRecognizer:
 
         return rule_offsets
 
-    def init_stack(self, start_rule_id: int) -> List[List[int]]:
+    def init_stack(self, start_rule_id: int) -> Set[Tuple[int]]:
 
-        stacks = []
+        stacks = set()
         # Loop over alternates of start rule to build initial stacks
         sub_rhs_offset = self.rule_offsets[start_rule_id] + 1
         while self.grammar_encoding[sub_rhs_offset]:
@@ -93,7 +93,7 @@ class StringRecognizer:
             element_offset = sub_rhs_offset + 1
             if self.grammar_encoding[element_offset] != END_OF_ALTERNATE_MARKER:
                 stack.append(element_offset)
-            stacks.extend(self.advance_stack(tuple(stack)))
+            stacks.update(self.advance_stack(tuple(stack)))
             sub_rhs_offset += 1 + self.grammar_encoding[sub_rhs_offset]
         return stacks
 
@@ -101,30 +101,29 @@ class StringRecognizer:
         return AcceptState(self.init_stack(self.start_rule_id), PartialUTF8())
 
     def get_termination_accept_state(self) -> AcceptState:
-        return AcceptState([], PartialUTF8())
+        return AcceptState(set(), PartialUTF8())
 
     @lru_cache(maxsize=32768)
-    def advance_stack(self, stack: Tuple[int]) -> List[List[int]]:
-        stack = list(stack)
+    def advance_stack(self, stack: Tuple[int]) -> Set[Tuple[int]]:
         if len(stack) == 0:
-            return [stack]
+            return {stack}
 
         # we get the last element of the stack, which is the element we are currently processing
         cur_element_offset = stack[-1]
 
         # if the element is a terminal, we don't need to advance the stack
         if self.grammar_encoding[cur_element_offset] != REF_RULE_MARKER:
-            return [stack]
+            return {stack}
         # the remaining case is that the element is a non-terminal, i.e. a reference to another rule
         else:
             ref_rule_id = self.grammar_encoding[cur_element_offset + 1]
             # find the offset of the referenced rule
             ref_subrule_offset = self.rule_offsets[ref_rule_id] + 1
-            new_stacks: List[List[int]] = []
+            new_stacks: Set[Tuple[int]] = set()
             # Loop over alternates of referenced rule to build new stacks
             while self.grammar_encoding[ref_subrule_offset] != END_OF_RULE_MARKER:
                 # copy the original stack without the last element
-                new_stack = stack[:-1]
+                new_stack = list(stack[:-1])
                 # if the rule ref is followed by another element, we add it to the stack
                 next_element_offset = cur_element_offset + 2
                 if (
@@ -138,7 +137,7 @@ class StringRecognizer:
                 if self.grammar_encoding[ref_element_offset] != END_OF_ALTERNATE_MARKER:
                     new_stack.append(ref_element_offset)
 
-                new_stacks.extend(self.advance_stack(tuple(new_stack)))
+                new_stacks.update(self.advance_stack(tuple(new_stack)))
                 ref_subrule_offset += self.grammar_encoding[ref_subrule_offset] + 1
 
             return new_stacks
@@ -152,7 +151,7 @@ class StringRecognizer:
     def _probe_bytes(
         self,
         byte_seq: bytes,
-        stacks: List[List[int]],
+        stacks: Set[Tuple[int]],
         partial_utf8: PartialUTF8,
         verbose=True,
     ):
@@ -178,7 +177,7 @@ class StringRecognizer:
     def _consume_bytes(
         self,
         byte_seq: bytes,
-        accept_state: AcceptState = None,
+        accept_state: Optional[AcceptState] = None,
         verbose=True,
     ):
         if accept_state is None:
@@ -194,13 +193,13 @@ class StringRecognizer:
             )
         new_stacks = self._consume_code_points(code_points, stacks)
 
-        new_new_stacks = []
+        new_new_stacks = set()
         for stack in new_stacks:
             if len(stack) == 0:
                 continue
             element_offset = stack[-1]
             if self.partial_utf8_accept_at_element(element_offset, new_partial_utf8):
-                new_new_stacks.append(stack)
+                new_new_stacks.add(stack)
         return AcceptState(new_new_stacks, new_partial_utf8)
 
     ##########################
@@ -211,27 +210,24 @@ class StringRecognizer:
 
     @lru_cache(maxsize=30000)
     def _consume_code_point(
-        self, code_point: int, stacks: Tuple[Tuple[int]]
-    ) -> List[List[int]]:
+        self, code_point: int, stacks: Set[Tuple[int]]
+    ) -> Set[Tuple[int]]:
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
         """
-        new_stacks = []
+        new_stacks: Set[Tuple[int]] = set()
 
-        stacks: List[List[int]] = list([list(stack) for stack in stacks])
         if code_point == 0:
             return new_stacks
         for stack in stacks:
-            new_stacks.extend(
-                self._consume_code_point_per_stack(code_point, tuple(stack))
-            )
+            new_stacks.update(self._consume_code_point_per_stack(code_point, stack))
         return new_stacks
 
     @lru_cache(maxsize=30000)
     def _consume_code_point_per_stack(
         self, code_point: int, stack: Tuple[int]
-    ) -> List[List[int]]:
+    ) -> Set[Tuple[int]]:
         """
         consume a character from the stack
         char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
@@ -241,8 +237,8 @@ class StringRecognizer:
         #     raise ValueError("Stacks don't contain any stack, meaning that no character can be consumed")
         # code_point = 0 is a special case when the uf8 sequence is not complete, we return an empty stack
         # to indicate that the character is not accepted
-        stack = list(stack)
-        new_stacks = []
+
+        new_stacks: Set[Tuple[int]] = set()
         if code_point == 0:
             return new_stacks
         # stack is empty
@@ -257,17 +253,17 @@ class StringRecognizer:
 
         size = self.grammar_encoding[element_offset]
         element_offset += size + 1
-        new_stack = stack[:-1]
+        new_stack = list(stack[:-1])
         if self.grammar_encoding[element_offset]:
             new_stack.append(element_offset)
         return self.advance_stack(tuple(new_stack))
 
     def _consume_code_points(
-        self, code_points: List[int], stacks: List[List[int]], verbose=False
-    ) -> List[List[int]]:
+        self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
+    ) -> Set[Tuple[int]]:
         for i, code_point in enumerate(code_points):
             # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
-            tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
+            tuple_stacks: Tuple[Tuple[int], ...] = tuple(stacks)
             stacks = self._consume_code_point(code_point, tuple_stacks)
             if len(stacks) > 0 and verbose:
                 accepted_code_point = code_points[: i + 1]
@@ -278,7 +274,7 @@ class StringRecognizer:
         return stacks
 
     def _accept_code_points(
-        self, code_points: List[int], stacks: List[List[int]], verbose=False
+        self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
     ) -> bool:
         stacks = self._consume_code_points(code_points, stacks, verbose)
         return len(stacks) > 0
@@ -370,13 +366,13 @@ class StringRecognizer:
         stacks = self._consume_code_points(code_points, accept_state.stacks)
         return AcceptState(stacks, accept_state.partial_utf8)
 
-    def _accept_prefix(self, string: str, accept_state: AcceptState = None):
+    def _accept_prefix(self, string: str, accept_state: Optional[AcceptState] = None):
         if accept_state is None:
             accept_state = self.get_initial_accept_state()
         new_accept_state = self._consume_string(string, accept_state)
         return len(new_accept_state.stacks) > 0
 
-    def _accept_string(self, string: str, accept_state: AcceptState = None):
+    def _accept_string(self, string: str, accept_state: Optional[AcceptState] = None):
         if accept_state is None:
             accept_state = self.get_initial_accept_state()
         new_accept_state = self._consume_string(string, accept_state)
@@ -385,7 +381,7 @@ class StringRecognizer:
         )
         return at_least_one_stack_is_empty
 
-    def _can_stop(self, stacks: List[List[int]]):
+    def _can_stop(self, stacks: Set[Tuple[int]]):
         # This happens in practice, but maybe it shouldn't? TODO
         if len(stacks) == 0:
             return True
@@ -396,7 +392,7 @@ class StringRecognizer:
         else:
             return False
 
-    def _must_stop(self, stacks: List[List[int]]):
+    def _must_stop(self, stacks: Set[Tuple[int]]):
         return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
 
     #############################
@@ -432,28 +428,22 @@ class StringRecognizer:
         return acceptance
 
     def _consume_code_points_new(
-        self, code_points: List[int], stacks: List[List[int]], verbose=False
-    ) -> List[List[int]]:
-        new_stacks: List[List[int]] = []
+        self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
+    ) -> Set[Tuple[int]]:
+        new_stacks: Set[Tuple[int]] = set()
         for stack in stacks:
-            new_stacks.extend(
-                self._consume_code_points_per_stack(
-                    tuple(code_points), tuple(stack), verbose
-                )
+            new_stacks.update(
+                self._consume_code_points_per_stack(tuple(code_points), stack, verbose)
             )
         return new_stacks
 
     @lru_cache(maxsize=30000)
     def _consume_code_points_per_stack(
         self, code_points: Tuple[int], stack: Tuple[int], verbose=False
-    ) -> List[List[int]]:
-        code_points = list(code_points)
-        stacks = (stack,)
-        for i, code_point in enumerate(code_points):
-            # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
-            stacks = self._consume_code_point(code_point, stacks)
-            stacks = tuple([tuple(stack) for stack in stacks])
-        return [list(stack) for stack in stacks]
+    ) -> Set[Tuple[int]]:
+        for code_point in code_points:
+            stacks = self._consume_code_point(code_point, (stack,))
+        return stacks
 
 
 if __name__ == "__main__":
