@@ -1,0 +1,27 @@
+root ::=  "(listValue " list_value ")" 
+
+
+list_value ::= "(filter " ( list_value " " PROPERTY | list_value " " PROPERTY OP list_value | list_value " " "(ensureNumericProperty "  PROPERTY ")" OP  "(ensureNumericEntity " list_value ")" ) ")" |
+               "(superlative " list_value AGGREGATE "(ensureNumericProperty "  PROPERTY "))" |
+               "(countSuperlative " list_value AGGREGATE PROPERTY ( " " list_value)?  ")" |
+               "(countComparative " list_value " " PROPERTY OP list_value ( " " list_value)? ")" |
+               "(_size " list_value ")" |
+               "(aggregate" AGGREGATE  list_value ")" |
+               "(getProperty " ( list_value " " PROPERTY | "(singleton " SINGLETON_VALUE ") " "!type" ) ")" |
+               "(concat " ( ENTITY_VALUE " " ENTITY_VALUE | NUMBER_VALUE " " NUMBER_VALUE ) ")" |
+               ENTITY_VALUE | NUMBER_VALUE
+
+PROPERTY ::= "shape" | "color" | "length" | "is_special" | "width" | "height" | "left" | "right" | "above" | "below" |
+             "(reverse " ( "left" | "right" | "above" | "below" ) ")"
+
+
+SINGLETON_VALUE ::=  "en.block"  | "en.shape"  | "en.color" 
+
+ENTITY_VALUE ::= "en.block.block1" | "en.block.block2" | "en.shape.pyramid" | "en.shape.cube" | "en.color.red" | "en.color.green"
+
+NUMBER_VALUE ::= ( "3" | "6" )  " " "en.inch" | "2"
+
+
+OP ::= " " ( "=" | ">" | "<" | ">=" | "<=" | "!=" ) " "
+
+AGGREGATE ::= " " ("sum" | "max" | "min" | "avg" ) " " 
