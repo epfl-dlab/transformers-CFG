@@ -1,0 +1,226 @@
+root ::= "answer(" answer_type ")"
+
+answer_type ::= city | state | num | place | river | country
+
+coma_sep ::= " "* "," " "*
+
+city ::=    "city(" city ")" |
+            "cityid('" CITYNAME "', '" STATEABBREV "')" |
+            "cityid('" CITYNAME "', _)" |
+            "capital(" city ")" |
+            "major(" city ")" |
+            "capital_1(" state ")" |
+            "loc_2(" state ")" |
+            "loc_2(" country ")" |
+            "largest(" city ")" |
+            "smallest(" city ")" |
+            "intersection(" city coma_sep city ")" |
+            "exclude(" city coma_sep city ")" |
+            "largest_one(population_1(" city "))" |
+            "largest_one(density_1(" city "))" |
+            "smallest_one(population_1(" city "))" |
+            "smallest_one(density_1(" city "))" |
+            ALL_CITY
+
+place ::=   "placeid('" PLACENAME "')" | 
+            "lake(" place ")" |
+            "mountain(" place ")" |
+            "place(" place ")" |
+            "high_point_1(" state ")" |
+            "low_point_1(" state ")" |
+            "higher_2(" place ")" |
+            "lower_2(" place ")" |
+            "lowest(" place ")" |
+            "highest(" place ")" |
+            "capital(" place ")" |
+            "loc_2(" city ")" |
+            "loc_2(" state ")" |
+            "loc_2(" country ")" |
+            "major(" place ")" |
+            "elevation_2(" NUM ")" |
+            "exclude(" place coma_sep place ")" |
+            ALL_PLACE
+
+river ::=   "river(" river ")" | 
+            "riverid('" RIVERNAME "')" |
+            "major(" river ")" | 
+            "loc_2(" country ")" | 
+            "loc_2(" state ")" |
+            "longer(" river ")" |
+            "traverse_2(" city ")" |
+            "traverse_2(" state ")" |
+            "traverse_2(" country ")" |
+            "longest(" river ")" |
+            "shortest(" river ")" |
+            "most(" river ")" |
+            "fewest(" river ")" |
+            "intersection(" river coma_sep river ")" |
+            "exclude(" river coma_sep river ")" |
+            ALL_RIVER
+
+state ::=   "state(" state ")" |
+            "stateid('" STATENAME "')" |
+            "capital_2(" city ")" |
+            "highest_point_2(" place ")" |
+            "loc_1(" place ")" |
+            "loc_1(" city ")" |
+            "loc_1(" river ")" |
+            "loc_2(" country ")" |
+            "next_to_1(" state ")" |
+            "next_to_2(" state ")" |
+            "next_to_2(" river ")" |
+            "traverse_1(" river ")" |
+            "largest(" state ")" |
+            "largest_one(area_1(" state "))" |
+            "largest_one(density_1(" state "))" |
+            "largest_one(population_1(" state "))" |
+            "smallest_one(area_1(" state "))" |
+            "smallest_one(density_1(" state "))" |
+            "smallest_one(population_1(" state "))" |
+            "highest(" state ")" |
+            "lowest(" state ")" |
+            "most(" state ")" |
+            "fewest(" state ")" |
+            "smallest(" state ")" |
+            "high_point_2(" place ")" |
+            "low_point_2(" place ")" |
+            "intersection(" state coma_sep state ")" |
+            "exclude(" state coma_sep state ")" |
+            ALL_STATE
+
+num ::= NUM |
+        "area_1(" city ")" |
+        "area_1(" state ")" |
+        "area_1(" country ")" |
+        "density_1(" city ")" |
+        "density_1(" state ")" |
+        "density_1(" country ")" |
+        "elevation_1(" place ")" |
+        "len(" river ")" |
+        "population_1(" state ")" |
+        "population_1(" city ")" |
+        "population_1(" country ")" |
+        "size(" state ")" |
+        "size(" city ")" |
+        "count(" city ")" |
+        "count(" state ")" |
+        "count(" river ")" |
+        "sum(" num ")" |
+        "smallest(" num ")"
+
+country ::= "countryid('" COUNTRYNAME "')" | "loc_1(" state ")"
+
+ALL_STATE ::= "state(all)"
+
+ALL_CITY ::= "city(all)" | "capital(all)"
+
+ALL_PLACE ::= "place(all)" | "mountain(all)" | "lake(all)"
+
+ALL_RIVER ::= "river(all)"
+
+NUM ::= "0"
+
+CITYNAME ::=    "new york" |
+                "guadalupe peak" |
+                "durham" |
+                "tempe" |
+                "sacramento" |
+                "albany" |
+                "rochester" |
+                "salem" |
+                "portland" |
+                "miami" |
+                "san diego" |
+                "spokane" |
+                "erie" |
+                "austin" |
+                "new orleans" |
+                "dallas" |
+                "boulder" |
+                "plano" |
+                "fort wayne" |
+                "boston" |
+                "springfield" |
+                "seattle" |
+                "dover" |
+                "minneapolis" |
+                "denver" |
+                "tucson" |
+                "montgomery" |
+                "san jose" |
+                "atlanta" |
+                "salt lake city" |
+                "kalamazoo" |
+                "flint" |
+                "chicago" |
+                "indiannapolis" |
+                "pittsburgh" |
+                "scotts valley" |
+                "baton rouge" |
+                "riverside" |
+                "san francisco" |
+                "des moines" |
+                "columbus" |
+                "houston" |
+                "detroit" |
+                "washington" |
+                "indianapolis" |
+                "san antonio"
+
+PLACENAME ::= "death valley"  | "mount whitney" | "guadalupe peak" | "mount mckinley"
+
+STATEABBREV ::= "ga" | "wa" | "mn"  | "az" | "pa" | "dc" | "tx" | "sd" | "me" | "ma" | "mo"
+
+STATENAME ::=   "north carolina" |
+                "washington" |
+                "minnesota" |
+                "florida" |
+                "virginia" |
+                "arkansas" |
+                "iowa" |
+                "california" |
+                "delaware" |
+                "new jersey" |
+                "rhode island" |
+                "nevada" |
+                "nebraska" |
+                "indiana" |
+                "wisconsin" |
+                "oklahoma" |
+                "new mexico" |
+                "idaho" |
+                "ohio" |
+                "montana" |
+                "arizona" |
+                "louisiana" |
+                "tennessee" |
+                "pennsylvania" |
+                "new hampshire" |
+                "south carolina" |
+                "michigan" |
+                "utah" |
+                "vermont" |
+                "kansas" |
+                "oregon" |
+                "wyoming" |
+                "maryland" |
+                "alaska" |
+                "georgia" |
+                "mississippi" |
+                "illinois" |
+                "texas" |
+                "south dakota" |
+                "north dakota" |
+                "alabama" |
+                "kentucky" |
+                "hawaii" |
+                "maine" |
+                "west virginia" |
+                "colorado" |
+                "new york" |
+                "massachusetts" |
+                "missouri"
+
+COUNTRYNAME ::= "usa"
+
+RIVERNAME ::= "ohio" | "north platte" | "red" | "chattahoochee" | "mississippi" | "potomac"| "colorado" | "missouri" | "rio grande" | "delaware"
