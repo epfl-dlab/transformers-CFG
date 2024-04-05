@@ -22,13 +22,6 @@ valid_cal_flow_sentences = [
         "find_reports", "(Yield (FindReports (toRecipient (CurrentUser))))"
     ),
     CalFlowTestCase(
-        "create_event", 'ghtEventWrapper (Event.subject_? (?= "choose the meeting")))))'
-    ),
-    CalFlowTestCase(
-        "event_start_end",
-        '(Yield (CreateCommitEventWrapper (CreatePreflightEventWrapper (& (&(Yield (CreateCommitEventWrapper (CreatePrefli (Event.subject_? (?= "Work Shift")) (Event.start_? (?= (Monday)))) (Event.end_? (?= (Monday)))))))',
-    ),
-    CalFlowTestCase(
         "long_entry",
         '(Yield (CreateCommitEventWrapper (CreatePreflightEventWrapper (& (& (Event.subject_? (?= "Work Shift")) (Event.start_? (?= (DateAtTimeWithDefaults (MDY 2L (April) (Year.apply 2019L)) (NumberAM 8L))))) (Event.end_? (DateTime.time_? (?= (NumberPM 4L))))))))',
     ),
@@ -175,14 +168,12 @@ invalid_cal_flow_sentences = [
     CalFlowTestCase(
         "no_space_between_operators", "(Yield(FindReports(toRecipient(CurrentUser))))"
     ),
-    # CalFlowTestCase("empty_operator", "answer(highest(place(loc_2())))"),
-    # CalFlowTestCase("missing_argument", "answer(intersection(state(next_to_2(stateid('texas'))), )"),
 ]
 
 
 class Test_parsing_cal_flow_object(TestCase):
     def setUp(self):
-        with open(f"examples/grammars/SMILES/calflow.ebnf", "r") as file:
+        with open(f"examples/grammars/calflow.ebnf", "r") as file:
             input_text = file.read()
         parsed_grammar = parse_ebnf(input_text)
         start_rule_id = parsed_grammar.symbol_table["root"]
