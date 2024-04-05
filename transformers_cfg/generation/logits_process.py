@@ -22,6 +22,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.parse_start_index = None
 
     def mask_logits(self, logits, device):
+        masked_logits = logits.clone()
         # resolve each stack to a tensor of True/False for each token
         # indicating acceptance
         # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
@@ -54,7 +55,8 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             logger.debug("Accepted tokens for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_tokens))
         # Logits to -inf where False
-        logits[~acceptance] = -math.inf
+        masked_logits[~acceptance] = -math.inf
+        return masked_logits
 
     # TODO: batching
     def process_logits(self, input_ids, scores):
@@ -92,8 +94,8 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         )
         logger.debug(f"input_ids: {input_ids}")
 
-        self.mask_logits(scores, scores.device)
-        return scores
+        masked_scores = self.mask_logits(scores, scores.device)
+        return masked_scores
 
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
     def __call__(
