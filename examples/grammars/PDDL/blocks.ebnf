@@ -1,0 +1,13 @@
+root ::= plan
+
+plan ::=  action ( right_action )*
+
+right_action ::= " " action
+
+action ::= "(unstack " object " " object ")" |
+           "(put-down " object ")" |
+           "(pick-up " object ")" |
+           "(pick-up-and-stack " object " " object ")" |
+           "(unstack-and-stack " object " " object  " " object ")"
+
+object ::= [a-e]
