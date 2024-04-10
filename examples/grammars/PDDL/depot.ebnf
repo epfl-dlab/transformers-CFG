@@ -3,11 +3,12 @@ root ::= plan
 
 plan ::= action ( " " action )*
 
-action ::= "(lift-and-drive " object " " object " " object " " object " " object " " object ")" |
-            ( "(lift "  | "(load " | "(unload ") object " " object " " object " " object ")" |
-            ( "(lift " | "(drop " ) object " " object " " object " " object ")" |
-            ( "(drive-and-lift " | "(drive-and-unload " | "(drive-and-load " ) object " " object " " object " " object " " object ")" |
-            "(drive " object " " object " " object ")"
+action ::= "(" (
+    "drive" " " object " " object " " object |
+    ( "lift"  | "load" | "unload" | "drive-and-load" | "drop" ) " " object " " object " " object " " object |
+    ( "drive-and-lift" | "drive-and-unload" ) " " object " " object " " object " " object " " object |
+    "lift-and-drive" " " object " " object " " object " " object " " object " " object
+) ")"
 
 # Example, should be input dependent
 

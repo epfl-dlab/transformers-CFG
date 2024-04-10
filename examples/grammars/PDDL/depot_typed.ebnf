@@ -1,0 +1,31 @@
+
+root ::= plan
+
+plan ::= action ( " " action )*
+
+action ::= "(" (
+    "drive" " " truck " " place " " place |
+    ( "lift" | "drop" ) " " hoist " " crate " " surface " " place |
+    ( "load" | "unload" ) " " hoist " " crate " " truck " " place |
+    "drive-and-load" " " truck " " hoist " " crate " " place |
+    ( "drive-and-lift" | "drive-and-unload" ) " " truck " " hoist " " crate " " surface " " place |
+    "lift-and-drive" " " truck " " hoist " " crate " " surface " " place " " place
+) ")"
+
+# Example, should be input dependent
+
+truck ::= "truck" [0-1]
+
+hoist ::= "hoist" [0-2]
+
+crate ::= "crate" [0-5]
+
+pallet ::= "pallet" [0-5]
+
+depot ::= "depot" [0-1]
+
+distributor ::= "distributor" [0-1]
+
+place ::= depot | distributor
+
+surface ::= pallet | crate

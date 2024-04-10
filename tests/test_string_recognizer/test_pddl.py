@@ -1,6 +1,4 @@
 from unittest import TestCase
-
-import logging
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -43,12 +41,17 @@ invalid_blocks_sentences = [
 valid_depot_sentences = [
     PDDLTestCase("simplest_operator", "(drive truck0 depot0 distributor0)"),
     PDDLTestCase("lift", "(lift hoist0 crate0 pallet0 distributor0)"),
+    PDDLTestCase("drive_and_load", "(drive-and-load truck1 hoist0 crate0 depot0)"),
     PDDLTestCase(
         "drive_and_lift",
         "(drive-and-lift truck0 hoist0 crate0 pallet0 distributor0)",
     ),
     PDDLTestCase(
         "lift_and_drive", "(lift-and-drive truck0 hoist0 crate0 pallet0 depot0 depot1)"
+    ),
+    PDDLTestCase(
+        "multiple_actions",
+        "(lift-and-drive truck0 hoist0 crate0 pallet0 depot0 depot0) (lift hoist2 crate2 crate1 distributor1)",
     ),
     PDDLTestCase(
         "long_realistic",
@@ -61,7 +64,7 @@ valid_depot_sentences = [
     PDDLTestCase(
         "long_real",
         "(lift-and-drive truck1 hoist0 crate5 pallet0 depot0 depot0) (drive-and-load truck1 hoist0 crate5 depot0) "
-        + "(drive-andlift truck0 hoist2 crate4 crate0 distributor1) (lift hoist1 crate0 pallet4 distributor0) "
+        + "(drive-and-lift truck0 hoist2 crate4 crate0 distributor1) (lift hoist1 crate0 pallet4 distributor0) "
         + "(drive-and-lift truck1 hoist0 crate1 pallet5 depot0) (drive-and-load truck1 hoist0 crate1 depot0) "
         + "(drive-and-lift truck1 hoist0 crate3 crate2 depot0) (drive-and-load truck1 hoist0 crate3 depot0) "
         + "(drive-and-unload truck1 hoist0 crate3 pallet1 depot0) (drop hoist2 crate4 pallet5 distributor1) "
@@ -71,11 +74,12 @@ valid_depot_sentences = [
     ),
 ]
 
+
 valid_depot_prefixes = [
     PDDLTestCase("empty_string", ""),
-    PDDLTestCase("one_action_spaced", "(load hoist0 crate0 pallet0 distributor0) "),
+    PDDLTestCase("one_action_spaced", "(load hoist0 crate0 truck0 distributor0) "),
     PDDLTestCase(
-        "r_unbalanced_paranthesis", "(unload hoist2 crate5 pallet5 distributor0)"
+        "r_unbalanced_paranthesis", "(unload hoist2 crate5 truck1 distributor0"
     ),
 ]
 
@@ -90,59 +94,76 @@ invalid_depot_sentences = [
     PDDLTestCase("empty_paranthesis", "()"),
 ]
 
-valid_satelite_sentences = [
-    PDDLTestCase("simple_operator", "(switch-on instrument1 satelite3)"),
-    PDDLTestCase(
-        "multiple_actions",
-        "(pick-up-and-stack b a) (pick-up-and-stack c b) (pick-up-and-stack d c)",
-    ),
+invalid_depot_typed_sentences = [
+    PDDLTestCase("load_wrong_type", "(load hoist0 crate0 pallet0 distributor0)"),
+    PDDLTestCase("unload_wrong_type", "(unload hoist2 crate5 pallet5 distributor0)"),
+    PDDLTestCase("lift", "(lift truck0 truck0 truck0 truck0)"),
+]
+
+valid_satellite_sentences = [
+    PDDLTestCase("simple_operator", "(switch-on instrument1 satellite3)"),
     PDDLTestCase(
         "complex_only",
-        "(switch-on instrument1 satelite3) (turn-to satelite1 direction4 direction0)",
+        "(switch-on instrument1 satellite3) (turn-to satellite1 direction4 direction0)",
     ),
     PDDLTestCase(
         "take_image",
-        "(take-image satelite1 direction4 instrument2 mode1)",
+        "(take-image satellite1 direction4 instrument2 mode1)",
     ),
 ]
 
-valid_satelite_prefixes = [
+valid_satellite_prefixes = [
     PDDLTestCase("empty_string", ""),
-    PDDLTestCase("one_action_spaced", "(switch-off instrument2 satelite3) "),
+    PDDLTestCase("one_action_spaced", "(switch-off instrument2 satellite3) "),
     PDDLTestCase(
-        "r_unbalanced_paranthesis", "(calibrate satelite1 instrument2 direction4"
+        "r_unbalanced_paranthesis", "(calibrate satellite1 instrument2 direction4"
     ),
 ]
 
-invalid_satelite_sentences = [
-    PDDLTestCase("undefined_object", "(switch-on instrument8 satelite3)"),
+invalid_satellite_sentences = [
+    PDDLTestCase("undefined_object", "(switch-on instrument8 satellite3)"),
     PDDLTestCase(
-        "wrong_number_of_arguments", "(take-image satelite1 instrument2 mode1)"
+        "wrong_number_of_arguments", "(take-image satellite1 instrument2 mode1)"
     ),
     PDDLTestCase(
-        "l_unbalanced_paranthesis", "(calibrate satelite1 instrument2 direction4))"
+        "l_unbalanced_paranthesis", "(calibrate satellite1 instrument2 direction4))"
     ),
-    PDDLTestCase("unexisitng_operator", "(turn satelite1 direction4 direction0)"),
+    PDDLTestCase("unexisitng_operator", "(turn satellite1 direction4 direction0)"),
     PDDLTestCase("empty_paranthesis", "()"),
+]
+
+invalid_satellite_typed_sentences = [
+    PDDLTestCase("switch_off_wrong_type", "(switch-off satellite3 instrument2)"),
+    PDDLTestCase("turn_wrong_type", "(turn-to satellite1 satellite1 satellite1)"),
 ]
 
 
 TestCases = {
     "blocks": (
         valid_blocks_sentences,
-        valid_blocks_sentences,
+        valid_blocks_prefixes,
         invalid_blocks_sentences,
     ),
-    #     "depot": (
-    #         valid_depot_sentences,
-    #         valid_depot_sentences,
-    #         invalid_depot_sentences,
-    #     ),
-    #     "satelite": (
-    #         valid_satelite_sentences,
-    #         valid_satelite_sentences,
-    #         invalid_satelite_sentences,
-    #     ),
+    "depot": (
+        valid_depot_sentences + invalid_depot_typed_sentences,
+        valid_depot_prefixes,
+        invalid_depot_sentences,
+    ),
+    "depot_typed": (
+        valid_depot_sentences,
+        valid_depot_prefixes,
+        invalid_depot_sentences + invalid_depot_typed_sentences,
+    ),
+    "satellite": (
+        valid_satellite_sentences + invalid_satellite_typed_sentences,
+        valid_satellite_prefixes,
+        invalid_satellite_sentences,
+    ),
+    "satellite_typed": (
+        valid_satellite_sentences,
+        valid_satellite_prefixes,
+        invalid_satellite_sentences + invalid_satellite_typed_sentences,
+    ),
 }
 
 
@@ -163,7 +184,7 @@ class Test_parsing_pddl_object(TestCase):
             )
         print("SetUp successfull!", flush=True)
 
-    def test_valid_sentence(self):
+    def test_valid_sentences(self):
         for grammar_name, recognizer in self.recognizers.items():
             valid_full, valid_prefix, invalid = TestCases[grammar_name]
 
@@ -172,7 +193,7 @@ class Test_parsing_pddl_object(TestCase):
                     f"{grammar_name.capitalize()}:"
                     + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
                 )
-                print(fail_msg, flush=True)
+                # print(fail_msg, flush=True)
                 self.assertEqual(
                     True,
                     recognizer._accept_string(PDDL_test_case.PDDL),
@@ -183,7 +204,6 @@ class Test_parsing_pddl_object(TestCase):
                     f"{grammar_name.capitalize()}:"
                     + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
                 )
-                print(fail_msg, flush=True)
                 self.assertEqual(
                     False,
                     recognizer._accept_string(PDDL_test_case.PDDL),
@@ -198,7 +218,6 @@ class Test_parsing_pddl_object(TestCase):
                     f"{grammar_name.capitalize()}:"
                     + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
                 )
-                print(fail_msg, flush=True)
                 self.assertEqual(
                     True,
                     recognizer._accept_prefix(PDDL_test_case.PDDL),
