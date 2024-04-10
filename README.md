@@ -5,6 +5,8 @@
 
 ## Latest News
 
+- **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
+
 - **Support for Unicode(multilingual) grammars** (2024-02-29)
 
 - **Integration with Text-Generation-WebUI** (2023-12-17)
