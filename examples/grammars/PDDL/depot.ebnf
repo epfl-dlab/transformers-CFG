@@ -12,4 +12,4 @@ action ::= "(" (
 
 # Example, should be input dependent
 
-object ::= "truck" [0-1] | "hoist" [0-2] | "crate" [0-5] | "pallet" [0-5] | "depot" [0-1] | "distributor" [0-1] 
+object ::= "truck" [0-1] | "hoist" [0-2] | "crate" [0-5] | "pallet" [0-5] | "depot" [0-1] | "distributor" [0-1]

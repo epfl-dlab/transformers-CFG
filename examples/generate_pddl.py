@@ -9,7 +9,7 @@ import time
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Generate SMILES strings")
+    parser = argparse.ArgumentParser(description="Generate PDDL strings")
     parser.add_argument(
         "--model-id",
         type=str,

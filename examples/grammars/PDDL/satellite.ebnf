@@ -10,4 +10,4 @@ action ::= "(" (
 
 # Example, should be input dependent
 
-object ::= "instrument" [0-5] | "satellite" [0-3] | "direction" [0-5] | "mode" [0-5] 
+object ::= "instrument" [0-5] | "satellite" [0-3] | "direction" [0-5] | "mode" [0-5]
