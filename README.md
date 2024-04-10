@@ -3,7 +3,7 @@
 ![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Latest News
+## 💭Latest News
 
 - **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
 
@@ -16,20 +16,29 @@ This integration enables users to utilize our CFG capabilities within the popula
 For more details, see [Relevent Pull Request](https://github.com/oobabooga/text-generation-webui/pull/4953)
 
 
-## Introduction
+## 🚀Introduction
 `transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG).
 This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
 
 It was initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library.
 See relevant discussion [here](https://github.com/huggingface/transformers/pull/27557).
 
-## Installation
+## 💻 Installation
+
+- You can install the stable version of `transformers-cfg` using pip:
 
 ```bash
 pip install transformers-cfg
 ```
 
-## QuickStart: Force LLM to generate a valid json object
+- For the latest code and updates, you can install directly from the GitHub repository:
+
+```
+pip install git+https://github.com/epfl-dlab/transformers-CFG.git@main
+```
+This will install the package directly from the `main` branch of the repository.
+
+## 🔧QuickStart: Force LLM to generate a valid json object
 
 The below example can be found in `examples/generate_json.py`
 
@@ -84,14 +93,14 @@ if __name__ == "__main__":
 
 ```
 
-## Why should I use transformers-CFG?
+## 💡Why should I use transformers-CFG?
 
 - We support EBNF grammar description format
 - We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
 - We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
 - We support multilingual grammars, you can use any character from any language in your grammar, e.g. 中文, 日本語, 한국어, हिन्दी, العربية, עברית, or emoji 🤗.
 
-## What is grammar ?
+## 🤔What is grammar ?
 
 TL;DR: Think of it as an enhanced version of regular expressions.
 
