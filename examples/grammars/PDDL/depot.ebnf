@@ -1,0 +1,15 @@
+
+root ::= plan
+
+plan ::= action ( " " action )*
+
+action ::= "(" (
+    "drive" " " object " " object " " object |
+    ( "lift"  | "load" | "unload" | "drive-and-load" | "drop" ) " " object " " object " " object " " object |
+    ( "drive-and-lift" | "drive-and-unload" ) " " object " " object " " object " " object " " object |
+    "lift-and-drive" " " object " " object " " object " " object " " object " " object
+) ")"
+
+# Example, should be input dependent
+
+object ::= "truck" [0-1] | "hoist" [0-2] | "crate" [0-5] | "pallet" [0-5] | "depot" [0-1] | "distributor" [0-1]

@@ -1,0 +1,13 @@
+root ::= plan
+
+plan ::= action ( " " action )*
+
+action ::= "(" (
+    ( "switch-on" | "switch-off" ) " " object " " object |
+    ( "turn-to" | "calibrate" ) " " object " " object " " object  |
+    "take-image" " "  object " " object " " object " " object
+) ")"
+
+# Example, should be input dependent
+
+object ::= "instrument" [0-5] | "satellite" [0-3] | "direction" [0-5] | "mode" [0-5]
