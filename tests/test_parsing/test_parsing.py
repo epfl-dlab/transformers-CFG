@@ -138,6 +138,8 @@ class Test(TestCase):
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("你"), ord("你")], outbuf)
 
+    
+    def test__parse_escape(self):
         escaped_char_src = '"\\n"'
         outbuf = []
 
