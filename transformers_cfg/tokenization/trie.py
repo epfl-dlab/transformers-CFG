@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Dict, List, Tuple
 from collections import deque
 
-from transformers_cfg.mapping import get_mapping
+from transformers_cfg.tokenization.mapping import get_mapping
 
 # from transformers_cfg.parser import parse_ebnf
 # from transformers_cfg.recognizer import GrammarRecognizer

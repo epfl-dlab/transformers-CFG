@@ -1,4 +1,3 @@
-import copy
 import logging
 from abc import ABC
 from functools import lru_cache
@@ -8,10 +7,9 @@ import torch
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.trie import ByteTrie
-from transformers_cfg.utf8_utils import PartialUTF8
-from .vocab_struct import LEAF, TokenTrie
-from transformers_cfg.mapping import get_mapping
+from transformers_cfg.tokenization.trie import ByteTrie
+from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
+from transformers_cfg.tokenization.mapping import get_mapping
 
 logger = logging.getLogger(__name__)
 
