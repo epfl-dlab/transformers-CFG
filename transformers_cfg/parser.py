@@ -127,7 +127,7 @@ def parse_char(src) -> (str, str):
             if first > -1:
                 second = hex_to_int(src[3])
                 if second > -1:
-                    return (first << 4) + second, src[4:]
+                    return chr((first << 4) + second), src[4:]
             raise RuntimeError("expecting \\xNN at " + src)
         elif esc in ('"', "[", "]"):
             return esc, src[2:]
