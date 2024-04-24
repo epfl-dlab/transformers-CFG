@@ -129,6 +129,20 @@ def parse_char(src) -> (str, str):
                 if second > -1:
                     return chr((first << 4) + second), src[4:]
             raise RuntimeError("expecting \\xNN at " + src)
+        elif esc == "u":
+            if len(src) >= 6:
+                hex_value = src[2:6]
+                if all(c in "0123456789ABCDEFabcdef" for c in hex_value):
+                    return chr(int(hex_value, 16)), src[6:]
+                raise RuntimeError("expecting \\uXXXX at " + src)
+            raise RuntimeError("incomplete \\uXXXX escape at " + src)
+        elif esc == "U":
+            if len(src) >= 10:
+                hex_value = src[2:10]
+                if all(c in "0123456789ABCDEFabcdef" for c in hex_value):
+                    return chr(int(hex_value, 16)), src[10:]
+                raise RuntimeError("expecting \\UXXXXXXXX at " + src)
+            raise RuntimeError("incomplete \\UXXXXXXXX escape at " + src)
         elif esc in ('"', "[", "]"):
             return esc, src[2:]
         elif esc == "r":
