@@ -1,0 +1,4 @@
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .
+This is a valid json string for a detailed http request:

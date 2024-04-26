@@ -7,6 +7,12 @@
 
 - **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
 
+- **Token masking optimization** (2024-04-25)
+
+Our update in the `transformers_cfg` library has significantly improved the performance of grammar-constrained decoding (especially for complicated).
+
+![Json grammar benchmarking](assets/prots/benchmarking_results.png)
+
 - **Support for Unicode(multilingual) grammars** (2024-02-29)
 
 - **Integration with Text-Generation-WebUI** (2023-12-17)
