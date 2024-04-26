@@ -9,7 +9,7 @@
 
 Our update in the `transformers_cfg` library has significantly improved the performance of grammar-constrained decoding (especially for complicated grammars).
 
-![Json grammar benchmarking](docs/assets/prots/benchmarking_results.png)
+![Json grammar benchmarking](docs/assets/plots/benchmarking_results.png)
 
 - **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
   
