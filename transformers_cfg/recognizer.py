@@ -487,9 +487,9 @@ if __name__ == "__main__":
 
     accept_state = AcceptState(recognizer.stacks, PartialUTF8())
     for i, byte in enumerate(byte_tokens):
-        new_accept_state = recognizer._consume_bytes(byte, accept_state)
-        logging.debug(f"new partial utf8: {new_accept_state.partial_utf8}")
-        if len(new_accept_state.stacks) > 0:
+        accept_state = recognizer._consume_bytes(byte, accept_state)
+        logging.debug(f"new partial utf8: {accept_state.partial_utf8}")
+        if len(accept_state.stacks) > 0:
             logging.debug(f"byte {byte} is accepted")
         else:
             logging.debug(f"byte {byte} is not accepted")

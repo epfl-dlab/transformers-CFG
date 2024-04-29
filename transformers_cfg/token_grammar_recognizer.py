@@ -132,12 +132,11 @@ class AbsTokenRecognizer(ABC):
     def get_token_acceptance_array_for_stack(self, stack, partial_utf8, device):
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
         assert isinstance(stack, tuple)
-        stack = list(stack)
 
         if self.byte_encoding:
 
             accept_f = lambda x: self.string_recognizer._probe_bytes(
-                x, [stack], partial_utf8=partial_utf8
+                x, {stack}, partial_utf8=partial_utf8
             )
             token_acceptance = self.unicode_trie.get_token_acceptance(
                 accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
@@ -293,29 +292,31 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     tokenRecognizer = IncrementalTokenRecognizer(
-        grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer
+        grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer, unicode=True
     )
 
     japanese = "トリーム"  # "こんにちは"
     token_ids = tokenizer.encode(japanese)
     # 13298, 12675, 12045, 254
-    stacks = tokenRecognizer._consume_token_ids(
-        token_ids, tokenRecognizer.string_recognizer.stacks, as_string=False
+    init_state = None
+    state = tokenRecognizer._consume_token_ids(
+        token_ids, init_state, as_string=False
     )
 
-    if stacks:
+    if state.stacks:
         print("The Japanese input is accepted")
     else:
         print("The Japanese input is not accepted")
 
     korean = "안녕하세요"
     token_ids = tokenizer.encode(korean)
+    init_state = tokenRecognizer.string_recognizer.get_initial_accept_state()
 
     try:
-        stacks = tokenRecognizer._consume_token_ids(
-            token_ids, tokenRecognizer.string_recognizer.stacks, as_string=False
+        state = tokenRecognizer._consume_token_ids(
+            token_ids, init_state, as_string=False,
         )
-        if stacks:
+        if state.stacks:
             print("The Korean input is accepted")
         else:
             print("The Korean input is not accepted")
