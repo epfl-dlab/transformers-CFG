@@ -89,7 +89,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         )
         # logger.debug("stacks: \n" + pprint.pformat(self.batch_accept_states.stacks))
 
-        self.batch_accept_states = self.grammar_constraint.advance_token_ids(
+        self.batch_accept_states = self.grammar_constraint.consume_token_ids(
             input_ids, self.batch_accept_states, self.parse_start_index
         )
         logger.debug(f"input_ids: {input_ids}")
