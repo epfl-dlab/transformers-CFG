@@ -68,7 +68,7 @@ class AbsTokenRecognizer(ABC):
         )
         return accept_state
 
-    def probe_token_id(self, token_id: int, accept_state: AcceptState) -> bool:
+    def try_accept_token_id(self, token_id: int, accept_state: AcceptState) -> bool:
         stacks = accept_state.stacks
         if self.string_recognizer._must_stop(stacks):
             if token_id == self.eos_token_id:
@@ -90,7 +90,7 @@ class AbsTokenRecognizer(ABC):
         )
         return len(new_acc_state.stacks) > 0
 
-    def advance_token_ids(self, *args, **kwargs):
+    def consume_token_ids(self, *args, **kwargs):
         """Process a list of tokens according to the grammar rules."""
         raise NotImplementedError
 
@@ -135,7 +135,7 @@ class AbsTokenRecognizer(ABC):
 
         if self.byte_encoding:
 
-            accept_f = lambda x: self.string_recognizer._probe_bytes(
+            accept_f = lambda x: self.string_recognizer._try_accept_bytes(
                 x, {stack}, partial_utf8=partial_utf8
             )
             token_acceptance = self.unicode_trie.get_token_acceptance(
@@ -172,7 +172,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         # if self.last_size is not set (which would be the case when processing the first token).
         # In this case, do nothing.
 
-    def advance_token_ids(self, input_ids, batch_accept_states, parse_start_index=None):
+    def consume_token_ids(self, input_ids, batch_accept_states, parse_start_index=None):
 
         if self.last_size is None:
             prefix_to_parse = [
@@ -271,7 +271,7 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
             new_stack = list(stk[:-1])
             if grammar.grammar_encoding[next_element_offset]:
                 new_stack.append(next_element_offset)
-            new_stacks.update(grammar.advance_stack(tuple(new_stack)))
+            new_stacks.update(grammar.expand_stack_head(tuple(new_stack)))
 
         if new_stacks:
             check_token_acceptance_in_trie(
@@ -292,16 +292,17 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     tokenRecognizer = IncrementalTokenRecognizer(
-        grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer, unicode=True
+        grammar_str=input_text,
+        start_rule_name="root",
+        tokenizer=tokenizer,
+        unicode=True,
     )
 
     japanese = "トリーム"  # "こんにちは"
     token_ids = tokenizer.encode(japanese)
     # 13298, 12675, 12045, 254
     init_state = None
-    state = tokenRecognizer._consume_token_ids(
-        token_ids, init_state, as_string=False
-    )
+    state = tokenRecognizer._consume_token_ids(token_ids, init_state, as_string=False)
 
     if state.stacks:
         print("The Japanese input is accepted")
@@ -314,7 +315,9 @@ if __name__ == "__main__":
 
     try:
         state = tokenRecognizer._consume_token_ids(
-            token_ids, init_state, as_string=False,
+            token_ids,
+            init_state,
+            as_string=False,
         )
         if state.stacks:
             print("The Korean input is accepted")
