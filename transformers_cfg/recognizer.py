@@ -93,7 +93,7 @@ class StringRecognizer:
             element_offset = sub_rhs_offset + 1
             if self.grammar_encoding[element_offset] != END_OF_ALTERNATE_MARKER:
                 stack.append(element_offset)
-            stacks.update(self.advance_stack(tuple(stack)))
+            stacks.update(self.expand_stack_head(tuple(stack)))
             sub_rhs_offset += 1 + self.grammar_encoding[sub_rhs_offset]
         return stacks
 
@@ -104,7 +104,15 @@ class StringRecognizer:
         return AcceptState(set(), PartialUTF8())
 
     @lru_cache(maxsize=32768)
-    def advance_stack(self, stack: Tuple[int]) -> Set[Tuple[int]]:
+    def expand_stack_head(self, stack: Tuple[int]) -> Set[Tuple[int]]:
+        """
+        Stack is the internal state of the recognizer(Pushdown Automaton).
+        This method updates the stack by advancing it to the next element.
+        If the element is a non-terminal, it expands the stack by adding the elements of the referenced rule.
+        A new stack is created for each alternate of the referenced rule, so we could have multiple stacks as output.
+        :param stack:
+        :return:
+        """
         if len(stack) == 0:
             return {stack}
 
@@ -137,24 +145,28 @@ class StringRecognizer:
                 if self.grammar_encoding[ref_element_offset] != END_OF_ALTERNATE_MARKER:
                     new_stack.append(ref_element_offset)
 
-                new_stacks.update(self.advance_stack(tuple(new_stack)))
+                new_stacks.update(self.expand_stack_head(tuple(new_stack)))
                 ref_subrule_offset += self.grammar_encoding[ref_subrule_offset] + 1
 
             return new_stacks
 
-    def _consume_byte(self, byte: int, accept_state: AcceptState):
+    def _consume_byte(self, byte: int, accept_state: AcceptState) -> AcceptState:
         # suppose we have code point 一, ord('一') = 19968, we need to match 3 bytes
         # we need to match 3 bytes, so we need to call _consume_byte_partial_match 3 times
-        self._consume_bytes(bytes([byte]), accept_state)
+        return self._consume_bytes(bytes([byte]), accept_state)
 
     # @lru_cache(maxsize=32768)
-    def _probe_bytes(
+    def _try_accept_bytes(
         self,
         byte_seq: bytes,
         stacks: Set[Tuple[int]],
         partial_utf8: PartialUTF8,
         verbose=True,
     ):
+        """
+        The difference between accept_bytes and consume_bytes is that accept_bytes returns a boolean and
+        consume_bytes returns a new accept state
+        """
         if type(byte_seq) is list:
             byte_seq = bytes(byte_seq)
         code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
@@ -162,7 +174,7 @@ class StringRecognizer:
             logging.debug(
                 f"code_points: {code_points}; new_partial_utf8: {new_partial_utf8}"
             )
-        new_stacks = self._consume_code_points(code_points, stacks)
+        new_stacks = self._consume_code_points_for_all_stacks(code_points, stacks)
 
         for stack in new_stacks:
 
@@ -179,7 +191,7 @@ class StringRecognizer:
         byte_seq: bytes,
         accept_state: Optional[AcceptState] = None,
         verbose=True,
-    ):
+    ) -> AcceptState:
         if accept_state is None:
             accept_state = self.get_initial_accept_state()
         stacks = accept_state.stacks
@@ -191,7 +203,7 @@ class StringRecognizer:
             logging.debug(
                 f"code_points: {code_points}; new_partial_utf8: {new_partial_utf8}"
             )
-        new_stacks = self._consume_code_points(code_points, stacks)
+        new_stacks = self._consume_code_points_for_all_stacks(code_points, stacks)
 
         new_new_stacks = set()
         for stack in new_stacks:
@@ -209,8 +221,8 @@ class StringRecognizer:
     ##########################
 
     @lru_cache(maxsize=30000)
-    def _consume_code_point(
-        self, code_point: int, stacks: Set[Tuple[int]]
+    def _consume_code_point_for_all_stacks(
+        self, code_point: int, stacks: Tuple[Tuple[int]]
     ) -> Set[Tuple[int]]:
         """
         consume a character from the stack
@@ -221,11 +233,13 @@ class StringRecognizer:
         if code_point == 0:
             return new_stacks
         for stack in stacks:
-            new_stacks.update(self._consume_code_point_per_stack(code_point, stack))
+            new_stacks.update(
+                self._consume_code_point_for_single_stack(code_point, stack)
+            )
         return new_stacks
 
     @lru_cache(maxsize=30000)
-    def _consume_code_point_per_stack(
+    def _consume_code_point_for_single_stack(
         self, code_point: int, stack: Tuple[int]
     ) -> Set[Tuple[int]]:
         """
@@ -256,15 +270,22 @@ class StringRecognizer:
         new_stack = list(stack[:-1])
         if self.grammar_encoding[element_offset]:
             new_stack.append(element_offset)
-        return self.advance_stack(tuple(new_stack))
+        # # Explicitly convert list to tuple of int to make it hashable
+        new_tuple_stack: Tuple[int, ...] = tuple(new_stack)
+        return self.expand_stack_head(new_tuple_stack)
 
-    def _consume_code_points(
+    def _consume_code_points_for_all_stacks(
         self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
     ) -> Set[Tuple[int]]:
+        """
+        code points is a list of Unicode code points. For example, the code points for "hello" is [104, 101, 108, 108, 111]
+        For unicode string "こんにちは世界", the code points are [12371, 12435, 12395, 12385, 12399, 19990, 30028]
+
+        """
         for i, code_point in enumerate(code_points):
             # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
             tuple_stacks: Tuple[Tuple[int], ...] = tuple(stacks)
-            stacks = self._consume_code_point(code_point, tuple_stacks)
+            stacks = self._consume_code_point_for_all_stacks(code_point, tuple_stacks)
             if len(stacks) > 0 and verbose:
                 accepted_code_point = code_points[: i + 1]
                 corresponding_char = chr(code_point)
@@ -276,7 +297,7 @@ class StringRecognizer:
     def _accept_code_points(
         self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
     ) -> bool:
-        stacks = self._consume_code_points(code_points, stacks, verbose)
+        stacks = self._consume_code_points_for_all_stacks(code_points, stacks, verbose)
         return len(stacks) > 0
 
     @lru_cache(maxsize=30000)
@@ -294,12 +315,6 @@ class StringRecognizer:
             ):
                 return True
         return False
-
-    # def _accept_code_point(self, code_point: int, stacks: List[List[int]]):
-    #     # for lru_cache to work, we need to convert the list of stacks into a tuple of stacks
-    #     tuple_stacks: Tuple[Tuple[int]] = tuple([tuple(stack) for stack in stacks])
-    #     new_stacks: List[List[int]] = self._consume_code_point(code_point, tuple_stacks)
-    #     return len(new_stacks) > 0
 
     #############################
     #
@@ -363,7 +378,9 @@ class StringRecognizer:
     def _consume_string(self, string: str, accept_state: AcceptState):
         # _bytes = bytes(string, "utf-8")
         code_points = [ord(char) for char in string]
-        stacks = self._consume_code_points(code_points, accept_state.stacks)
+        stacks = self._consume_code_points_for_all_stacks(
+            code_points, accept_state.stacks
+        )
         return AcceptState(stacks, accept_state.partial_utf8)
 
     def _accept_prefix(self, string: str, accept_state: Optional[AcceptState] = None):
@@ -427,23 +444,27 @@ class StringRecognizer:
         logging.debug(acceptance)
         return acceptance
 
-    def _consume_code_points_new(
-        self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
-    ) -> Set[Tuple[int]]:
-        new_stacks: Set[Tuple[int]] = set()
-        for stack in stacks:
-            new_stacks.update(
-                self._consume_code_points_per_stack(tuple(code_points), stack, verbose)
-            )
-        return new_stacks
-
-    @lru_cache(maxsize=30000)
-    def _consume_code_points_per_stack(
-        self, code_points: Tuple[int], stack: Tuple[int], verbose=False
-    ) -> Set[Tuple[int]]:
-        for code_point in code_points:
-            stacks = self._consume_code_point(code_point, (stack,))
-        return stacks
+    # def _consume_code_points_new(
+    #     self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
+    # ) -> Set[Tuple[int]]:
+    #     new_stacks: Set[Tuple[int]] = set()
+    #     for stack in stacks:
+    #         new_stacks.update(
+    #             self._consume_code_points_per_stack(tuple(code_points), stack, verbose)
+    #         )
+    #     return new_stacks
+    #
+    # @lru_cache(maxsize=30000)
+    # def _consume_code_points_per_stack(
+    #     self, code_points: Tuple[int], stack: Tuple[int], verbose=False
+    # ) -> Set[Tuple[int]]:
+    #     stacks = {stack}
+    #
+    #     for code_point in code_points:
+    #         # Update the stacks variable by consuming each code point.
+    #         stacks = self._consume_code_point_for_all_stacks(code_point, (stack,))
+    #
+    #     return stacks
 
 
 if __name__ == "__main__":
@@ -487,9 +508,9 @@ if __name__ == "__main__":
 
     accept_state = AcceptState(recognizer.stacks, PartialUTF8())
     for i, byte in enumerate(byte_tokens):
-        new_accept_state = recognizer._consume_bytes(byte, accept_state)
-        logging.debug(f"new partial utf8: {new_accept_state.partial_utf8}")
-        if len(new_accept_state.stacks) > 0:
+        accept_state = recognizer._consume_bytes(byte, accept_state)
+        logging.debug(f"new partial utf8: {accept_state.partial_utf8}")
+        if len(accept_state.stacks) > 0:
             logging.debug(f"byte {byte} is accepted")
         else:
             logging.debug(f"byte {byte} is not accepted")
