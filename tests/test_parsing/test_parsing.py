@@ -138,6 +138,7 @@ class Test(TestCase):
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("你"), ord("你")], outbuf)
 
+        
     def test__parse_escape(self):
         escaped_char_src = '"\\n"'
         outbuf = []
@@ -160,6 +161,23 @@ class Test(TestCase):
         remaining_src = _parse_rhs_literal_string(escaped_backslash_src, outbuf)
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("\\"), ord("\\")], outbuf)
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
+
+    def test__parse_escape_unicode(self):
+        # Test for 16-bit Unicode escape
+        escaped_unicode_16_src = '"\\u20AC"'  # Unicode for Euro symbol
+        outbuf = []
+        remaining_src = _parse_rhs_literal_string(escaped_unicode_16_src, outbuf)
+        self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
+        self.assertListEqual([2, ord("€"), ord("€")], outbuf)
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
+
+        # Test for 32-bit Unicode escape
+        escaped_unicode_32_src = '"\\U0001F600"'  # Unicode for grinning face emoji
+        outbuf = []
+        remaining_src = _parse_rhs_literal_string(escaped_unicode_32_src, outbuf)
+        self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
+        self.assertListEqual([2, ord("😀"), ord("😀")], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
     def test_null(self):
@@ -313,15 +331,6 @@ class Test(TestCase):
 
         src = 'root ::= ("2" | "3" | "4") | ("5" | "6" | "7")'
         rhs_src = '("2" | "3" | "4") | ("5" | "6" | "7")'
-        state = ParseState()
-        state.symbol_table["root"] = 9
-        _ = parse_rhs(
-            state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
-        )
-        logging.debug(f"state.grammar_encoding of {rhs_src}: {state.grammar_encoding}")
-
-        src = 'root ::= "\\\\"'
-        rhs_src = '"\\\\"'
         state = ParseState()
         state.symbol_table["root"] = 9
         _ = parse_rhs(
