@@ -5,11 +5,7 @@
 
 ## 💭Latest News
 
-- **Token masking optimization** (2024-04-25)
-
-Our update in the `transformers_cfg` library has significantly improved the performance of grammar-constrained decoding (especially for complicated grammars).
-
-![Json grammar benchmarking](docs/assets/plots/benchmarking_results.png)
+- **[Token masking optimization](#efficiency)(** (2024-04-25)
 
 - **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
   
@@ -175,6 +171,11 @@ See [supported_models.yaml](docs%2Fsupported_models.yaml) for the full list of s
 
 As a rule of thumb, all models with the same tokenizer should naturally be supported.
 If you find any model that is not supported, please open an issue or submit a pull request.
+
+## Efficiency
+Our update in the `transformers_cfg` library has significantly improved the performance of grammar-constrained decoding (especially for complicated grammars).
+
+<img src="docs/assets/plots/benchmarking_results.png" style="width: 60%; height: auto;">
 
 ## Citation
 
