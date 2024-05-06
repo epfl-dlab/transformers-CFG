@@ -5,6 +5,7 @@ import pprint
 
 import torch
 import logging
+from line_profiler import profile
 from transformers.generation.logits_process import (
     LogitsProcessor,
     LOGITS_PROCESSOR_INPUTS_DOCSTRING,
@@ -98,6 +99,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         return masked_scores
 
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
+    @profile
     def __call__(
         self, input_ids: torch.LongTensor, scores: torch.FloatTensor
     ) -> torch.FloatTensor:

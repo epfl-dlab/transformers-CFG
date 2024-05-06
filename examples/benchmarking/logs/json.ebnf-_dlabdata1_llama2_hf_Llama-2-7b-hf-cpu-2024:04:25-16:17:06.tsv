@@ -1,0 +1,181 @@
+prompt	n_tokens	run_id	total_time	time_per_token	device	model_id	constrained_time	unconstrained_time
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	1	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.87	0.95
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	2	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.82	0.91
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	3	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.07	1.43
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	4	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.82	0.78
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	5	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.80	0.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	1	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.98	1.16
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	2	0.007	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.02	0.79
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	3	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.80	0.81
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	4	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.88	1.09
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	5	0.008	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.87	0.88
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	1	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.02	1.27
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	2	0.008	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.22	1.10
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	3	0.008	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.55	1.09
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	4	0.006	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.00	0.92
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	5	0.007	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.98	0.91
+This is a valid json string for a detailed http request:	1	1	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.75	0.75
+This is a valid json string for a detailed http request:	1	2	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.75	0.69
+This is a valid json string for a detailed http request:	1	3	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.03	1.02
+This is a valid json string for a detailed http request:	1	4	0.006	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.66	208.59
+This is a valid json string for a detailed http request:	1	5	0.005	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	0.82	0.89
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	1	0.018	0.009	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.80	1.90
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	2	0.015	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.40	1.40
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	3	0.025	0.013	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.64	1.84
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	4	0.015	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.84	1.43
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	5	0.025	0.013	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.43	1.82
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	1	0.019	0.010	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.19	2.53
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	2	0.019	0.009	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.49	1.35
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	3	0.015	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.45	1.53
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	4	0.016	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.34	1.46
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	5	0.025	0.013	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.28	1.27
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	1	0.019	0.010	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.39	1.75
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	2	0.018	0.009	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.75	1.45
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	3	0.015	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.46	1.64
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	4	0.016	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.54	1.81
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	5	0.020	0.010	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.52	1.87
+This is a valid json string for a detailed http request:	2	1	0.167	0.083	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.33	1.24
+This is a valid json string for a detailed http request:	2	2	0.163	0.082	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.30	1.09
+This is a valid json string for a detailed http request:	2	3	0.162	0.081	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.81	1.12
+This is a valid json string for a detailed http request:	2	4	0.193	0.097	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.41	1.28
+This is a valid json string for a detailed http request:	2	5	0.163	0.081	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	1.46	1.31
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	1	0.029	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.98	2.69
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	2	0.030	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	3.08	2.20
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	3	0.034	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.33	2.91
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	4	0.019	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.71	2.82
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	5	0.029	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.50	2.58
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	1	0.018	0.004	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.27	2.33
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	2	0.019	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.98	3.09
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	3	0.019	0.005	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.48	2.66
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	4	0.028	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	3.00	2.72
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	5	0.030	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.85	2.83
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	1	0.239	0.060	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.87	4.02
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	2	0.174	0.044	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.59	2.50
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	3	0.177	0.044	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.77	2.36
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	4	0.178	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.67	2.64
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	5	0.175	0.044	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	3.32	3.10
+This is a valid json string for a detailed http request:	4	1	0.364	0.091	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	12.41	3.93
+This is a valid json string for a detailed http request:	4	2	0.322	0.081	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.73	2.64
+This is a valid json string for a detailed http request:	4	3	0.350	0.087	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.13	3.35
+This is a valid json string for a detailed http request:	4	4	0.318	0.080	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.65	2.63
+This is a valid json string for a detailed http request:	4	5	0.317	0.079	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	2.86	2.18
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	1	0.258	0.032	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.39	4.31
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	2	0.249	0.031	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.55	4.52
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	3	0.209	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.98	4.63
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	4	0.207	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.83	4.09
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	5	0.216	0.027	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	6.40	5.53
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	1	0.211	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.71	4.23
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	2	0.208	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	6.23	4.34
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	3	0.246	0.031	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.01	4.46
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	4	0.205	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.60	4.76
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	5	0.214	0.027	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.53	4.16
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	1	0.364	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	7.27	4.88
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	2	0.356	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.51	5.13
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	3	0.363	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	6.34	4.93
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	4	0.391	0.049	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	6.36	5.28
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	5	0.374	0.047	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.21	4.49
+This is a valid json string for a detailed http request:	8	1	0.320	0.040	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	4.15	3.81
+This is a valid json string for a detailed http request:	8	2	0.327	0.041	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	7.33	5.05
+This is a valid json string for a detailed http request:	8	3	0.328	0.041	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	5.91	4.78
+This is a valid json string for a detailed http request:	8	4	0.333	0.042	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	7.01	4.72
+This is a valid json string for a detailed http request:	8	5	0.358	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	6.56	4.93
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	1	0.432	0.027	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.43	9.88
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	2	0.441	0.028	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	12.57	12.23
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	3	0.597	0.037	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	14.10	9.76
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	4	0.451	0.028	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	12.48	10.95
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	5	0.463	0.029	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.22	10.49
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	1	0.581	0.036	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.69	9.28
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	2	0.537	0.034	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.10	12.66
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	3	0.566	0.035	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.46	9.05
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	4	0.610	0.038	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.38	10.54
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	5	0.548	0.034	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.54	9.56
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	1	0.794	0.050	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	14.99	10.36
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	2	0.823	0.051	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.51	9.33
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	3	0.818	0.051	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.82	10.13
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	4	0.758	0.047	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	10.95	9.38
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	5	0.720	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.03	8.84
+This is a valid json string for a detailed http request:	16	1	0.760	0.047	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	11.86	8.41
+This is a valid json string for a detailed http request:	16	2	0.685	0.043	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.94	10.59
+This is a valid json string for a detailed http request:	16	3	0.710	0.044	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	14.35	10.00
+This is a valid json string for a detailed http request:	16	4	0.631	0.039	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	12.79	9.80
+This is a valid json string for a detailed http request:	16	5	0.660	0.041	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	13.57	9.09
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	1	0.732	0.023	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	24.17	16.76
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	2	0.806	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	20.81	22.80
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	3	0.854	0.027	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.62	20.55
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	4	0.789	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	24.26	19.17
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	5	0.738	0.023	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	21.35	18.04
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	1	0.809	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	21.67	22.08
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	2	0.809	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	20.65	22.27
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	3	0.771	0.024	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	18.48	24.32
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	4	0.850	0.027	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	23.12	20.10
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	5	0.779	0.024	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	25.08	17.47
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	1	0.786	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.14	19.95
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	2	0.800	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.84	19.05
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	3	0.832	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	21.23	22.35
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	4	0.795	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.15	18.23
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	5	0.793	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	23.89	23.65
+This is a valid json string for a detailed http request:	32	1	1.534	0.048	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	24.91	23.77
+This is a valid json string for a detailed http request:	32	2	1.367	0.043	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.96	21.92
+This is a valid json string for a detailed http request:	32	3	1.438	0.045	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	24.65	22.93
+This is a valid json string for a detailed http request:	32	4	1.345	0.042	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	25.26	22.37
+This is a valid json string for a detailed http request:	32	5	1.665	0.052	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	22.09	23.60
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	1	1.232	0.019	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	41.52	38.82
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	2	1.278	0.020	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	42.29	41.66
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	3	1.238	0.019	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	38.90	41.71
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	4	1.282	0.020	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	40.71	41.12
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	5	1.372	0.021	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	43.78	38.71
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	1	0.905	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	36.53	38.83
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	2	0.891	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	43.49	44.63
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	3	0.869	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	37.13	42.16
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	4	0.902	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	37.77	43.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	5	0.872	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	37.56	40.46
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	53	1	0.845	0.016	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	31.15	39.57
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	53	2	0.849	0.016	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	30.63	43.52
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	53	3	0.857	0.016	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	36.46	43.96
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	53	4	0.848	0.016	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	35.32	44.21
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	53	5	0.833	0.016	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	36.23	45.99
+This is a valid json string for a detailed http request:	56	1	1.433	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	37.28	42.25
+This is a valid json string for a detailed http request:	56	2	1.441	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	36.43	42.91
+This is a valid json string for a detailed http request:	56	3	1.594	0.028	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	37.98	45.05
+This is a valid json string for a detailed http request:	56	4	1.446	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	39.80	39.41
+This is a valid json string for a detailed http request:	56	5	1.449	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	35.32	40.78
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	128	1	1.443	0.011	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	76.75	85.57
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	128	2	1.648	0.013	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	83.23	90.88
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	128	3	1.505	0.012	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	79.63	77.04
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	128	4	2.154	0.017	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	79.88	79.49
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	128	5	1.501	0.012	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	81.45	87.38
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	1	1.418	0.011	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	79.76	89.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	2	1.042	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	77.78	89.25
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	3	1.072	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	86.06	91.88
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	4	1.239	0.010	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	82.16	89.04
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	5	1.368	0.011	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	77.17	86.64
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	1	1.059	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	75.52	83.02
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	2	1.042	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	81.49	84.69
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	3	1.748	0.014	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	75.84	87.07
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	4	1.011	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	74.17	79.95
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	5	0.991	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	74.19	79.92
+This is a valid json string for a detailed http request:	56	1	2.093	0.037	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	35.19	85.03
+This is a valid json string for a detailed http request:	56	2	1.441	0.026	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	34.16	79.65
+This is a valid json string for a detailed http request:	56	3	1.376	0.025	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	34.53	79.33
+This is a valid json string for a detailed http request:	56	4	1.364	0.024	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	32.94	75.24
+This is a valid json string for a detailed http request:	56	5	1.367	0.024	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	31.92	81.50
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	256	1	2.225	0.009	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	150.13	161.29
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	256	2	1.938	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	153.59	155.12
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	256	3	2.115	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	154.63	160.34
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	256	4	1.903	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	155.20	159.66
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	256	5	1.879	0.007	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	152.86	162.54
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	1	1.569	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	144.58	153.60
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	2	1.626	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	149.99	158.12
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	3	1.584	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	149.50	155.07
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	4	1.597	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	144.55	158.30
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	5	1.464	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	139.80	155.02
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	1	1.591	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	142.85	153.30
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	2	1.632	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	143.24	152.55
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	3	1.931	0.008	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	148.87	156.65
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	4	1.622	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	147.42	154.96
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	5	1.626	0.006	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	147.58	158.71
+This is a valid json string for a detailed http request:	56	1	1.827	0.033	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	32.34	155.25
+This is a valid json string for a detailed http request:	56	2	1.243	0.022	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	31.56	153.28
+This is a valid json string for a detailed http request:	56	3	2.068	0.037	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	32.80	150.83
+This is a valid json string for a detailed http request:	56	4	1.273	0.023	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	34.30	154.85
+This is a valid json string for a detailed http request:	56	5	1.243	0.022	cpu	/dlabdata1/llama2_hf/Llama-2-7b-hf	32.68	155.21

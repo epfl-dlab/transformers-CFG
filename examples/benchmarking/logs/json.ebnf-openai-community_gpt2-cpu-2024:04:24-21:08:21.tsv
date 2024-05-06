@@ -1,0 +1,180 @@
+prompt	n_tokens	run_id	total_time	time_per_token	device	model_id	constrained_time	unconstrained_time
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	1	0.038	0.038	cpu	openai-community/gpt2	0.07	1.85
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	2	0.033	0.033	cpu	openai-community/gpt2	0.07	1.11
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	3	0.041	0.041	cpu	openai-community/gpt2	0.07	1.31
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	4	0.039	0.039	cpu	openai-community/gpt2	0.07	1.33
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	5	0.038	0.038	cpu	openai-community/gpt2	0.07	1.21
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	1	0.032	0.032	cpu	openai-community/gpt2	0.07	1.22
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	2	0.032	0.032	cpu	openai-community/gpt2	0.07	1.29
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	3	0.038	0.038	cpu	openai-community/gpt2	0.07	2.04
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	4	0.038	0.038	cpu	openai-community/gpt2	0.08	1.60
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	5	0.037	0.037	cpu	openai-community/gpt2	0.07	1.18
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	1	0.038	0.038	cpu	openai-community/gpt2	0.08	1.65
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	2	0.033	0.033	cpu	openai-community/gpt2	0.07	1.07
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	3	0.038	0.038	cpu	openai-community/gpt2	0.08	1.37
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	4	0.032	0.032	cpu	openai-community/gpt2	0.07	1.12
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	5	0.038	0.038	cpu	openai-community/gpt2	0.08	1.64
+This is a valid json string for a detailed http request:	1	1	0.030	0.030	cpu	openai-community/gpt2	0.06	1.47
+This is a valid json string for a detailed http request:	1	2	0.032	0.032	cpu	openai-community/gpt2	0.06	1.42
+This is a valid json string for a detailed http request:	1	3	0.035	0.035	cpu	openai-community/gpt2	0.06	1.22
+This is a valid json string for a detailed http request:	1	4	0.033	0.033	cpu	openai-community/gpt2	0.06	1.25
+This is a valid json string for a detailed http request:	1	5	0.038	0.038	cpu	openai-community/gpt2	0.07	1.23
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	1	0.110	0.055	cpu	openai-community/gpt2	0.17	1.43
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	2	0.107	0.053	cpu	openai-community/gpt2	0.16	2.22
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	3	0.122	0.061	cpu	openai-community/gpt2	0.18	1.22
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	4	0.113	0.057	cpu	openai-community/gpt2	0.17	1.28
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	5	0.110	0.055	cpu	openai-community/gpt2	0.17	1.68
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	1	0.147	0.073	cpu	openai-community/gpt2	0.21	1.85
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	2	0.126	0.063	cpu	openai-community/gpt2	0.19	1.96
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	3	0.146	0.073	cpu	openai-community/gpt2	0.21	1.30
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	4	0.124	0.062	cpu	openai-community/gpt2	0.18	1.92
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	5	0.122	0.061	cpu	openai-community/gpt2	0.18	1.44
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	1	0.147	0.073	cpu	openai-community/gpt2	0.21	1.28
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	2	0.107	0.054	cpu	openai-community/gpt2	0.18	1.36
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	3	0.104	0.052	cpu	openai-community/gpt2	0.17	1.50
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	4	0.141	0.071	cpu	openai-community/gpt2	0.20	1.40
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	5	0.103	0.052	cpu	openai-community/gpt2	0.17	2.03
+This is a valid json string for a detailed http request:	2	1	0.122	0.061	cpu	openai-community/gpt2	0.17	1.83
+This is a valid json string for a detailed http request:	2	2	0.145	0.072	cpu	openai-community/gpt2	0.20	1.32
+This is a valid json string for a detailed http request:	2	3	0.146	0.073	cpu	openai-community/gpt2	0.20	1.39
+This is a valid json string for a detailed http request:	2	4	0.124	0.062	cpu	openai-community/gpt2	0.18	1.29
+This is a valid json string for a detailed http request:	2	5	0.107	0.054	cpu	openai-community/gpt2	0.16	1.49
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.150	0.050	cpu	openai-community/gpt2	0.23	1.21
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.153	0.051	cpu	openai-community/gpt2	0.23	1.19
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.183	0.061	cpu	openai-community/gpt2	0.27	2.00
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.155	0.052	cpu	openai-community/gpt2	0.24	1.88
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.156	0.052	cpu	openai-community/gpt2	0.24	1.42
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.137	0.046	cpu	openai-community/gpt2	0.22	1.57
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.154	0.051	cpu	openai-community/gpt2	0.24	1.79
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.135	0.045	cpu	openai-community/gpt2	0.22	1.84
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.152	0.051	cpu	openai-community/gpt2	0.24	1.66
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.158	0.053	cpu	openai-community/gpt2	0.23	1.75
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.138	0.046	cpu	openai-community/gpt2	0.22	1.47
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.153	0.051	cpu	openai-community/gpt2	0.24	1.61
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.145	0.048	cpu	openai-community/gpt2	0.30	1.86
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.133	0.044	cpu	openai-community/gpt2	0.23	1.57
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.154	0.051	cpu	openai-community/gpt2	0.25	1.57
+This is a valid json string for a detailed http request:	4	1	0.449	0.112	cpu	openai-community/gpt2	0.55	1.51
+This is a valid json string for a detailed http request:	4	2	0.454	0.114	cpu	openai-community/gpt2	0.55	1.49
+This is a valid json string for a detailed http request:	4	3	0.454	0.114	cpu	openai-community/gpt2	0.56	1.29
+This is a valid json string for a detailed http request:	4	4	0.460	0.115	cpu	openai-community/gpt2	0.56	1.30
+This is a valid json string for a detailed http request:	4	5	0.424	0.106	cpu	openai-community/gpt2	0.54	1.29
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.203	0.068	cpu	openai-community/gpt2	0.28	1.30
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.133	0.044	cpu	openai-community/gpt2	0.21	1.36
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.152	0.051	cpu	openai-community/gpt2	0.24	1.66
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.133	0.044	cpu	openai-community/gpt2	0.21	1.59
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.133	0.044	cpu	openai-community/gpt2	0.22	1.56
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.180	0.060	cpu	openai-community/gpt2	0.26	1.51
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.150	0.050	cpu	openai-community/gpt2	0.23	1.58
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.132	0.044	cpu	openai-community/gpt2	0.21	1.24
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.133	0.044	cpu	openai-community/gpt2	0.21	1.57
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.154	0.051	cpu	openai-community/gpt2	0.24	2.34
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.152	0.051	cpu	openai-community/gpt2	0.24	1.45
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.134	0.045	cpu	openai-community/gpt2	0.22	1.42
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.134	0.045	cpu	openai-community/gpt2	0.22	2.01
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.133	0.044	cpu	openai-community/gpt2	0.22	1.55
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.133	0.044	cpu	openai-community/gpt2	0.23	1.54
+This is a valid json string for a detailed http request:	8	1	0.448	0.056	cpu	openai-community/gpt2	0.64	1.54
+This is a valid json string for a detailed http request:	8	2	0.465	0.058	cpu	openai-community/gpt2	0.66	2.13
+This is a valid json string for a detailed http request:	8	3	0.457	0.057	cpu	openai-community/gpt2	0.68	1.45
+This is a valid json string for a detailed http request:	8	4	0.464	0.058	cpu	openai-community/gpt2	0.68	1.68
+This is a valid json string for a detailed http request:	8	5	0.444	0.056	cpu	openai-community/gpt2	0.66	1.28
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.132	0.044	cpu	openai-community/gpt2	0.21	1.70
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.138	0.046	cpu	openai-community/gpt2	0.24	1.75
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.132	0.044	cpu	openai-community/gpt2	0.21	1.68
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.136	0.045	cpu	openai-community/gpt2	0.24	2.30
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.133	0.044	cpu	openai-community/gpt2	0.21	1.87
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.188	0.063	cpu	openai-community/gpt2	0.27	1.53
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.159	0.053	cpu	openai-community/gpt2	0.35	2.59
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.158	0.053	cpu	openai-community/gpt2	0.24	1.52
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.137	0.046	cpu	openai-community/gpt2	0.22	1.84
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.133	0.044	cpu	openai-community/gpt2	0.22	1.54
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.137	0.046	cpu	openai-community/gpt2	0.22	2.31
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.139	0.046	cpu	openai-community/gpt2	0.22	1.66
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.153	0.051	cpu	openai-community/gpt2	0.24	1.58
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.136	0.045	cpu	openai-community/gpt2	0.23	1.69
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.135	0.045	cpu	openai-community/gpt2	0.22	1.61
+This is a valid json string for a detailed http request:	16	1	0.447	0.028	cpu	openai-community/gpt2	0.89	1.65
+This is a valid json string for a detailed http request:	16	2	0.452	0.028	cpu	openai-community/gpt2	0.94	1.93
+This is a valid json string for a detailed http request:	16	3	0.439	0.027	cpu	openai-community/gpt2	0.89	2.24
+This is a valid json string for a detailed http request:	16	4	0.447	0.028	cpu	openai-community/gpt2	0.83	2.12
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.162	0.054	cpu	openai-community/gpt2	0.24	2.15
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.138	0.046	cpu	openai-community/gpt2	0.22	2.07
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.139	0.046	cpu	openai-community/gpt2	0.22	1.97
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.137	0.046	cpu	openai-community/gpt2	0.22	2.17
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.137	0.046	cpu	openai-community/gpt2	0.22	2.48
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.135	0.045	cpu	openai-community/gpt2	0.22	2.17
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.136	0.045	cpu	openai-community/gpt2	0.22	2.18
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.152	0.051	cpu	openai-community/gpt2	0.31	1.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.137	0.046	cpu	openai-community/gpt2	0.22	1.98
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.159	0.053	cpu	openai-community/gpt2	0.24	2.15
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.162	0.054	cpu	openai-community/gpt2	0.24	2.34
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.139	0.046	cpu	openai-community/gpt2	0.22	2.35
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.132	0.044	cpu	openai-community/gpt2	0.21	2.15
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.152	0.051	cpu	openai-community/gpt2	0.34	1.94
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.132	0.044	cpu	openai-community/gpt2	0.21	1.93
+This is a valid json string for a detailed http request:	32	1	0.476	0.015	cpu	openai-community/gpt2	1.22	2.48
+This is a valid json string for a detailed http request:	32	2	0.464	0.015	cpu	openai-community/gpt2	1.17	2.20
+This is a valid json string for a detailed http request:	32	3	0.488	0.015	cpu	openai-community/gpt2	1.30	2.48
+This is a valid json string for a detailed http request:	32	4	0.473	0.015	cpu	openai-community/gpt2	1.35	2.38
+This is a valid json string for a detailed http request:	32	5	0.482	0.015	cpu	openai-community/gpt2	1.21	2.44
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.137	0.046	cpu	openai-community/gpt2	0.22	2.90
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.136	0.045	cpu	openai-community/gpt2	0.23	3.11
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.135	0.045	cpu	openai-community/gpt2	0.22	3.16
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.192	0.064	cpu	openai-community/gpt2	0.28	3.42
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.156	0.052	cpu	openai-community/gpt2	0.23	2.62
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.136	0.045	cpu	openai-community/gpt2	0.22	2.90
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.140	0.047	cpu	openai-community/gpt2	0.24	3.01
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.135	0.045	cpu	openai-community/gpt2	0.22	2.82
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.160	0.053	cpu	openai-community/gpt2	0.25	3.35
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.141	0.047	cpu	openai-community/gpt2	0.25	3.16
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.138	0.046	cpu	openai-community/gpt2	0.23	2.89
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.142	0.047	cpu	openai-community/gpt2	0.37	2.82
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.210	0.070	cpu	openai-community/gpt2	0.32	3.14
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.147	0.049	cpu	openai-community/gpt2	0.23	3.18
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.160	0.053	cpu	openai-community/gpt2	0.24	3.35
+This is a valid json string for a detailed http request:	64	1	0.563	0.009	cpu	openai-community/gpt2	2.10	3.14
+This is a valid json string for a detailed http request:	64	2	0.682	0.011	cpu	openai-community/gpt2	2.41	3.13
+This is a valid json string for a detailed http request:	64	3	0.555	0.009	cpu	openai-community/gpt2	2.31	2.76
+This is a valid json string for a detailed http request:	64	4	0.550	0.009	cpu	openai-community/gpt2	2.27	2.75
+This is a valid json string for a detailed http request:	64	5	0.578	0.009	cpu	openai-community/gpt2	2.45	3.20
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.184	0.061	cpu	openai-community/gpt2	0.26	4.99
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.139	0.046	cpu	openai-community/gpt2	0.23	4.82
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.138	0.046	cpu	openai-community/gpt2	0.24	4.69
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.156	0.052	cpu	openai-community/gpt2	0.23	4.60
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.133	0.044	cpu	openai-community/gpt2	0.21	4.96
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.143	0.048	cpu	openai-community/gpt2	0.33	4.79
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.137	0.046	cpu	openai-community/gpt2	0.22	5.01
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.134	0.045	cpu	openai-community/gpt2	0.22	4.67
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.162	0.054	cpu	openai-community/gpt2	0.27	5.64
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.135	0.045	cpu	openai-community/gpt2	0.22	4.93
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.142	0.047	cpu	openai-community/gpt2	0.24	5.02
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.175	0.058	cpu	openai-community/gpt2	0.26	4.99
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.196	0.065	cpu	openai-community/gpt2	0.41	4.63
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.169	0.056	cpu	openai-community/gpt2	0.26	4.78
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.135	0.045	cpu	openai-community/gpt2	0.24	5.02
+This is a valid json string for a detailed http request:	128	1	0.742	0.006	cpu	openai-community/gpt2	4.15	4.49
+This is a valid json string for a detailed http request:	128	2	0.751	0.006	cpu	openai-community/gpt2	3.50	4.41
+This is a valid json string for a detailed http request:	128	3	0.722	0.006	cpu	openai-community/gpt2	4.03	4.71
+This is a valid json string for a detailed http request:	128	4	0.767	0.006	cpu	openai-community/gpt2	3.68	5.47
+This is a valid json string for a detailed http request:	128	5	0.782	0.006	cpu	openai-community/gpt2	4.32	4.52
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	1	0.163	0.054	cpu	openai-community/gpt2	0.24	8.72
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	2	0.187	0.062	cpu	openai-community/gpt2	0.28	8.40
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	3	0.188	0.063	cpu	openai-community/gpt2	0.27	8.44
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	4	0.184	0.061	cpu	openai-community/gpt2	0.26	7.98
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	3	5	0.184	0.061	cpu	openai-community/gpt2	0.27	8.79
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	1	0.135	0.045	cpu	openai-community/gpt2	0.21	8.13
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	2	0.136	0.045	cpu	openai-community/gpt2	0.22	8.95
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	3	0.189	0.063	cpu	openai-community/gpt2	0.27	8.46
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	4	0.164	0.055	cpu	openai-community/gpt2	0.24	7.88
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	3	5	0.136	0.045	cpu	openai-community/gpt2	0.22	8.18
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	1	0.183	0.061	cpu	openai-community/gpt2	0.27	8.26
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	2	0.164	0.055	cpu	openai-community/gpt2	0.24	8.37
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	3	0.161	0.054	cpu	openai-community/gpt2	0.24	7.37
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	4	0.147	0.049	cpu	openai-community/gpt2	0.33	8.55
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	3	5	0.162	0.054	cpu	openai-community/gpt2	0.24	8.50
+This is a valid json string for a detailed http request:	256	1	1.262	0.005	cpu	openai-community/gpt2	7.37	8.73
+This is a valid json string for a detailed http request:	256	2	1.127	0.004	cpu	openai-community/gpt2	6.86	8.29
+This is a valid json string for a detailed http request:	256	3	1.185	0.005	cpu	openai-community/gpt2	7.28	8.22
+This is a valid json string for a detailed http request:	256	4	1.183	0.005	cpu	openai-community/gpt2	7.18	7.82
+This is a valid json string for a detailed http request:	256	5	1.252	0.005	cpu	openai-community/gpt2	8.07	8.11

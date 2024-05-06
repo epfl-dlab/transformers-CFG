@@ -167,3 +167,6 @@ cython_debug/
 
 # VSCode
 launch.json
+
+# Profiling
+*.prof

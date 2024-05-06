@@ -1,0 +1,181 @@
+prompt	n_tokens	run_id	total_time	time_per_token	device	model_id	constrained_time	unconstrained_time
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	1	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.78	0.74
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	2	0.006	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.00	1.06
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	3	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.85	0.84
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	4	0.008	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.18	0.90
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	1	5	0.006	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.77	1.08
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	1	0.007	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.22	0.92
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	2	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.01	0.88
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	3	0.006	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.81	0.75
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	4	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.79	0.76
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	1	5	0.004	0.004	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.93	1.00
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	1	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.08	1.49
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	2	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.43	1.40
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	3	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.98	0.91
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	4	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.91	1.23
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	1	5	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.09	1.00
+This is a valid json string for a detailed http request:	1	1	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.87	0.88
+This is a valid json string for a detailed http request:	1	2	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.71	0.70
+This is a valid json string for a detailed http request:	1	3	0.004	0.004	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.84	0.87
+This is a valid json string for a detailed http request:	1	4	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.85	1.23
+This is a valid json string for a detailed http request:	1	5	0.005	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	0.79	0.92
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	1	0.014	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.44	1.75
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	2	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.36	1.43
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	3	0.017	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.69	1.58
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	4	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.60	1.56
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	2	5	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.69	1.75
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	1	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.44	1.55
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	2	0.015	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.51	1.73
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	3	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.35	1.80
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	4	0.019	0.010	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.39	1.49
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	2	5	0.015	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.29	4.08
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	1	0.015	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.66	1.73
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	2	0.020	0.010	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.55	1.59
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	3	0.017	0.009	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	2.19	1.82
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	4	0.016	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	2.90	3.43
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	2	5	0.015	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.70	1.69
+This is a valid json string for a detailed http request:	2	1	0.170	0.085	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.40	1.32
+This is a valid json string for a detailed http request:	2	2	0.164	0.082	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.48	1.38
+This is a valid json string for a detailed http request:	2	3	0.170	0.085	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.60	1.44
+This is a valid json string for a detailed http request:	2	4	0.194	0.097	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.47	2.80
+This is a valid json string for a detailed http request:	2	5	0.161	0.081	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	1.74	1.83
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	1	0.017	0.004	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.38	3.40
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	2	0.020	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.52	2.79
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	3	0.018	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.37	3.67
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	4	0.019	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.40	3.45
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	4	5	0.019	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.42	3.05
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	1	0.020	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	5.59	4.66
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	2	0.018	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.31	3.23
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	3	0.019	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.46	3.50
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	4	0.018	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.78	4.06
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	4	5	0.046	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.91	5.23
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	1	0.019	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.68	3.39
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	2	0.020	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.03	4.03
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	3	0.025	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.74	2.85
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	4	0.021	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.08	4.24
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	4	5	0.018	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	4.57	3.43
+This is a valid json string for a detailed http request:	4	1	0.378	0.095	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.70	3.25
+This is a valid json string for a detailed http request:	4	2	0.361	0.090	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.22	2.73
+This is a valid json string for a detailed http request:	4	3	0.315	0.079	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.26	2.87
+This is a valid json string for a detailed http request:	4	4	0.343	0.086	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.58	2.94
+This is a valid json string for a detailed http request:	4	5	0.344	0.086	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	3.55	3.02
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	1	0.202	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.38	5.92
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	2	0.203	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	7.04	6.61
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	3	0.198	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.47	5.60
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	4	0.199	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	5.54	6.74
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	8	5	0.189	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	5.93	5.95
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	1	0.211	0.026	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.84	6.43
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	2	0.213	0.027	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.60	5.75
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	3	0.186	0.023	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	5.73	5.17
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	4	0.172	0.022	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.00	5.63
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	8	5	0.218	0.027	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.44	5.84
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	1	0.198	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	7.31	6.82
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	2	0.187	0.023	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	7.16	6.38
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	3	0.195	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.04	5.47
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	4	0.205	0.026	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.49	5.63
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	8	5	0.194	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	5.87	5.74
+This is a valid json string for a detailed http request:	8	1	0.725	0.091	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	7.08	5.63
+This is a valid json string for a detailed http request:	8	2	0.658	0.082	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.83	5.47
+This is a valid json string for a detailed http request:	8	3	0.685	0.086	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	6.99	5.66
+This is a valid json string for a detailed http request:	8	4	0.765	0.096	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	7.34	6.26
+This is a valid json string for a detailed http request:	8	5	0.593	0.074	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	9.34	10.00
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	1	0.303	0.019	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.00	11.66
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	2	0.302	0.019	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.62	10.71
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	3	0.277	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	10.42	10.24
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	4	0.313	0.020	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	13.39	9.87
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	16	5	0.331	0.021	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.30	12.35
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	1	0.501	0.031	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	10.83	11.17
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	2	0.539	0.034	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.99	10.88
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	3	0.609	0.038	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	13.10	11.04
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	4	0.551	0.034	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	12.38	12.97
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	16	5	0.498	0.031	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.77	10.43
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	1	0.540	0.034	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	13.08	13.24
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	2	0.539	0.034	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	13.13	9.54
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	3	0.563	0.035	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	12.55	10.61
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	4	0.525	0.033	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	11.88	9.78
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	16	5	0.605	0.038	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	13.01	11.97
+This is a valid json string for a detailed http request:	16	1	0.847	0.053	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	21.50	18.50
+This is a valid json string for a detailed http request:	16	2	0.723	0.045	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	15.15	11.34
+This is a valid json string for a detailed http request:	16	3	0.657	0.041	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	12.94	10.34
+This is a valid json string for a detailed http request:	16	4	0.642	0.040	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	12.51	13.57
+This is a valid json string for a detailed http request:	16	5	0.659	0.041	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	10.77	9.79
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	1	0.375	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	19.26	23.37
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	2	0.346	0.011	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	20.11	22.32
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	3	0.349	0.011	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	17.93	25.48
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	4	0.333	0.010	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	23.85	27.93
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	32	5	0.314	0.010	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	21.20	22.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	1	0.750	0.023	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	19.04	22.23
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	2	0.779	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	19.88	22.55
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	3	0.803	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	17.79	19.30
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	4	0.806	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	18.82	18.88
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	32	5	0.789	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	19.25	17.45
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	1	0.735	0.023	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	19.85	23.62
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	2	1.376	0.043	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	141.55	143.95
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	3	1.373	0.043	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	131.43	155.20
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	4	1.275	0.040	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	128.52	137.80
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	32	5	1.357	0.042	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	131.19	136.48
+This is a valid json string for a detailed http request:	32	1	1.875	0.059	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	121.81	124.07
+This is a valid json string for a detailed http request:	32	2	1.709	0.053	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	124.67	140.76
+This is a valid json string for a detailed http request:	32	3	1.665	0.052	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	123.70	133.04
+This is a valid json string for a detailed http request:	32	4	1.551	0.048	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	119.66	122.38
+This is a valid json string for a detailed http request:	32	5	1.708	0.053	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	130.99	124.78
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	1	1.097	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	256.96	271.56
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	2	1.012	0.016	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	247.67	273.34
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	3	1.016	0.016	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	258.84	267.85
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	4	1.095	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	275.46	266.53
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	64	5	1.114	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	260.81	260.18
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	1	1.349	0.021	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	247.23	276.06
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	2	1.412	0.022	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	268.15	251.44
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	3	1.438	0.022	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	237.94	258.65
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	4	1.314	0.021	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	239.71	256.33
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	64	5	1.285	0.020	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	246.73	241.60
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	64	1	1.558	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	248.33	265.84
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	64	2	1.857	0.029	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	263.71	251.53
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	64	3	1.564	0.024	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	254.43	254.86
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	64	4	1.796	0.028	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	257.96	260.49
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	64	5	1.631	0.025	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	249.01	258.57
+This is a valid json string for a detailed http request:	64	1	2.496	0.039	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	239.15	260.08
+This is a valid json string for a detailed http request:	64	2	2.513	0.039	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	245.23	245.99
+This is a valid json string for a detailed http request:	64	3	2.361	0.037	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	240.27	244.25
+This is a valid json string for a detailed http request:	64	4	2.385	0.037	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	242.07	251.30
+This is a valid json string for a detailed http request:	64	5	2.249	0.035	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	261.69	248.21
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	1	0.256	0.015	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	9.36	332.15
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	2	0.292	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.67	68.91
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	3	0.292	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	10.24	82.20
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	4	0.302	0.018	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	9.22	77.52
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	5	0.285	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	9.02	73.69
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	1	1.004	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	67.12	76.40
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	2	0.806	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	61.09	77.65
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	3	0.849	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	63.13	80.02
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	4	0.969	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	62.58	75.89
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	128	5	0.806	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	61.31	70.53
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	1	0.985	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	68.17	74.73
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	2	1.114	0.009	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	61.42	73.84
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	3	0.997	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	64.26	77.80
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	4	0.942	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	64.06	79.20
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	128	5	0.966	0.008	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	63.22	78.76
+This is a valid json string for a detailed http request:	128	1	1.556	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	64.86	80.92
+This is a valid json string for a detailed http request:	128	2	1.449	0.011	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	62.36	74.14
+This is a valid json string for a detailed http request:	128	3	1.493	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	63.87	71.55
+This is a valid json string for a detailed http request:	128	4	1.478	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	65.69	76.29
+This is a valid json string for a detailed http request:	128	5	1.570	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	70.96	77.96
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	1	0.259	0.015	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.86	142.51
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	2	0.242	0.014	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.41	140.84
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	3	0.247	0.015	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.62	148.06
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	4	0.257	0.015	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.99	143.15
+Generate a valid JSON object that contains a list of all even numbers up to <MAX_NEW_TOKENS>.	17	5	0.291	0.017	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	8.67	143.99
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	1	1.358	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	121.30	140.16
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	2	1.416	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	121.14	140.98
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	3	1.454	0.006	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	124.47	139.28
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	4	1.303	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	125.08	133.62
+Generate a valid JSON object that contains a list of all keys from key1 to key<MAX_NEW_TOKENS>.	256	5	1.358	0.005	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	135.17	131.27
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	1	1.809	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	198.13	212.09
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	2	1.792	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	203.93	196.99
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	3	1.782	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	188.55	196.03
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	4	1.755	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	190.95	198.71
+Generate a valid JSON object that contains all key value pairs from (key1, value1) to (key<MAX_NEW_TOKENS>, value<MAX_NEW_TOKENS>) .	256	5	1.805	0.007	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	202.39	197.29
+This is a valid json string for a detailed http request:	158	1	1.794	0.011	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	101.07	172.48
+This is a valid json string for a detailed http request:	158	2	1.976	0.013	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	103.42	168.95
+This is a valid json string for a detailed http request:	158	3	1.885	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	100.22	176.93
+This is a valid json string for a detailed http request:	158	4	1.826	0.012	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	102.85	173.80
+This is a valid json string for a detailed http request:	158	5	2.062	0.013	cpu	/dlabdata1/llm_hub/Mistral-7B-v0.1	100.42	172.08
