@@ -92,8 +92,48 @@ if __name__ == "__main__":
     'This is a valid json string for http request:{ "request": { "method": "GET", "headers": [], "content": "Content","type": "application" }}
     'This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }
     """
-
 ```
+
+Alternatively, you can use `transformers-cfg` to perform grammar-constrained decoding with huggingface pipeline.
+
+<details>
+<summary>Click here to see an example, or check it out in `examples/pipeline_json.py` </summary>
+
+```python
+# Load model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+tokenizer.pad_token = tokenizer.eos_token
+# Load model to defined device
+model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
+
+# Load grammar
+with open(f"examples/grammars/json.ebnf", "r") as file:
+    grammar_str = file.read()
+
+grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
+grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
+
+# Initialize pipeline
+pipe = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    device_map="auto",
+    max_length=50,
+    batch_size=2,
+)
+
+generations = pipe(
+    [
+        "This is a valid json string for http request: ",
+        "This is a valid json string for shopping cart: ",
+    ],
+    do_sample=False,
+    logits_processor=[grammar_processor],
+)
+```
+</details>
+
 
 ## 💡Why should I use transformers-CFG?
 

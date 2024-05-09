@@ -50,7 +50,7 @@ def main():
         tokenizer=tokenizer,
         device_map="auto",
         max_length=50,
-        batch_size=4,
+        batch_size=2,
     )
     # # outputs = pipe("This is a valid json string for http request:", do_sample=False, max_length=50)
     generations = pipe(
