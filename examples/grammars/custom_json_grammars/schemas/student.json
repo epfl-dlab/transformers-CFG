@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "age": {
+            "type": "number"
+        },
+        "is_student": {
+            "type": "boolean"
+        },
+        "courses": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
