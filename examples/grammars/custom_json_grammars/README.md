@@ -5,7 +5,7 @@ You can use custom grammars to constrain the output of a language model to gener
 ## Quickstart
 
 There are multiple ways to represent json schemas. 
-We provide recommendations on how to do this for two common formats: Typescript and json schemas.
+We provide recommendations on how to do this for two common formats: Typescript and json.
 
 <details>
 <summary> Example of a Typescript schema for a Student object </summary>
@@ -47,7 +47,7 @@ To generate custom json grammars from Typescript schemas, you can use [this onli
 
 ### From json schemas
 
-Alternatively, you can generate custom json grammars from json format schemas using the `json_schema_to_grammar.py` script, analogous to [one in the lama.cpp repository](https://github.com/ggerganov/llama.cpp/blob/ab9a3240a9da941fdef5cd4a25f2b97c2f5a67aa/examples/json_schema_to_grammar.py). 
+Alternatively, you can generate custom json grammars from json format schemas using the `json_schema_to_grammar.py` script, analogous to [the one in the lama.cpp repository](https://github.com/ggerganov/llama.cpp/blob/ab9a3240a9da941fdef5cd4a25f2b97c2f5a67aa/examples/json_schema_to_grammar.py). 
 
 
 To generate a grammar from a json schema, run the following command:
