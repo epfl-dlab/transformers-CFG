@@ -28,8 +28,10 @@ class TokenTrie:
             hex_value = match.group(1)
             return chr(int(hex_value, 16))
 
-        if ("gpt2" in tokenizer.__class__.__name__.lower() 
-            or "pretrained" in tokenizer.__class__.__name__.lower()): # llama3 tokenizer
+        if (
+            "gpt2" in tokenizer.__class__.__name__.lower()
+            or "pretrained" in tokenizer.__class__.__name__.lower()
+        ):  # llama3 tokenizer
             special = tokenizer.additional_special_tokens_ids
 
             # Here, the decoder does a string replace on a bunch of sequences
