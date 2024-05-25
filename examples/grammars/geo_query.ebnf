@@ -22,7 +22,7 @@ city ::=    "city(" city ")" |
             "smallest_one(density_1(" city "))" |
             ALL_CITY
 
-place ::=   "placeid('" PLACENAME "')" | 
+place ::=   "placeid('" PLACENAME "')" |
             "lake(" place ")" |
             "mountain(" place ")" |
             "place(" place ")" |
@@ -41,10 +41,10 @@ place ::=   "placeid('" PLACENAME "')" |
             "exclude(" place coma_sep place ")" |
             ALL_PLACE
 
-river ::=   "river(" river ")" | 
+river ::=   "river(" river ")" |
             "riverid('" RIVERNAME "')" |
-            "major(" river ")" | 
-            "loc_2(" country ")" | 
+            "major(" river ")" |
+            "loc_2(" country ")" |
             "loc_2(" state ")" |
             "longer(" river ")" |
             "traverse_2(" city ")" |
