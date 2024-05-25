@@ -7,8 +7,8 @@ import torch
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.tokenization.trie import ByteTrie
-from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
+from transformers_cfg.tokenization.byte_trie import ByteTrie
+from transformers_cfg.tokenization.codepoint_trie import LEAF, CodePointTrie
 from transformers_cfg.tokenization.mapping import get_mapping
 
 logger = logging.getLogger(__name__)
@@ -30,14 +30,14 @@ class AbsTokenRecognizer(ABC):
             )
 
         self.eos_token_id = tokenizer.eos_token_id
-        self.token_trie = TokenTrie(tokenizer)
+        self.code_point_token_trie = CodePointTrie(tokenizer)
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
         self.unicode_trie = ByteTrie.from_tokenizer(tokenizer, unicode=unicode)
         self.mapping = get_mapping(tokenizer, unicode=unicode)
         assert len(self.mapping) == len(
-            self.token_trie
-        ), f"{len(self.mapping)}, {len(self.token_trie)}"
+            self.code_point_token_trie
+        ), f"{len(self.mapping)}, {len(self.code_point_token_trie)}"
 
     def _consume_token_id(
         self, token_id: int, accept_state: AcceptState
@@ -142,7 +142,7 @@ class AbsTokenRecognizer(ABC):
         else:
             accepts = [False] * len(self.mapping)
             token_acceptance = check_token_acceptance_in_trie(
-                self.token_trie.trie,
+                self.code_point_token_trie.trie,
                 [stack],
                 self.string_recognizer,
                 self.eos_token_id,
@@ -252,11 +252,11 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
             continue
 
         new_stacks = set()
-        for stk in stacks:
-            if not stk:
+        for stack in stacks:
+            if not stack:
                 continue
 
-            next_element_offset = stk[-1]
+            next_element_offset = stack[-1]
             num_chars = grammar.grammar_encoding[next_element_offset]
 
             if not grammar.char_acceptance_at_element(next_element_offset).get(
@@ -266,7 +266,7 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
                 continue
 
             next_element_offset += num_chars + 1
-            new_stack = list(stk[:-1])
+            new_stack = list(stack[:-1])
             if grammar.grammar_encoding[next_element_offset]:
                 new_stack.append(next_element_offset)
             new_stacks.update(grammar.expand_stack_head(tuple(new_stack)))
