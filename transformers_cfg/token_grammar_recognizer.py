@@ -10,6 +10,7 @@ from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.tokenization.byte_trie import ByteTrie
 from transformers_cfg.tokenization.codepoint_trie import LEAF, CodePointTrie
 from transformers_cfg.tokenization.mapping import get_mapping
+from typing import Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -35,25 +36,32 @@ class AbsTokenRecognizer(ABC):
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
         self.unicode_trie = ByteTrie.from_tokenizer(tokenizer, unicode=unicode)
         self.mapping = get_mapping(tokenizer, unicode=unicode)
-        assert len(self.mapping) == len(
+        self.vocab_size = len(self.mapping)
+        assert self.vocab_size == len(
             self.code_point_token_trie
-        ), f"{len(self.mapping)}, {len(self.code_point_token_trie)}"
+        ), f"{self.vocab_size}, {len(self.code_point_token_trie)}"
+
+    def _must_stop(self, stacks: Set[Tuple[int]]):
+        return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
+
+    def _can_stop(self, stacks: Set[Tuple[int]]):
+        # if at least one of the stack is empty, we can stop
+        return len(stacks) == 0 or any(len(stack) == 0 for stack in stacks)
 
     def _consume_token_id(
         self, token_id: int, accept_state: AcceptState
     ) -> AcceptState:
-        if self.string_recognizer._must_stop(accept_state.stacks):
+        if self._must_stop(accept_state.stacks):
             if token_id == self.eos_token_id:
-                return self.string_recognizer.get_termination_accept_state()
+                return AcceptState.empty_state()
             else:
                 raise ValueError(
                     f"All stacks are empty, so the only token accepted is EOS({self.eos_token_id}), but got {token_id}"
                 )
         if token_id == self.eos_token_id:
-            if self.string_recognizer._can_stop(accept_state.stacks):
-                # if at least one of the stack is empty, we can stop
+            if self._can_stop(accept_state.stacks):
                 # we clear all the stacks, meaning that we don't accept any token after EOS
-                return self.string_recognizer.get_termination_accept_state()
+                return AcceptState.empty_state()
             else:
                 raise ValueError(
                     f"At least one of the stack should be empty when EOS is reached. However, "
@@ -65,28 +73,6 @@ class AbsTokenRecognizer(ABC):
             bytes_or_codepoints, accept_state
         )
         return accept_state
-
-    def try_accept_token_id(self, token_id: int, accept_state: AcceptState) -> bool:
-        stacks = accept_state.stacks
-        if self.string_recognizer._must_stop(stacks):
-            if token_id == self.eos_token_id:
-                return True
-            else:
-                return False
-        if token_id == self.eos_token_id:
-            if self.string_recognizer._can_stop(stacks):
-                # if at least one of the stack is empty, we can stop
-                # we clear all the stacks, meaning that we don't accept any token after EOS
-                return True
-            else:
-                return False
-        # for code_point in self.mapping.map(token_id):
-        #     stacks = self.grammar._consume_char_code_point(code_point, stacks)
-        bytes_or_codepoints = self.mapping.map(token_id, verbose=False)
-        new_acc_state = self.string_recognizer._consume_bytes(
-            bytes_or_codepoints, accept_state, verbose=False
-        )
-        return len(new_acc_state.stacks) > 0
 
     def consume_token_ids(self, *args, **kwargs):
         """Process a list of tokens according to the grammar rules."""
@@ -102,10 +88,9 @@ class AbsTokenRecognizer(ABC):
         if not accept_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.mapping)
             logger.debug(f"Empty stack, sum of acceptance: {0}")
             # size of the vocab
-            accepts = [False] * vocab_size
+            accepts = [False] * self.vocab_size
             accepts[self.eos_token_id] = True
             return torch.tensor(accepts, dtype=torch.bool, device=device)
 
@@ -127,26 +112,30 @@ class AbsTokenRecognizer(ABC):
         return acceptance
 
     @lru_cache(maxsize=32768)
-    def get_token_acceptance_array_for_stack(self, stack, partial_utf8, device):
-        # stack = list(stack)  # needs to come in as a tuple for lru_cache
+    def get_token_acceptance_array_for_stack(self, stack: Tuple, partial_utf8, device):
+
         assert isinstance(stack, tuple)
-
+        
+        token_acceptance = [False] * self.vocab_size
+        
         if self.byte_encoding:
-
+            # boolean function checking if a byte sequence is accepted by the grammar
             accept_f = lambda x: self.string_recognizer._try_accept_bytes(
-                x, {stack}, partial_utf8=partial_utf8
+                bytes(x), {stack}, partial_utf8=partial_utf8
             )
-            token_acceptance = self.unicode_trie.get_token_acceptance(
-                accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
+            self.unicode_trie.get_token_acceptance(
+                accept=accept_f, 
+                accept_eos=False, 
+                eos_token_id=self.eos_token_id, 
+                token_acceptance=token_acceptance
             )
         else:
-            accepts = [False] * len(self.mapping)
-            token_acceptance = check_token_acceptance_in_trie(
+            check_token_acceptance_in_trie(
                 self.code_point_token_trie.trie,
                 [stack],
                 self.string_recognizer,
                 self.eos_token_id,
-                accepts,
+                token_acceptance,
             )
         x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
         x_eos = self.validate_and_set_eos_acceptance(x)
@@ -241,7 +230,6 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
 
 
 def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
-
     for byte, next_trie in trie.items():
         if byte == LEAF:
             token_id = next_trie
@@ -259,10 +247,8 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
             next_element_offset = stack[-1]
             num_chars = grammar.grammar_encoding[next_element_offset]
 
-            if not grammar.char_acceptance_at_element(next_element_offset).get(
-                byte, False
-            ):
-                # if the current byte is not accepted by the current rule, we need to try next rule
+            # if the current byte is not accepted by the current rule, we need to try next rule
+            if not grammar.accept_code_point_at_element(byte, next_element_offset):
                 continue
 
             next_element_offset += num_chars + 1

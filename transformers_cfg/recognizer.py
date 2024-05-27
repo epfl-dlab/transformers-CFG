@@ -100,9 +100,6 @@ class StringRecognizer:
     def get_initial_accept_state(self) -> AcceptState:
         return AcceptState(self.init_stack(self.start_rule_id), PartialUTF8())
 
-    def get_termination_accept_state(self) -> AcceptState:
-        return AcceptState(set(), PartialUTF8())
-
     @lru_cache(maxsize=32768)
     def expand_stack_head(self, stack: Tuple[int]) -> Set[Tuple[int]]:
         """
@@ -130,7 +127,6 @@ class StringRecognizer:
             new_stacks: Set[Tuple[int]] = set()
             # Loop over alternates of referenced rule to build new stacks
             while self.grammar_encoding[ref_subrule_offset] != END_OF_RULE_MARKER:
-                # copy the original stack without the last element
                 new_stack = list(stack[:-1])
                 # if the rule ref is followed by another element, we add it to the stack
                 next_element_offset = cur_element_offset + 2
@@ -150,12 +146,6 @@ class StringRecognizer:
 
             return new_stacks
 
-    def _consume_byte(self, byte: int, accept_state: AcceptState) -> AcceptState:
-        # suppose we have code point 一, ord('一') = 19968, we need to match 3 bytes
-        # we need to match 3 bytes, so we need to call _consume_byte_partial_match 3 times
-        return self._consume_bytes(bytes([byte]), accept_state)
-
-    # @lru_cache(maxsize=32768)
     def _try_accept_bytes(
         self,
         byte_seq: bytes,
@@ -167,8 +157,6 @@ class StringRecognizer:
         The difference between accept_bytes and consume_bytes is that accept_bytes returns a boolean and
         consume_bytes returns a new accept state
         """
-        if type(byte_seq) is list:
-            byte_seq = bytes(byte_seq)
         code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
         if verbose:
             logging.debug(
@@ -177,7 +165,6 @@ class StringRecognizer:
         new_stacks = self._consume_code_points_for_all_stacks(code_points, stacks)
 
         for stack in new_stacks:
-
             # stack is empty, meaning that the variables are all consumed
             if len(stack) == 0:
                 return True
@@ -192,12 +179,14 @@ class StringRecognizer:
         accept_state: Optional[AcceptState] = None,
         verbose=True,
     ) -> AcceptState:
+
         if accept_state is None:
             accept_state = self.get_initial_accept_state()
         stacks = accept_state.stacks
         partial_utf8 = accept_state.partial_utf8
         if type(byte_seq) is list:
             byte_seq = bytes(byte_seq)
+            
         code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
         if verbose:
             logging.debug(
@@ -226,7 +215,7 @@ class StringRecognizer:
     ) -> Set[Tuple[int]]:
         """
         consume a character from the stack
-        char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
+        code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
         """
         new_stacks: Set[Tuple[int]] = set()
 
@@ -244,7 +233,7 @@ class StringRecognizer:
     ) -> Set[Tuple[int]]:
         """
         consume a character from the stack
-        char_code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
+        code_point: can be a Unicode code point, including ascii code points which are in the range [0, 127]
         """
         # TODO, the below code will raise an error when the stack is empty, but why is this happening?
         # if len(stacks) == 0:
@@ -253,15 +242,13 @@ class StringRecognizer:
         # to indicate that the character is not accepted
 
         new_stacks: Set[Tuple[int]] = set()
-        if code_point == 0:
-            return new_stacks
-        # stack is empty
-        if len(stack) == 0:
+
+        if code_point == 0 or len(stack) == 0:
             return new_stacks
 
         element_offset = stack[-1]
-
         found = self.accept_code_point_at_element(code_point, element_offset)
+
         if not found:
             return new_stacks
 
@@ -398,20 +385,6 @@ class StringRecognizer:
         )
         return at_least_one_stack_is_empty
 
-    def _can_stop(self, stacks: Set[Tuple[int]]):
-        # This happens in practice, but maybe it shouldn't? TODO
-        if len(stacks) == 0:
-            return True
-        # if any of the stack is empty, we can stop
-        for stack in stacks:
-            if len(stack) == 0:
-                return True
-        else:
-            return False
-
-    def _must_stop(self, stacks: Set[Tuple[int]]):
-        return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
-
     #############################
     #
     # Not Used
@@ -422,49 +395,27 @@ class StringRecognizer:
     @lru_cache(maxsize=None)
     def char_acceptance_at_element(self, element_offset):
         """
-        Caches and returns a dictionary indicating whether a Unicode character is accepted
+        Caches and returns a set of accepted Unicode characters
         at a given rule position. This function considers Unicode characters, dynamically
-        inserting accepted ranges into a dictionary to optimize memory usage.
+        inserting accepted ranges into the set to optimize memory usage.
 
         Args:
         - rule_offset: The offset in the grammar encoding where the rule starts.
 
         Returns:
-        - A dictionary where each key is a Unicode character (or range) and the value is True if accepted.
+        - A set of accepted Unicode characters (or range).
         """
         logging.debug(f"element_offset: {element_offset}")
-        acceptance = {}
+        acceptance = set()
         num_chars = self.grammar_encoding[element_offset]
         element_offset += 1
         for i in range(0, num_chars, 2):
             start = self.grammar_encoding[element_offset + i]
             end = self.grammar_encoding[element_offset + i + 1]
             for j in range(start, end + 1):
-                acceptance[j] = True
+                acceptance.add(j)
         logging.debug(acceptance)
         return acceptance
-
-    # def _consume_code_points_new(
-    #     self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
-    # ) -> Set[Tuple[int]]:
-    #     new_stacks: Set[Tuple[int]] = set()
-    #     for stack in stacks:
-    #         new_stacks.update(
-    #             self._consume_code_points_per_stack(tuple(code_points), stack, verbose)
-    #         )
-    #     return new_stacks
-    #
-    # @lru_cache(maxsize=30000)
-    # def _consume_code_points_per_stack(
-    #     self, code_points: Tuple[int], stack: Tuple[int], verbose=False
-    # ) -> Set[Tuple[int]]:
-    #     stacks = {stack}
-    #
-    #     for code_point in code_points:
-    #         # Update the stacks variable by consuming each code point.
-    #         stacks = self._consume_code_point_for_all_stacks(code_point, (stack,))
-    #
-    #     return stacks
 
 
 if __name__ == "__main__":
