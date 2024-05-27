@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Tuple
-
-from dataclasses import dataclass
+from typing import List, Tuple
+from functools import lru_cache
 
 
 @dataclass
@@ -36,34 +35,41 @@ class PartialUTF8:
         return self.value == other.value and self.n_remain == other.n_remain
 
 
-from typing import List, Tuple
-from functools import lru_cache
+@lru_cache(maxsize=3000000)
+def decode_utf8_intermediate(
+    src: bytes, pos: int, value: int, n_remain: int
+) -> Tuple[int, int, int]:
+    while pos < len(src) and n_remain > 0:
+        next_byte = src[pos]  # Get the next byte to process
+        # Check if the continuation byte format is correct (`10xxxxxx`)
+        if (next_byte >> 6) != 2:
+            return -1, -1, -1
+
+        # Accumulate the value by shifting left and adding the relevant 6 bits
+        value = (value << 6) + (next_byte & 0x3F)
+        pos += 1  # Move to the next byte
+        n_remain -= 1  # Decrement the number of remaining bytes
+    return value, n_remain, pos
 
 
 @lru_cache(maxsize=3000000)
 def decode_utf8(
     src: bytes, partial_start: PartialUTF8
 ) -> Tuple[List[int], PartialUTF8]:
+    
     # Lookup table for determining the total bytes based on the first byte's high 4 bits
     lookup = [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 3, 4]
     pos = 0  # Position in the src bytes to start decoding from
     code_points = []  # List to store the decoded Unicode code points
+
     value = partial_start.value  # Start with any previously partial decoded value
     n_remain = partial_start.n_remain  # Number of bytes remaining from a partial decode
 
     # If there's a partial sequence left from last decode, try to continue decoding it
-    while pos < len(src) and n_remain > 0:
-        next_byte = src[pos]  # Get the next byte to process
-        # Check if the continuation byte format is correct (`10xxxxxx`)
-        if (next_byte >> 6) != 2:
-            # If not, it's an invalid sequence. Abort and return a special error state.
-            code_points = [0]
-            return code_points, PartialUTF8(0, -1)
-
-        # Accumulate the value by shifting left and adding the relevant 6 bits
-        value = (value << 6) + (next_byte & 0x3F)
-        pos += 1  # Move to the next byte
-        n_remain -= 1  # Decrement the number of remaining bytes
+    value, n_remain, pos = decode_utf8_intermediate(src, pos, value, n_remain)
+    # Invalid sequence, return a special error state.
+    if value == -1 and n_remain == -1 and pos == -1:
+        return [0], PartialUTF8(0, -1)
 
     # If we've completed a partial sequence, add its value to the code points
     if partial_start.n_remain > 0 and n_remain == 0:
@@ -86,13 +92,11 @@ def decode_utf8(
         value = first_byte & mask  # Apply the mask to get the initial value
         pos += 1  # Move to the next byte
 
-        # Process the continuation bytes
-        while pos < len(src) and n_remain > 0:
-            next_byte = src[pos]
-            # Shift the accumulated value and add the next 6 significant bits
-            value = (value << 6) + (next_byte & 0x3F)
-            pos += 1  # Move to the next byte
-            n_remain -= 1  # Decrement the number of remaining bytes
+        # Decode the continuation bytes
+        value, n_remain, pos = decode_utf8_intermediate(src, pos, value, n_remain)
+        # Invalid sequence, return a special error state.
+        if value == -1 and n_remain == -1 and pos == -1:
+            return [0], PartialUTF8(0, -1)
 
         # If the sequence is complete, add its decoded value to the code points
         if n_remain == 0:
