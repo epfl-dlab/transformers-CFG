@@ -15,4 +15,7 @@ def setup_logging():
         "CRITICAL": logging.CRITICAL,
     }
     log_level = log_levels.get(log_level_name, logging.WARNING)
-    logging.basicConfig(level=log_level)
+    # Create a logger for the library
+    logger = logging.getLogger('transformers_cfg')
+    # the level will propagate to loggers with submodule scope
+    logger.setLevel(log_level)
