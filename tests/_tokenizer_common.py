@@ -29,6 +29,15 @@ class TokenizerTesterMixin:
     # test_sentencepiece must also be set to True
     test_sentencepiece_ignore_case = False
 
+    def _check_for_unk(self, token_ids):
+        for token_id in token_ids:
+            if token_id == self.tokenizer.unk_token_id:
+                warnings.warn(
+                    f"unk token found in input_token_ids: {token_ids}, skipping test"
+                )
+                return True
+        return False
+
     def setUp(self):
         self.tokenizer = self.get_tokenizer()
 
@@ -51,12 +60,8 @@ class TokenizerTesterMixin:
         pprint_token_ids(self.tokenizer, token_ids)
 
         # check if there is unk token
-        for token_id in token_ids:
-            if token_id == self.tokenizer.unk_token_id:
-                warnings.warn(
-                    f"unk token found in input_token_ids: {token_ids}, skipping test"
-                )
-                return
+        if self._check_for_unk(token_ids):
+            return
 
         acc_state = JsontokenRecognizer._consume_token_ids(token_ids, as_string=False)
         # the json object is complete, so the stacks should be empty
@@ -78,12 +83,8 @@ class TokenizerTesterMixin:
         pprint_token_ids(self.tokenizer, token_ids)
 
         # check if there is unk token
-        for token_id in token_ids:
-            if token_id == self.tokenizer.unk_token_id:
-                warnings.warn(
-                    f"unk token found in input_token_ids: {token_ids}, skipping test"
-                )
-                return
+        if self._check_for_unk(token_ids):
+            return
 
         accept_state = recognizer._consume_token_ids(token_ids, as_string=False)
         # the json object is complete, so the stacks should be empty
@@ -92,16 +93,29 @@ class TokenizerTesterMixin:
             f"stacks: {accept_state.stacks}, not empty",
         )
 
-        # inbalanced_parentheses = "((((((((()))))))))))))"
-        # token_ids = self.tokenizer.encode(inbalanced_parentheses)
-        # pprint_token_ids(self.tokenizer, token_ids)
-        #
-        # # check if there is unk token
-        # stacks = recognizer._consume_token_ids(
-        #     token_ids, recognizer.grammar.stacks, as_string=False
-        # )
-        #
-        # self.assertTrue(stacks != [] and stacks != [[]], f"stacks: {stacks}, empty")
+    def test_multiple_sequences(self):
+        # Test that the global bos setting works with multiple sequences
+        with open("examples/grammars/balanced_parentheses.ebnf", "r") as file:
+            input_text = file.read()
+        recognizer = IncrementalTokenRecognizer(
+            grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
+        )
+
+        balanced_parentheses_samples = ["((((((((()))))))))", "()"]
+
+        # check if there is unk token
+        for sample in balanced_parentheses_samples:
+            token_ids = self.tokenizer.encode(sample)
+            pprint_token_ids(self.tokenizer, token_ids)
+            if self._check_for_unk(token_ids):
+                return
+
+            accept_state = recognizer._consume_token_ids(token_ids, as_string=False)
+            # the json object is complete, so the stacks should be empty
+            self.assertTrue(
+                accept_state.stacks == set() or accept_state.stacks == set(tuple()),
+                f"stacks: {accept_state.stacks}, not empty",
+            )
 
     @unittest.skip("Not implemented")
     def test_emoji(self):

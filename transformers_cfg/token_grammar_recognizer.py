@@ -53,6 +53,7 @@ class AbsTokenRecognizer(ABC):
     ) -> AcceptState:
         if self._must_stop(accept_state.stacks):
             if token_id == self.eos_token_id:
+                self.mapping.last_token_id = None
                 return AcceptState.empty_state()
             else:
                 raise ValueError(
@@ -60,6 +61,7 @@ class AbsTokenRecognizer(ABC):
                 )
         if token_id == self.eos_token_id:
             if self._can_stop(accept_state.stacks):
+                self.mapping.last_token_id = None
                 # we clear all the stacks, meaning that we don't accept any token after EOS
                 return AcceptState.empty_state()
             else:
@@ -115,19 +117,19 @@ class AbsTokenRecognizer(ABC):
     def get_token_acceptance_array_for_stack(self, stack: Tuple, partial_utf8, device):
 
         assert isinstance(stack, tuple)
-        
+
         token_acceptance = [False] * self.vocab_size
-        
+
         if self.byte_encoding:
             # boolean function checking if a byte sequence is accepted by the grammar
             accept_f = lambda x: self.string_recognizer._try_accept_bytes(
                 bytes(x), {stack}, partial_utf8=partial_utf8
             )
             self.unicode_trie.get_token_acceptance(
-                accept=accept_f, 
-                accept_eos=False, 
-                eos_token_id=self.eos_token_id, 
-                token_acceptance=token_acceptance
+                accept=accept_f,
+                accept_eos=False,
+                eos_token_id=self.eos_token_id,
+                token_acceptance=token_acceptance,
             )
         else:
             check_token_acceptance_in_trie(
@@ -219,6 +221,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
             string = self.tokenizer.decode(token_ids)
             accept_state = self.string_recognizer._consume_string(string, accept_state)
         else:
+            print(self.tokenizer.eos_token_id in token_ids)
             for i, token_id in enumerate(token_ids):
                 accept_state = self._consume_token_id(token_id, accept_state)
                 if len(accept_state.stacks) > 0:
