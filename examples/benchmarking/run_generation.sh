@@ -1,4 +1,6 @@
-grammar_path=$1 
+#!/bin/bash
+
+grammar_path=$1
 grammar_name=$(basename $grammar_path)
 prompts_path=$2
 model_id=${3:-"openai-community/gpt2"}
@@ -19,7 +21,7 @@ do
     do
         echo "Prompt: $prompt"
         for run_id in {1..5}
-        do  
+        do
             echo "Measurment: $run_id"
             kernprof -b --skip-zero -v time_benchmarking.py $grammar_path "$prompt" $max_new_tokens $model_id > $tmp_file
             unconstrained_time=$(cat $tmp_file | grep "Unconstrained time: " | awk '{print $3;}')

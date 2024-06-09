@@ -5,16 +5,7 @@ from collections import deque
 
 from transformers_cfg.tokenization.mapping import get_mapping
 
-# from transformers_cfg.parser import parse_ebnf
-# from transformers_cfg.recognizer import GrammarRecognizer
-# from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
-
 logger = logging.getLogger(__name__)
-
-# def check_token_acceptance_in_trie(trie, stacks, grammar, partial_utf8, accept_eos=True, eos_token_id=None) -> List[bool]:
-#     accept_f = lambda x: grammar._probe_bytes_partial_match(x, stack=stacks, partial_utf8=partial_utf8)
-#     accepts = trie.get_token_acceptance(accept=accept_f, accept_eos=accept_eos, eos_token_id=eos_token_id)
-#     return accepts
 
 
 class TrieNode:
@@ -76,14 +67,16 @@ class ByteTrie:
     def bfs(
         self, predicate=lambda x: True, verbose=False
     ) -> List[Tuple[List[int], int]]:
+
         queue = deque([(self.root, [])])
+        # TODO: do we need to keep track of the byte sequence?
         valid_byte_seqs: List[Tuple[List[int], int]] = []
         counter = {"visited": 0, "pruned": 0}
 
         while queue:
             counter["visited"] += 1
             node, byte_seq = queue.popleft()
-            if predicate(byte_seq):
+            if predicate(bytes(byte_seq)):
                 if node.is_end_of_word:
                     valid_byte_seqs.append((byte_seq, node.token_id))
                 for char, next_node in node.children.items():
@@ -95,18 +88,21 @@ class ByteTrie:
         return valid_byte_seqs
 
     def get_token_acceptance(
-        self, accept=lambda x: True, accept_eos=True, eos_token_id=None
+        self, accept, accept_eos, eos_token_id, token_acceptance
     ) -> List[bool]:
+        """
+        Finds all acceptable tokens for a fixed stack (verified with accept function).
+        Modifies token_acceptance: a list of booleans, where the ith element is True if the ith token is acceptable, False otherwise.
+        """
         valid_byte_seqs: List[Tuple[List[int], int]] = self.bfs(accept, verbose=True)
         valid_token_ids: List[int] = [token_id for _, token_id in valid_byte_seqs]
-        token_acceptance: List[bool] = [False] * (len(self))
+
         for token_id in valid_token_ids:
             token_acceptance[token_id] = True
         if not accept_eos:
             # eos_token is mapped to an empty string, so it's always accepted regardless of the accept function
             # this can be undesirable, so we can set it to False to ignore it
             token_acceptance[eos_token_id] = False
-        return token_acceptance
 
 
 def _dfs(

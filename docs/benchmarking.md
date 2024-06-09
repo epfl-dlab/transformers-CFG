@@ -1,6 +1,6 @@
 # Benchmarking constrained generation overhead in transformers-CFG
 
-This document provides guidelines and on benchmarking grammar constrained decoding when working with the `transformers_cfg` library. 
+This document provides guidelines and on benchmarking grammar constrained decoding when working with the `transformers_cfg` library.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ The output of the script will be saved in `transformers_cfg/examples/benchmarkin
 
 The output contains the following columns:
 
-- `prompt`:	the text of the prompt (see more on the benchmarking prompt design in the `examples/benchmarking/process_benchmarking_logs.ipynb`) 
+- `prompt`:	the text of the prompt (see more on the benchmarking prompt design in the `examples/benchmarking/process_benchmarking_logs.ipynb`)
 - `n_tokens`: number of tokens generated (can be affected by the `max_new_tokens` parameter)
 - `run_id`: run id (each generation is performed 5 times per prompt to account for noise in the execution time measurmnet)
 - `total_time`: total overhead (depends on the complexity of the grammar, the model, the prompt and the device)
