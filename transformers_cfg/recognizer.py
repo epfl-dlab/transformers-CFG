@@ -444,28 +444,9 @@ class StringRecognizer:
         logging.debug(acceptance)
         return acceptance
 
-    # def _consume_code_points_new(
-    #     self, code_points: List[int], stacks: Set[Tuple[int]], verbose=False
-    # ) -> Set[Tuple[int]]:
-    #     new_stacks: Set[Tuple[int]] = set()
-    #     for stack in stacks:
-    #         new_stacks.update(
-    #             self._consume_code_points_per_stack(tuple(code_points), stack, verbose)
-    #         )
-    #     return new_stacks
-    #
-    # @lru_cache(maxsize=30000)
-    # def _consume_code_points_per_stack(
-    #     self, code_points: Tuple[int], stack: Tuple[int], verbose=False
-    # ) -> Set[Tuple[int]]:
-    #     stacks = {stack}
-    #
-    #     for code_point in code_points:
-    #         # Update the stacks variable by consuming each code point.
-    #         stacks = self._consume_code_point_for_all_stacks(code_point, (stack,))
-    #
-    #     return stacks
 
+# backward compatibility, add alias of StringRecognizer to GrammarRecognizer
+GrammarRecognizer = StringRecognizer
 
 if __name__ == "__main__":
     # set logging level
