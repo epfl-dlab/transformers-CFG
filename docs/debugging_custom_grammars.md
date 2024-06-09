@@ -90,18 +90,18 @@ We provide a simple script to do this:
 
 ```python
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import GrammarRecognizer
+from transformers_cfg.recognizer import StringRecognizer
 
 with open("examples/grammars/json.ebnf", "r") as file:
     input_text = file.read()
 parsed_grammar = parse_ebnf(input_text)
 
 start_rule_id = parsed_grammar.symbol_table["root"]
-recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
 # Test the grammar with a simple input
 json_input = '{"foo": "bar", "baz": "bat"}'
-is_accepted = recognizer._accept_prefix(json_input, recognizer.stacks)
+is_accepted = recognizer._accept_prefix(json_input)
 print(is_accepted)
 ```
 
@@ -112,7 +112,7 @@ N.B. the recognizer can accept partial input, so you can try the following:
 
 ```python
 json_input = '{"foo": "bar"'
-is_accepted = recognizer._accept_prefix(json_input, recognizer.stacks)
+is_accepted = recognizer._accept_prefix(json_input)
 print(is_accepted)
 ```
 

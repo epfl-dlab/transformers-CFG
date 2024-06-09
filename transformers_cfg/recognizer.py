@@ -186,7 +186,7 @@ class StringRecognizer:
         partial_utf8 = accept_state.partial_utf8
         if type(byte_seq) is list:
             byte_seq = bytes(byte_seq)
-            
+
         code_points, new_partial_utf8 = decode_utf8(byte_seq, partial_utf8)
         if verbose:
             logging.debug(
@@ -417,6 +417,9 @@ class StringRecognizer:
         logging.debug(acceptance)
         return acceptance
 
+
+# backward compatibility, add alias of StringRecognizer to GrammarRecognizer
+GrammarRecognizer = StringRecognizer
 
 if __name__ == "__main__":
     # set logging level
