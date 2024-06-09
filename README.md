@@ -142,7 +142,9 @@ More details can be found in this [doc from llama-cpp](https://github.com/ggerga
 Advanced grammar debugging guide can be found [here](docs/debugging_custom_grammars.md)
 
 ### Automatic Grammar Generation
-Here is an awesome tool to generate grammars for you: [Grammar Builder](https://grammar.intrinsiclabs.ai/)
+
+You can use custom grammars to constrain the output of a language model. 
+Check out the [documentation](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md) on json schema to grammar conversion to learn how to automatically create custom grammars for complex json objects.
 
 ### Grammar Collection
 
