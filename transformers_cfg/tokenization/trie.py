@@ -5,16 +5,7 @@ from collections import deque
 
 from transformers_cfg.tokenization.mapping import get_mapping
 
-# from transformers_cfg.parser import parse_ebnf
-# from transformers_cfg.recognizer import GrammarRecognizer
-# from transformers_cfg.token_grammar_recognizer import IncrementalTokenGrammarRecognizer
-
 logger = logging.getLogger(__name__)
-
-# def check_token_acceptance_in_trie(trie, stacks, grammar, partial_utf8, accept_eos=True, eos_token_id=None) -> List[bool]:
-#     accept_f = lambda x: grammar._probe_bytes_partial_match(x, stack=stacks, partial_utf8=partial_utf8)
-#     accepts = trie.get_token_acceptance(accept=accept_f, accept_eos=accept_eos, eos_token_id=eos_token_id)
-#     return accepts
 
 
 class TrieNode:
@@ -94,7 +85,7 @@ class ByteTrie:
                 counter["pruned"] += 1
         return valid_byte_seqs
 
-    def get_token_acceptance(
+    def get_next_token_acceptance(
         self, accept=lambda x: True, accept_eos=True, eos_token_id=None
     ) -> List[bool]:
         valid_byte_seqs: List[Tuple[List[int], int]] = self.bfs(accept, verbose=True)
@@ -182,7 +173,7 @@ if __name__ == "__main__":
     # for word in words:
     #     print(bytes(word[0]).decode("utf-8"))
     #
-    # token_acceptance = trie.get_token_acceptance(accept=lambda x: len(x) > 0 and x[0] == 65 or len(x)==0)
+    # token_acceptance = trie.get_next_token_acceptance(accept=lambda x: len(x) > 0 and x[0] == 65 or len(x)==0)
     # print(sum(token_acceptance))
     # assert sum(token_acceptance) == len(words)
 
@@ -200,5 +191,5 @@ if __name__ == "__main__":
     # start_rule_id = parsed_grammar.symbol_table["root"]
     #
     # recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
-    # accept_state = recognizer.init_accept_state()
-    # token_acc = trie.get_token_acceptance(accept=lambda x: recognizer._probe_bytes_partial_match(x, accept_state=accept_state))
+    # parsing_state = recognizer.init_parsing_state()
+    # token_acc = trie.get_next_token_acceptance(accept=lambda x: recognizer._probe_bytes_partial_match(x, parsing_state=parsing_state))
