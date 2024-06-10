@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
-    def __init__(self, grammar_constraint, parse_start_index=None):
+    def __init__(self, grammar_constraint, valid_token_start_idx=None):
         self.last_size = None
         self.grammar_constraint = grammar_constraint
-        self.batch_accept_states = None
-        self.parse_start_index = None
+        self.batch_parsing_states = None
+        self.valid_token_start_idx = None
 
     def mask_logits(self, logits, device):
         masked_logits = logits.clone()
@@ -28,7 +28,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # indicating acceptance
         # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
         acceptance = self.grammar_constraint.batch_filter_vocab(
-            self.batch_accept_states, device
+            self.batch_parsing_states, device
         )
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
@@ -67,11 +67,11 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         :return:
         """
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
-        if self.batch_accept_states is None:
-            self.batch_accept_states = [
+        if self.batch_parsing_states is None:
+            self.batch_parsing_states = [
                 # self.grammar_constraint.init_stacks()
                 copy.deepcopy(
-                    self.grammar_constraint.string_recognizer.get_initial_accept_state()
+                    self.grammar_constraint.string_recognizer.get_initial_parsing_state()
                 )
                 for _ in range(len(input_ids))
             ]
@@ -85,13 +85,15 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         logger.debug(
             "num of stacks: \n"
             + pprint.pformat(
-                [len(acc_state.stacks) for acc_state in self.batch_accept_states]
+                [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
             )
         )
-        # logger.debug("stacks: \n" + pprint.pformat(self.batch_accept_states.stacks))
+        # logger.debug("stacks: \n" + pprint.pformat(self.batch_parsing_states.stacks))
 
-        self.batch_accept_states = self.grammar_constraint.consume_token_ids(
-            input_ids, self.batch_accept_states, self.parse_start_index
+        self.batch_parsing_states = (
+            self.grammar_constraint.update_state_with_batch_token_seqs(
+                input_ids, self.batch_parsing_states, self.valid_token_start_idx
+            )
         )
         logger.debug(f"input_ids: {input_ids}")
 

@@ -31,7 +31,6 @@ class TestJsonArray(TestCase):
         recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
         for json in jsons:
-            # accept_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json),
                 recognizer._accept_prefix(json),

@@ -34,10 +34,10 @@ class TestUnicode(TestCase):
 
         head_bytes = bytes_japanese[:8]
         # partial_utf8 = PartialUTF8()
-        accept_state = recognizer._consume_bytes(head_bytes)
+        parsing_state = recognizer._update_state_with_bytes(head_bytes)
 
         # non empty stack means that the bytes were accepted
-        self.assertTrue(len(accept_state.stacks) > 0)
+        self.assertTrue(len(parsing_state.stacks) > 0)
 
     def test_accept_japanese_progressive(self):
         #######################
@@ -62,12 +62,12 @@ class TestUnicode(TestCase):
         # cast into bytes
         byte_tokens = [bytes([byte]) for byte in byte_tokens]
 
-        accept_state = recognizer.get_initial_accept_state()
+        parsing_state = recognizer.get_initial_parsing_state()
 
-        # accept_state = recognizer.init_accept_state
+        # parsing_state = recognizer.init_parsing_state
         for i, byte in enumerate(byte_tokens):
-            accept_state = recognizer._consume_bytes(byte, accept_state)
-            self.assertTrue(len(accept_state.stacks) > 0)
+            parsing_state = recognizer._update_state_with_bytes(byte, parsing_state)
+            self.assertTrue(len(parsing_state.stacks) > 0)
 
     def test_accept_emoji(self):
         """
@@ -88,6 +88,6 @@ class TestUnicode(TestCase):
         # 😀😄😂
 
         # partial_utf8 = PartialUTF8()
-        accept_state = recognizer._consume_bytes(bytes_emoji)
+        parsing_state = recognizer._update_state_with_bytes(bytes_emoji)
         # non empty stack means that the bytes were accepted
-        self.assertTrue(len(accept_state.stacks) > 0)
+        self.assertTrue(len(parsing_state.stacks) > 0)

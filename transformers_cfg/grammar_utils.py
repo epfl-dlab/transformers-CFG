@@ -1,4 +1,7 @@
-from .token_grammar_recognizer import IncrementalTokenRecognizer
+from .token_grammar_recognizer import (
+    IncrementalTokenRecognizer,
+    NonIncrementalTokenSeqRecognizer,
+)
 
 
 # Old class name, kept for backward compatibility

@@ -51,8 +51,6 @@ class Test_parsing_json_object(TestCase):
         """
         json = '{"foo": "bar", "baz": "bat"}'
 
-        # accept_state = AcceptState.empty_state()
-
         self.assertEqual(
             is_json_parsable(json),
             self.recognizer._accept_prefix(json),
@@ -71,7 +69,7 @@ class Test_parsing_json_object(TestCase):
     def test_systematic_examples(self):
 
         for name, json_object in json_examples.items():
-            # accept_state = AcceptState.empty_state()
+            # parsing_state = AcceptState.empty_state()
             self.assertEqual(
                 is_json_parsable(json_object),
                 self.recognizer._accept_prefix(json_object),

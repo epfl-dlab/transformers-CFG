@@ -58,7 +58,9 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        acc_state = JsontokenRecognizer._consume_token_ids(token_ids, as_string=False)
+        acc_state = JsontokenRecognizer._update_state_with_single_token_seq(
+            token_ids, as_string=False
+        )
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
             acc_state.stacks == set() or acc_state.stacks == set(tuple()),
@@ -85,23 +87,14 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        accept_state = recognizer._consume_token_ids(token_ids, as_string=False)
+        parsing_state = recognizer._update_state_with_single_token_seq(
+            token_ids, as_string=False
+        )
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            accept_state.stacks == set() or accept_state.stacks == set(tuple()),
-            f"stacks: {accept_state.stacks}, not empty",
+            parsing_state.stacks == set() or parsing_state.stacks == set(tuple()),
+            f"stacks: {parsing_state.stacks}, not empty",
         )
-
-        # inbalanced_parentheses = "((((((((()))))))))))))"
-        # token_ids = self.tokenizer.encode(inbalanced_parentheses)
-        # pprint_token_ids(self.tokenizer, token_ids)
-        #
-        # # check if there is unk token
-        # stacks = recognizer._consume_token_ids(
-        #     token_ids, recognizer.grammar.stacks, as_string=False
-        # )
-        #
-        # self.assertTrue(stacks != [] and stacks != [[]], f"stacks: {stacks}, empty")
 
     @unittest.skip("Not implemented")
     def test_emoji(self):
@@ -128,7 +121,7 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        stacks = JsontokenRecognizer._consume_token_ids(
+        stacks = JsontokenRecognizer._update_state_with_single_token_seq(
             token_ids, JsontokenRecognizer.string_recognizer.stacks, as_string=False
         )
 

@@ -132,7 +132,7 @@ class Test(TestCase):
                 grammar_str=grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
 
-            accept_state = tokenRecognizer._consume_token_ids(
+            parsing_state = tokenRecognizer._update_state_with_single_token_seq(
                 input_ids[0], as_string=False
             )
             # generations = tokenizer.batch_decode(output, skip_special_tokens=True)

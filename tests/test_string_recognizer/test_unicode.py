@@ -24,8 +24,6 @@ class TestUnicode(TestCase):
 
         recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        # accept_state = AcceptState.empty_state()
-
         self.assertTrue(recognizer._accept_prefix(japanese))
 
     def test_emoji(self):
