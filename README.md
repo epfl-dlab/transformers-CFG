@@ -7,7 +7,7 @@
 
 - **[Token masking optimization](#efficiency)(** (2024-04-25)
 
-- **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
+- **Online [Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF space** (2024-04-10)
   
 - **Support for Unicode(multilingual) grammars** (2024-02-29)
 
