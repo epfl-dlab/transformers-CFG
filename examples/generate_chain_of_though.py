@@ -8,7 +8,9 @@ from transformers_cfg.parser import parse_ebnf
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Generate calflow strings")
+    parser = argparse.ArgumentParser(
+        description="Generate chain of thought arithmentic strings"
+    )
     parser.add_argument(
         "--model-id",
         type=str,
