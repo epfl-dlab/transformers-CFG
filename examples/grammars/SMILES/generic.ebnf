@@ -16,7 +16,7 @@ wildcard ::=  "*"
 
 atom_spec ::= "[" isotope? ( "se" | "as" | aromatic_symbol | element_symbol | wildcard ) chiral_class? h_count? ( charge | class? ) "]"
 
-organic_symbol ::= "B" | "C" | "N" | "O" | "P" | "S" | "F" | "I" | "Br" | "Cl" | "At" | "Ts" 
+organic_symbol ::= "B" | "C" | "N" | "O" | "P" | "S" | "F" | "I" | "Br" | "Cl" | "At" | "Ts"
 
 aromatic_symbol ::= "b" | "c" | "n" | "o" | "p" | "s"
 
@@ -39,7 +39,7 @@ element_symbol  ::= "A" ( "c" | "g" | "l" | "m" | "r" | "s" | "t" | "u" ) |
                     "S" ( "b" | "c" | "e" | "g" | "i" | "m" | "n" | "r" )? |
                     "T" ( "a" | "b" | "c" | "e" | "h" | "i" | "l" | "m" | "s" ) |
                     "U" | "V" | "W" | "Xe" | "Y" "b"? |
-                    "Z" ( "n" | "r" ) 
+                    "Z" ( "n" | "r" )
 
 ring_closure ::= "%" [1-9] [0-9] | [0-9]
 

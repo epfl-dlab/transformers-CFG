@@ -1,0 +1,7 @@
+root ::= cot | result
+
+cot ::= ([-+*/=0-9])* " " result_mark " " result
+
+result_mark ::= ">>>"
+
+result ::= [0-9]+ ";"
