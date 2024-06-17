@@ -418,6 +418,9 @@ class StringRecognizer:
         return acceptance
 
 
+# backward compatibility, add alias of StringRecognizer to GrammarRecognizer
+GrammarRecognizer = StringRecognizer
+
 if __name__ == "__main__":
     # set logging level
 

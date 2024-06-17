@@ -1,0 +1,16 @@
+age-kv ::= "\"age\"" space ":" space number
+age-rest ::= ( "," space courses-kv )?
+boolean ::= ("true" | "false") space
+char ::= [^"\\] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F])
+courses ::= "[" space (string ("," space string)*)? "]" space
+courses-kv ::= "\"courses\"" space ":" space courses
+decimal-part ::= [0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9])?)?)?)?)?)?)?)?)?)?)?)?)?)?)?
+integral-part ::= [0-9] | [1-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9] ([0-9])?)?)?)?)?)?)?)?)?)?)?)?)?)?)?
+is-student-kv ::= "\"is_student\"" space ":" space boolean
+is-student-rest ::= ( "," space name-kv )? name-rest
+name-kv ::= "\"name\"" space ":" space string
+name-rest ::= ( "," space age-kv )? age-rest
+number ::= ("-"? integral-part) ("." decimal-part)? ([eE] [-+]? integral-part)? space
+root ::= "{" space  (is-student-kv is-student-rest | name-kv name-rest | age-kv age-rest | courses-kv )? "}" space
+space ::= " "?
+string ::= "\"" char* "\"" space

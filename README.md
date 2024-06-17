@@ -7,8 +7,8 @@
 
 - **[Token masking optimization](#efficiency)(** (2024-04-25)
 
-- **Online [Demo with JSON Grammar](https://huggingface.co/spaces/saibo/transformers-CFG-JSON-demo) at HF space** (2024-04-10)
-
+- **Online [Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF space** (2024-04-10)
+  
 - **Support for Unicode(multilingual) grammars** (2024-02-29)
 
 - **Integration with Text-Generation-WebUI** (2023-12-17)
@@ -92,8 +92,48 @@ if __name__ == "__main__":
     'This is a valid json string for http request:{ "request": { "method": "GET", "headers": [], "content": "Content","type": "application" }}
     'This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }
     """
-
 ```
+
+Alternatively, you can use `transformers-cfg` to perform grammar-constrained decoding with huggingface pipeline.
+
+<details>
+<summary>Click here to see an example, or check it out in `examples/pipeline_json.py` </summary>
+
+```python
+# Load model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+tokenizer.pad_token = tokenizer.eos_token
+# Load model to defined device
+model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
+
+# Load grammar
+with open(f"examples/grammars/json.ebnf", "r") as file:
+    grammar_str = file.read()
+
+grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
+grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
+
+# Initialize pipeline
+pipe = pipeline(
+    "text-generation",
+    model=model,
+    tokenizer=tokenizer,
+    device_map="auto",
+    max_length=50,
+    batch_size=2,
+)
+
+generations = pipe(
+    [
+        "This is a valid json string for http request: ",
+        "This is a valid json string for shopping cart: ",
+    ],
+    do_sample=False,
+    logits_processor=[grammar_processor],
+)
+```
+</details>
+
 
 ## 💡Why should I use transformers-CFG?
 
@@ -142,7 +182,9 @@ More details can be found in this [doc from llama-cpp](https://github.com/ggerga
 Advanced grammar debugging guide can be found [here](docs/debugging_custom_grammars.md)
 
 ### Automatic Grammar Generation
-Here is an awesome tool to generate grammars for you: [Grammar Builder](https://grammar.intrinsiclabs.ai/)
+
+You can use custom grammars to constrain the output of a language model. 
+Check out the [documentation](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md) on json schema to grammar conversion to learn how to automatically create custom grammars for complex json objects.
 
 ### Grammar Collection
 
