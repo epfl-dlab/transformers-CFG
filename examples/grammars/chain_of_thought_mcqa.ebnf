@@ -1,0 +1,5 @@
+root ::= cot | result
+
+cot ::= [\[\]-+*/=% 0-9a-zA-Z., ]* "." "\n" result
+
+result ::= "Answer: " [A-E] ")" ";"
