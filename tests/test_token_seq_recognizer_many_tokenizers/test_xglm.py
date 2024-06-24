@@ -2,11 +2,12 @@ import unittest
 
 from transformers import XGLMTokenizerFast
 
-from tests._tokenizer_common import TokenizerTesterMixin
+from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
 
 import logging
 
 
+@unittest.skip("Not Supported and Will be removed")
 class XGLMTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = XGLMTokenizerFast

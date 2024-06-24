@@ -2,7 +2,7 @@ import unittest
 
 from transformers import T5TokenizerFast
 
-from tests._tokenizer_common import TokenizerTesterMixin
+from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
 
 import logging
 
