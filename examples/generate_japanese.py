@@ -10,9 +10,13 @@ logging.basicConfig(level=logging.DEBUG)
 def main():
 
     # Load model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")  # JackFram/llama-68m"
+    tokenizer = AutoTokenizer.from_pretrained(
+        "JackFram/llama-68m"
+    )  # JackFram/llama-68m"
     tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained("gpt2")  # Load model to defined device
+    model = AutoModelForCausalLM.from_pretrained(
+        "JackFram/llama-68m"
+    )  # Load model to defined device
 
     # Load grammar
     with open("examples/grammars/japanese.ebnf", "r") as file:
@@ -21,8 +25,8 @@ def main():
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate
-    prefix1 = "English: coffee, Japanese: "
-    prefix2 = "English: dog, Japanese: "
+    prefix1 = "こんにちは世界"
+    prefix2 = "こんにちは世界"
     input_ids = tokenizer(
         [prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True
     )["input_ids"]

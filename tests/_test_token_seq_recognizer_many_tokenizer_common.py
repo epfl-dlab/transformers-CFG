@@ -86,7 +86,6 @@ class TokenizerTesterMixin:
                     f"unk token found in input_token_ids: {token_ids}, skipping test"
                 )
                 return
-
         parsing_state = recognizer._update_state_with_single_token_seq(
             token_ids, as_string=False
         )
@@ -124,44 +123,3 @@ class TokenizerTesterMixin:
         stacks = JsontokenRecognizer._update_state_with_single_token_seq(
             token_ids, JsontokenRecognizer.string_recognizer.stacks, as_string=False
         )
-
-        # parsed_grammar = parse_ebnf(input_text)
-        #
-        # start_rule_id = parsed_grammar.symbol_table["root"]
-        #
-        # recognizer = GrammarRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
-        #
-        # self.assertTrue(recognizer._accept_string(emoji, recognizer.stacks))
-
-    # def test_beam_search_low_memory(self):
-    #     # Check that choosing 'low_memory' does not change the model output
-    #     for model_class in self.all_generative_model_classes:
-    #         if any(model_name in model_class.__name__.lower() for model_name in ["fsmt", "reformer"]):
-    #             self.skipTest("Won't fix: old model with different cache format")
-    #         if any(
-    #             model_name in model_class.__name__.lower()
-    #             for model_name in [
-    #                 "bloom",
-    #                 "ctrl",
-    #                 "gptbigcode",
-    #                 "transo_xl",
-    #                 "xlnet",
-    #                 "cpm",
-    #             ]
-    #         ):
-    #             self.skipTest("May fix in the future: need model-specific fixes")
-    #         config, input_ids, attention_mask, max_length = self._get_input_ids_and_config(batch_size=2)
-    #         # batch_size=1 is ok, but batch_size>1 will cause non-identical output
-    #
-    #         config.use_cache = True
-    #         config.is_decoder = True
-    #
-    #         # test output equality of low versus high memory
-    #         model = model_class(config).to(torch_device).eval()
-    #
-    #         low_output = model.generate(input_ids, max_new_tokens=8, num_beams=5, early_stopping=True, low_memory=True)
-    #
-    #         high_output = model.generate(
-    #             input_ids, max_new_tokens=8, num_beams=5, early_stopping=True, low_memory=False
-    #         )
-    #         self.assertListEqual(low_output.tolist(), high_output.tolist())

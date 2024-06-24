@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Dict, List, Tuple
 from collections import deque
 
-from transformers_cfg.tokenization.mapping import get_mapping
+from transformers_cfg.tokenization.mapping import getTokenizerMiddleMapping
 
 logger = logging.getLogger(__name__)
 
@@ -45,18 +45,20 @@ class ByteTrie:
         return True
 
     @classmethod
-    def from_tokenizer(cls, tokenizer, unicode=True):
+    def from_tokenizer(cls, tokenizer):
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
-        mapping = get_mapping(tokenizer, unicode=unicode)
+        mapping = getTokenizerMiddleMapping(tokenizer)
         for token_id in vocab.values():
             byte_repr = mapping.map(token_id)
             trie.insert(byte_repr, token_id)
+        trie.vocab_size = len(vocab)
         return trie
 
     @lru_cache(maxsize=128)
     def __len__(self):
-        return len(self.dfs(verbose=False))
+        # return len(self.dfs(verbose=False))
+        return self.vocab_size
 
     def dfs(self, accept=lambda x: True, verbose=False) -> List[Tuple[List[int], int]]:
         result = []
@@ -91,6 +93,7 @@ class ByteTrie:
         valid_byte_seqs: List[Tuple[List[int], int]] = self.bfs(accept, verbose=True)
         valid_token_ids: List[int] = [token_id for _, token_id in valid_byte_seqs]
         token_acceptance: List[bool] = [False] * (len(self))
+
         for token_id in valid_token_ids:
             token_acceptance[token_id] = True
         if not accept_eos:

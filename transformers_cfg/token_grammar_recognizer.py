@@ -9,7 +9,7 @@ from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.tokenization.trie import ByteTrie
 from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
-from transformers_cfg.tokenization.mapping import get_mapping
+from transformers_cfg.tokenization.mapping import getTokenizerMiddleMapping
 
 logger = logging.getLogger(__name__)
 
@@ -19,22 +19,14 @@ class AbsTokenRecognizer(ABC):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
-        self.byte_encoding = unicode
-
-        if unicode and not tokenizer.__class__.__name__.lower().startswith(
-            "gpt2"
-        ):  # gpt2tokenizer or gpt2tokenizerfast
-            raise ValueError(
-                "Constrained decoding with unicode is only supported for GPT2 model. Support for other models is coming soon."
-                "Or you can use the constraints with only ascii characters."
-            )
+        self.use_unicode = unicode
 
         self.eos_token_id = tokenizer.eos_token_id
         self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        self.unicode_trie = ByteTrie.from_tokenizer(tokenizer, unicode=unicode)
-        self.mapping = get_mapping(tokenizer, unicode=unicode)
+        self.unicode_trie = ByteTrie.from_tokenizer(tokenizer)
+        self.mapping = getTokenizerMiddleMapping(tokenizer)
         assert len(self.mapping) == len(
             self.token_trie
         ), f"{len(self.mapping)}, {len(self.token_trie)}"
@@ -229,7 +221,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
         assert isinstance(stack, tuple)
 
-        if self.byte_encoding:
+        if self.use_unicode:
 
             accept_f = lambda x: self.string_recognizer._try_accept_bytes(
                 x, {stack}, partial_utf8=partial_utf8
