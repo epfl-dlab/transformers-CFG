@@ -87,8 +87,11 @@ def get_tokenizer_model_type(model: str = "gpt2"):
         and tokenizer_json["pre_tokenizer"] is not None
         and (
             tokenizer_json["pre_tokenizer"]["type"] == "ByteLevel"
-            or tokenizer_json["pre_tokenizer"]["pretokenizers"][1]["type"]
-            == "ByteLevel"
+            or (
+                "pretokenizers" in tokenizer_json["pre_tokenizer"]
+                and tokenizer_json["pre_tokenizer"]["pretokenizers"][1]["type"]
+                == "ByteLevel"
+            )
         )
     ):
         model_type = "ByteLevelBPE"
