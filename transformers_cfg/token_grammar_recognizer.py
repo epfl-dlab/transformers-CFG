@@ -9,7 +9,9 @@ from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.tokenization.trie import ByteTrie
 from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
-from transformers_cfg.tokenization.mapping import getTokenizerMiddleMapping
+from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
+    getTokenizerMiddleMapping,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +106,8 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                 return self.string_recognizer.get_termination_parsing_state()
             else:
                 raise ValueError(
-                    f"All stacks are empty, so the only token accepted is EOS({self.eos_token_id}), but got {token_id}"
+                    f"All stacks are empty, so the only token accepted is EOS({self.eos_token_id}), but got {token_id}.\
+                        This error is likely due to the previous token not being accepted by the grammar."
                 )
         if token_id == self.eos_token_id:
             if self.string_recognizer._can_stop(parsing_state.stacks):

@@ -3,7 +3,9 @@ from functools import lru_cache
 from typing import Dict, List, Tuple
 from collections import deque
 
-from transformers_cfg.tokenization.mapping import getTokenizerMiddleMapping
+from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
+    getTokenizerMiddleMapping,
+)
 
 logger = logging.getLogger(__name__)
 

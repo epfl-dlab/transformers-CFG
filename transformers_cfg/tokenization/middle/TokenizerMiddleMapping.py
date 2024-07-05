@@ -5,6 +5,20 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def getTokenizerMiddleMapping(tokenizer):
+
+    if "gpt2" in tokenizer.__class__.__name__.lower():
+        return GPT2TokenizerMiddleMapping(tokenizer)
+    elif "llama" in tokenizer.__class__.__name__.lower():
+        return LLAMA1TokenizerMiddleMapping(tokenizer)
+    elif "mistral" in tokenizer.__class__.__name__.lower():
+        return LLAMA1TokenizerMiddleMapping(tokenizer)
+    elif "t5" in tokenizer.__class__.__name__.lower():
+        return T5TokenizerMiddleMapping(tokenizer)
+    else:
+        raise NotImplementedError(f"Unicode mapping for {tokenizer.__class__.__name__}")
+
+
 class TokenizerMiddleMapping:
     def __init__(self, tokenizer):
         self.eos_token_id = tokenizer.eos_token_id
@@ -72,4 +86,34 @@ class LLAMA1TokenizerMiddleMapping(TokenizerMiddleMapping):
             # remove space at the beginning of the sentence
             token_bytes = token_bytes[1:]
 
+        return token_bytes
+
+
+class T5TokenizerMiddleMapping(TokenizerMiddleMapping):
+    def __init__(self, tokenizer):
+        super().__init__(tokenizer)
+        self.at_bos = True
+        self.byte_proxy_mapper = LLAMAByteProxyMapper()
+
+    def map(self, token_id: int, verbose=False) -> bytes:
+        # we need to check if the token is at the beginning of the sentence to remove the space
+        # specific to BPE
+
+        # This is the case for BOS,
+        if token_id in self.special:
+            self.at_bos = False
+            return b""
+        # if token_id is tensor, convert it to int
+        if hasattr(token_id, "item"):
+            token_id = token_id.item()
+        proxy_token = self.tokenizer.convert_ids_to_tokens(token_id)
+
+        token_bytes = self.byte_proxy_mapper.map(proxy_token)
+
+        # check if the first byte is a space
+        if token_bytes[0] == 32 and self.at_bos:
+            # remove space at the beginning of the sentence
+            token_bytes = token_bytes[1:]
+
+        self.at_bos = False
         return token_bytes
