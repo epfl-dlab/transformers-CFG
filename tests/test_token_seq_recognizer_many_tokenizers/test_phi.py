@@ -7,8 +7,8 @@ from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTest
 import logging
 
 
-@unittest.skip("CodeGen is not supported and will be removed")
-class CodeGenTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
+# @unittest.skip("CodeGen is not supported and will be removed")
+class PhiTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
     tokenizer_class = CodeGenTokenizerFast
     pretrained_name = "microsoft/phi-1_5"

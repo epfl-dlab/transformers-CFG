@@ -6,6 +6,7 @@ from collections import deque
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
     getTokenizerMiddleMapping,
 )
+from transformers_cfg.tokenization.tokenizer import Tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,9 @@ class ByteTrie:
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
         mapping = getTokenizerMiddleMapping(tokenizer)
-        for token_id in vocab.values():
+        TCFG_tokenizer = Tokenizer(tokenizer)
+
+        for token_id in range(TCFG_tokenizer.real_vocab_size()):
             byte_repr = mapping.map(token_id)
             trie.insert(byte_repr, token_id)
         trie.vocab_size = len(vocab)

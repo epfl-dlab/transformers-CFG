@@ -95,7 +95,6 @@ class TokenizerTesterMixin:
             f"stacks: {parsing_state.stacks}, not empty",
         )
 
-    @unittest.skip("Not implemented")
     def test_emoji(self):
         """
         Test that we can accept emoji
@@ -120,6 +119,6 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        stacks = JsontokenRecognizer._update_state_with_single_token_seq(
-            token_ids, JsontokenRecognizer.string_recognizer.stacks, as_string=False
-        )
+        accpetance = JsontokenRecognizer.accept_token_ids(token_ids, as_string=False)
+
+        self.assertTrue(accpetance, f"emoji: {emoji} not accepted, but it should be")

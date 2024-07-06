@@ -14,12 +14,12 @@ class ByteProxyMapping:
         self.tokenizer = tokenizer
         self.byte2proxychar: Dict[int, str] = tokenizer.byte_encoder
         self.proxychar2byte: Dict[str, int] = tokenizer.byte_decoder
+
         # code point to byte
         self.cdp2byte: Dict[int, int] = {
             ord(c): b for c, b in self.proxychar2byte.items()
         }
         self.byte2cdp: Dict[int, int] = {v: k for k, v in self.cdp2byte.items()}
-
         self.PROXY_CDP_SET = set(self.cdp2byte.keys())
         # [33, 126] and [161,172, [174, 323], in total 94 + 12 + 150 = 256(N.B. 173 is a control character)
 
