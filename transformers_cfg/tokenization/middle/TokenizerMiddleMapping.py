@@ -7,11 +7,16 @@ log = logging.getLogger(__name__)
 
 def getTokenizerMiddleMapping(tokenizer):
 
-    if "gpt2" in tokenizer.__class__.__name__.lower():
+    if (
+        "gpt2" in tokenizer.__class__.__name__.lower()
+        or "codegen" in tokenizer.__class__.__name__.lower()
+        or "bart" in tokenizer.__class__.__name__.lower()
+    ):
         return GPT2TokenizerMiddleMapping(tokenizer)
-    elif "llama" in tokenizer.__class__.__name__.lower():
-        return LLAMA1TokenizerMiddleMapping(tokenizer)
-    elif "mistral" in tokenizer.__class__.__name__.lower():
+    elif (
+        "llama" in tokenizer.__class__.__name__.lower()
+        or "mistral" in tokenizer.__class__.__name__.lower()
+    ):
         return LLAMA1TokenizerMiddleMapping(tokenizer)
     elif "t5" in tokenizer.__class__.__name__.lower():
         return T5TokenizerMiddleMapping(tokenizer)

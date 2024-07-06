@@ -92,6 +92,10 @@ class AbsTokenRecognizer(ABC):
             acceptance[self.eos_token_id] = False
         return acceptance
 
+    def accept_token_ids(self, token_ids, stacks) -> bool:
+        """Accept a list of token IDs according to the grammar rules."""
+        raise NotImplementedError
+
 
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
     def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False):
@@ -205,6 +209,12 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     decoded_string = self.tokenizer.decode(cur_token_ids)
                     logging.debug(f"The decoded string is {decoded_string}")
         return parsing_state
+
+    def accept_token_ids(self, token_ids, stacks=None, as_string=True) -> bool:
+        output_state = self._update_state_with_single_token_seq(
+            token_ids, stacks, as_string
+        ).stacks
+        return True if output_state else False
 
     def get_next_token_acceptance(self, parsing_state, device) -> torch.Tensor:
         acceptance_matrix = torch.cat(
