@@ -29,9 +29,6 @@ class AbsTokenRecognizer(ABC):
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
         self.unicode_trie = ByteTrie.from_tokenizer(tokenizer)
         self.mapping = getTokenizerMiddleMapping(tokenizer)
-        assert len(self.mapping) == len(
-            self.token_trie
-        ), f"{len(self.mapping)}, {len(self.token_trie)}"
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         stacks = parsing_state.stacks

@@ -52,7 +52,7 @@ class ByteTrie:
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
         mapping = getTokenizerMiddleMapping(tokenizer)
-        TCFG_tokenizer = Tokenizer(tokenizer)
+        TCFG_tokenizer = Tokenizer.from_hf_tokenizer(tokenizer)
 
         for token_id in range(TCFG_tokenizer.real_vocab_size()):
             byte_repr = mapping.map(token_id)
