@@ -95,6 +95,39 @@ class TokenizerTesterMixin:
             f"stacks: {parsing_state.stacks}, not empty",
         )
 
+    def test_forcing_sequence(self):
+
+        string_to_force = "12345 678 90"
+
+        grammar_str = f"""
+        root ::= "{string_to_force}"
+
+        """
+
+        tokenRecognizer = IncrementalTokenRecognizer(
+            grammar_str=grammar_str, start_rule_name="root", tokenizer=self.tokenizer
+        )
+
+        token_ids = self.tokenizer.encode(string_to_force)
+        pprint_token_ids(self.tokenizer, token_ids)
+
+        # check if there is unk token
+        for token_id in token_ids:
+            if token_id == self.tokenizer.unk_token_id:
+                warnings.warn(
+                    f"unk token found in input_token_ids: {token_ids}, skipping test"
+                )
+                return
+
+        acc_state = tokenRecognizer._update_state_with_single_token_seq(
+            token_ids, as_string=False
+        )
+        # the json object is complete, so the stacks should be empty
+        self.assertTrue(
+            acc_state.stacks == set() or acc_state.stacks == set(tuple()),
+            f"stacks: {acc_state.stacks}, not empty",
+        )
+
     def test_emoji(self):
         """
         Test that we can accept emoji
@@ -103,7 +136,7 @@ class TokenizerTesterMixin:
         with open("examples/grammars/emoji.ebnf", "r") as file:
             input_text = file.read()
 
-        JsontokenRecognizer = IncrementalTokenRecognizer(
+        tokenRecognizer = IncrementalTokenRecognizer(
             grammar_str=input_text, start_rule_name="root", tokenizer=self.tokenizer
         )
 
@@ -119,6 +152,6 @@ class TokenizerTesterMixin:
                 )
                 return
 
-        accpetance = JsontokenRecognizer.accept_token_ids(token_ids, as_string=False)
+        accpetance = tokenRecognizer.accept_token_ids(token_ids, as_string=False)
 
         self.assertTrue(accpetance, f"emoji: {emoji} not accepted, but it should be")
