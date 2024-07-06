@@ -4,8 +4,6 @@ from transformers import CodeGenTokenizerFast
 
 from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
 
-import logging
-
 
 # @unittest.skip("CodeGen is not supported and will be removed")
 class PhiTokenizerTest(TokenizerTesterMixin, unittest.TestCase):

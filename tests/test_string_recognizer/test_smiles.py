@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-import logging
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass

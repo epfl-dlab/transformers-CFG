@@ -1,12 +1,9 @@
-import unittest
 import warnings
 
 from transformers import PreTrainedTokenizer
 from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
 
-from transformers_cfg.recognizer import StringRecognizer
 
-from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.utils import pprint_token_ids
 
 

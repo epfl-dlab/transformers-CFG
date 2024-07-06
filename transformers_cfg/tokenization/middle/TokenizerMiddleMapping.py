@@ -1,5 +1,4 @@
 from .ByteProxyMapping import ByteProxyMapping, LLAMAByteProxyMapper
-from transformers import AutoTokenizer
 import logging
 
 log = logging.getLogger(__name__)

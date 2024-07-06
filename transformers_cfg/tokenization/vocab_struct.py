@@ -3,7 +3,6 @@
 #################
 
 import logging
-import re
 from typing import List
 
 from transformers_cfg.tokenization.tokenizer import Tokenizer

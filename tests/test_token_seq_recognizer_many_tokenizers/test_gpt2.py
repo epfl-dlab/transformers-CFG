@@ -4,8 +4,6 @@ from transformers import GPT2TokenizerFast
 
 from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
 
-import logging
-
 
 class GPT2TokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 

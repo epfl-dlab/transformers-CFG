@@ -1,10 +1,8 @@
 import unittest
 
-from transformers import PreTrainedTokenizer, AutoTokenizer
+from transformers import AutoTokenizer
 
 from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
-
-import logging
 
 
 @unittest.skip("Falcom is not supported and will be removed")

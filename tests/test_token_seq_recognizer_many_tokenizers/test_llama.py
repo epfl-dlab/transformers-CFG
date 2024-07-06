@@ -4,8 +4,6 @@ from transformers import LlamaTokenizerFast
 
 from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
 
-import logging
-
 
 class LlamaTokenizerTest(TokenizerTesterMixin, unittest.TestCase):
 
