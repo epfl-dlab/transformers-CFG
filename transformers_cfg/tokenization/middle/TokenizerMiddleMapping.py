@@ -20,8 +20,6 @@ def getTokenizerMiddleMapping(tokenizer):
         return LLAMA1TokenizerMiddleMapping(tokenizer)
     elif "t5" in tokenizer.__class__.__name__.lower():
         return T5TokenizerMiddleMapping(tokenizer)
-    elif "codegen" in tokenizer.__class__.__name__.lower():
-        return GPT2TokenizerMiddleMapping(tokenizer)
     else:
         raise NotImplementedError(f"Unicode mapping for {tokenizer.__class__.__name__}")
 
