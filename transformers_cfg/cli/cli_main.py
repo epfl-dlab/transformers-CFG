@@ -5,12 +5,15 @@ from transformers_cfg.tokenization.utils import is_tokenizer_supported
 
 
 def parse_arguments(args=None):
-    parser = argparse.ArgumentParser(
-        description="Get the tokenizer class for a given model name."
+    parser = argparse.ArgumentParser(description="Transformers-CFG CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Sub-commands help")
+
+    # Sub-command: check
+    check_parser = subparsers.add_parser("check", help="Check if a model is supported")
+    check_parser.add_argument(
+        "model", type=str, help="The unique model name on HF hub."
     )
-    parser.add_argument(
-        "--model", "-m", type=str, help="The unique model name on HF hub."
-    )
+
     return parser.parse_args(args)
 
 
@@ -29,7 +32,8 @@ def check_model_support(model_name):
 
 def main(args=None):
     args = parse_arguments(args)
-    result = check_model_support(args.model)
+    if args.command == "check":
+        check_model_support(args.model)
 
 
 if __name__ == "__main__":
