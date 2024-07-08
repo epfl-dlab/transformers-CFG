@@ -29,8 +29,7 @@ def check_model_support(model_name):
 
 def main(args=None):
     args = parse_arguments(args)
-    result = check_model_support(args.model, args.tokenizer_type, args.config_path)
-    print(result)
+    result = check_model_support(args.model)
 
 
 if __name__ == "__main__":
