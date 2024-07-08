@@ -22,4 +22,9 @@ setup(
     },
     include_package_data=True,
     # Add any additional package configuration here
+    entry_points={
+        "console_scripts": [
+            "transformers-cfg-cli=transformers_cfg.cli.cli_main:main",
+        ],
+    },
 )
