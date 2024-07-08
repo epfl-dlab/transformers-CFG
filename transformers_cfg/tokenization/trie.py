@@ -4,9 +4,9 @@ from typing import Dict, List, Tuple
 from collections import deque
 
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
-    getTokenizerMiddleMapping,
+    TokenizerMiddleMapping,
 )
-from transformers_cfg.tokenization.tokenizer import Tokenizer
+from transformers_cfg.tokenization.tokenizer import TCFG_Tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +51,8 @@ class ByteTrie:
     def from_tokenizer(cls, tokenizer):
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
-        mapping = getTokenizerMiddleMapping(tokenizer)
-        TCFG_tokenizer = Tokenizer.from_hf_tokenizer(tokenizer)
+        mapping = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        TCFG_tokenizer = TCFG_Tokenizer.from_hf_tokenizer(tokenizer)
 
         for token_id in range(TCFG_tokenizer.real_vocab_size()):
             byte_repr = mapping.map(token_id)

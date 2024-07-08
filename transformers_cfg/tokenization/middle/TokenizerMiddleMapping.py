@@ -1,26 +1,15 @@
+from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
 from .ByteProxyMapping import ByteProxyMapping, LLAMAByteProxyMapper
 import logging
+from transformers import (
+    GPT2TokenizerFast,
+    BartTokenizerFast,
+    T5TokenizerFast,
+    CodeGenTokenizerFast,
+    LlamaTokenizerFast,
+)
 
 log = logging.getLogger(__name__)
-
-
-def getTokenizerMiddleMapping(tokenizer):
-
-    if (
-        "gpt2" in tokenizer.__class__.__name__.lower()
-        or "codegen" in tokenizer.__class__.__name__.lower()
-        or "bart" in tokenizer.__class__.__name__.lower()
-    ):
-        return GPT2TokenizerMiddleMapping(tokenizer)
-    elif (
-        "llama" in tokenizer.__class__.__name__.lower()
-        or "mistral" in tokenizer.__class__.__name__.lower()
-    ):
-        return LLAMA1TokenizerMiddleMapping(tokenizer)
-    elif "t5" in tokenizer.__class__.__name__.lower():
-        return T5TokenizerMiddleMapping(tokenizer)
-    else:
-        raise NotImplementedError(f"Unicode mapping for {tokenizer.__class__.__name__}")
 
 
 class TokenizerMiddleMapping:
@@ -36,6 +25,24 @@ class TokenizerMiddleMapping:
 
     def map(self, token_id: int, verbose=False) -> bytes:
         raise NotImplementedError("This method should be implemented in the subclass")
+
+    @classmethod
+    def from_hf_tokenizer(cls, hf_tokenizer):
+        assert (
+            type(hf_tokenizer) in SUPPORTED_TOKENIZERS
+        ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
+        if isinstance(
+            hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast, CodeGenTokenizerFast)
+        ):
+            return GPT2TokenizerMiddleMapping(hf_tokenizer)
+        elif isinstance(hf_tokenizer, LlamaTokenizerFast):
+            return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
+        elif isinstance(hf_tokenizer, T5TokenizerFast):
+            return T5TokenizerMiddleMapping(hf_tokenizer)
+        else:
+            raise NotImplementedError(
+                f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
+            )
 
 
 class GPT2TokenizerMiddleMapping(TokenizerMiddleMapping):

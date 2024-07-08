@@ -10,7 +10,7 @@ from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.tokenization.trie import ByteTrie
 from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
-    getTokenizerMiddleMapping,
+    TokenizerMiddleMapping,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class AbsTokenRecognizer(ABC):
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
         self.unicode_trie = ByteTrie.from_tokenizer(tokenizer)
-        self.mapping = getTokenizerMiddleMapping(tokenizer)
+        self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         stacks = parsing_state.stacks
@@ -46,7 +46,7 @@ class AbsTokenRecognizer(ABC):
                 return False
         # for code_point in self.mapping.map(token_id):
         #     stacks = self.grammar._consume_char_code_point(code_point, stacks)
-        bytes_or_codepoints = self.mapping.map(token_id, verbose=False)
+        bytes_or_codepoints = self.homomorphism.map(token_id, verbose=False)
         new_acc_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state, verbose=False
         )
@@ -66,7 +66,7 @@ class AbsTokenRecognizer(ABC):
         if not parsing_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.mapping)
+            vocab_size = len(self.homomorphism)
             logger.debug(f"Empty stack, sum of acceptance: {0}")
             # size of the vocab
             accepts = [False] * vocab_size
@@ -121,7 +121,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     f"the stacks are {parsing_state.stacks}"
                 )
 
-        bytes_or_codepoints = self.mapping.map(token_id)
+        bytes_or_codepoints = self.homomorphism.map(token_id)
         parsing_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state
         )
@@ -240,7 +240,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                 accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
             )
         else:
-            accepts = [False] * len(self.mapping)
+            accepts = [False] * len(self.homomorphism)
             token_acceptance = check_token_acceptance_in_trie(
                 self.token_trie.trie,
                 [stack],

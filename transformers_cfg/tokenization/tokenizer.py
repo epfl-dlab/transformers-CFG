@@ -1,13 +1,31 @@
 import re
 from typing import List
+from transformers import (
+    GPT2TokenizerFast,
+    BartTokenizerFast,
+    LlamaTokenizerFast,
+    T5TokenizerFast,
+    CodeGenTokenizerFast,
+)
+
+from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
+from transformers_cfg.tokenization.utils import (
+    replace_hex,
+)
 
 
-def replace_hex(match):
-    hex_value = match.group(1)
-    return chr(int(hex_value, 16))
+def get_TCFG_tokenizer_class(model_name_or_tokenizer):
+    from transformers import AutoTokenizer
+
+    if isinstance(model_name_or_tokenizer, str):
+        tokenizer = AutoTokenizer.from_pretrained(model_name_or_tokenizer)
+    else:
+        tokenizer = model_name_or_tokenizer
+
+    return TCFG_Tokenizer.from_hf_tokenizer(tokenizer).__class__
 
 
-class Tokenizer:
+class TCFG_Tokenizer:
     def __init__(self, hf_tokenizer):
         self.hf_tokenizer = hf_tokenizer
         self.special_token_ids = hf_tokenizer.all_special_ids
@@ -28,38 +46,35 @@ class Tokenizer:
 
     @classmethod
     def from_hf_tokenizer(cls, hf_tokenizer):
-        if (
-            "gpt2" in hf_tokenizer.__class__.__name__.lower()
-            or "bart" in hf_tokenizer.__class__.__name__.lower()
-        ):
-            return GPT2Tokenizer(hf_tokenizer)
-        elif (
-            "llama" in hf_tokenizer.__class__.__name__.lower()
-            or "mistral" in hf_tokenizer.__class__.__name__.lower()
-            or "t5" in hf_tokenizer.__class__.__name__.lower()
-        ):
-            return LlamaTokenizer(hf_tokenizer)
-        elif "codegen" in hf_tokenizer.__class__.__name__.lower():
+        assert (
+            type(hf_tokenizer) in SUPPORTED_TOKENIZERS
+        ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
+
+        if isinstance(hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast)):
+            return TCFG_GPT2Tokenizer(hf_tokenizer)
+        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, T5TokenizerFast)):
+            return TCFG_LlamaTokenizer(hf_tokenizer)
+        elif isinstance(hf_tokenizer, CodeGenTokenizerFast):
             # phi reuses the codegen tokenizer
-            return PhiTokenizer(hf_tokenizer)
+            return TCFG_PhiTokenizer(hf_tokenizer)
         else:
             raise NotImplementedError(
                 f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
             )
 
 
-class LlamaTokenizer(Tokenizer):
+class TCFG_LlamaTokenizer(TCFG_Tokenizer):
     def __init__(self, hf_tokenizer):
         super().__init__(hf_tokenizer)
 
     def _format_token_as_bytes(self, token_id):
         token = self.hf_tokenizer.convert_ids_to_tokens(token_id)
         token = re.sub(r"<0x([0-9a-fA-F]{2})>", replace_hex, token)
-        token = token.replace("▁", " ")
+        # token = token.replace("▁", " ")
         return bytes(token, "utf-8")
 
 
-class GPT2Tokenizer(Tokenizer):
+class TCFG_GPT2Tokenizer(TCFG_Tokenizer):
     def __init__(self, hf_tokenizer):
         super().__init__(hf_tokenizer)
 
@@ -72,7 +87,11 @@ class GPT2Tokenizer(Tokenizer):
         )
 
 
-class CharacterTokenizer(Tokenizer):
+class TCFG_CharacterTokenizer(TCFG_Tokenizer):
+    """
+    Not yet used, but can be used for character level tokenization (even though rarely used in practice)
+    """
+
     def __init__(self, hf_tokenizer):
         super().__init__(hf_tokenizer)
 
@@ -80,7 +99,7 @@ class CharacterTokenizer(Tokenizer):
         return bytes(self.hf_tokenizer.convert_ids_to_tokens(token_id), "utf-8")
 
 
-class PhiTokenizer(GPT2Tokenizer):
+class TCFG_PhiTokenizer(TCFG_GPT2Tokenizer):
     def __init__(self, hf_tokenizer):
         super().__init__(hf_tokenizer)
 
