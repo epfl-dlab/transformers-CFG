@@ -6,6 +6,7 @@ from transformers import (
     LlamaTokenizerFast,
     T5TokenizerFast,
     CodeGenTokenizerFast,
+    PreTrainedTokenizerFast,
 )
 
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
@@ -33,9 +34,6 @@ class TCFG_Tokenizer:
     def real_vocab_size(self):
         return len(self.hf_tokenizer.vocab)
 
-    def getTokenizerMiddleMapping(self):
-        raise NotImplementedError("This method should be implemented in the subclass")
-
     def get_tokens_as_bytes(self) -> List[bytes]:
         vocab_size = self.real_vocab_size()
         token_as_bytes: List[bytes] = [
@@ -50,13 +48,20 @@ class TCFG_Tokenizer:
             type(hf_tokenizer) in SUPPORTED_TOKENIZERS
         ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
 
-        if isinstance(hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast)):
+        if isinstance(
+            hf_tokenizer,
+            (GPT2TokenizerFast, BartTokenizerFast),
+        ):
             return TCFG_GPT2Tokenizer(hf_tokenizer)
         elif isinstance(hf_tokenizer, (LlamaTokenizerFast, T5TokenizerFast)):
             return TCFG_LlamaTokenizer(hf_tokenizer)
         elif isinstance(hf_tokenizer, CodeGenTokenizerFast):
             # phi reuses the codegen tokenizer
             return TCFG_PhiTokenizer(hf_tokenizer)
+        elif isinstance(
+            hf_tokenizer, PreTrainedTokenizerFast
+        ) and hf_tokenizer.name_or_path.startswith("meta-llama/Meta-Llama-3"):
+            return TCFG_LlamaTokenizer(hf_tokenizer)
         else:
             raise NotImplementedError(
                 f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"

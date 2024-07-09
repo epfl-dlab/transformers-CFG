@@ -7,6 +7,7 @@ from transformers import (
     T5TokenizerFast,
     CodeGenTokenizerFast,
     LlamaTokenizerFast,
+    PreTrainedTokenizerFast,
 )
 
 from transformers_cfg.tokenization.utils import get_tokenizer_charset
@@ -41,10 +42,10 @@ class TokenizerMiddleMapping:
             return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, T5TokenizerFast):
             return T5TokenizerMiddleMapping(hf_tokenizer)
-        else:
-            raise NotImplementedError(
-                f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
-            )
+        elif isinstance(
+            hf_tokenizer, PreTrainedTokenizerFast
+        ) and hf_tokenizer.name_or_path.startswith("meta-llama/Meta-Llama-3"):
+            return GPT2TokenizerMiddleMapping(hf_tokenizer)
 
     @staticmethod
     def auto_infer(hf_tokenizer):
@@ -55,6 +56,10 @@ class TokenizerMiddleMapping:
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
         elif "▁" in charset:
             return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
+        else:
+            raise NotImplementedError(
+                f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
+            )
 
 
 class GPT2TokenizerMiddleMapping(TokenizerMiddleMapping):

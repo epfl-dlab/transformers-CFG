@@ -4,6 +4,7 @@ from transformers import (
     LlamaTokenizerFast,
     T5TokenizerFast,
     CodeGenTokenizerFast,
+    PreTrainedTokenizerFast,
 )
 
 SUPPORTED_TOKENIZERS = {
@@ -12,4 +13,5 @@ SUPPORTED_TOKENIZERS = {
     LlamaTokenizerFast,
     T5TokenizerFast,
     CodeGenTokenizerFast,
+    PreTrainedTokenizerFast,
 }

@@ -12,6 +12,13 @@ class ByteProxyMapping:
                 tokenizer.name_or_path, use_fast=False
             )
         self.tokenizer = tokenizer
+
+        # if tokenizer doesn't have byte_encoder(which is the case for llama-3), use gpt2_tokenizer
+        if not hasattr(tokenizer, "byte_encoder"):
+            gpt2_tokenizer = AutoTokenizer.from_pretrained("gpt2", use_fast=False)
+            tokenizer.byte_encoder = gpt2_tokenizer.byte_encoder
+            tokenizer.byte_decoder = gpt2_tokenizer.byte_decoder
+
         self.byte2proxychar: Dict[int, str] = tokenizer.byte_encoder
         self.proxychar2byte: Dict[str, int] = tokenizer.byte_decoder
 
