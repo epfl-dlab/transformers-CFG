@@ -29,3 +29,7 @@ def is_tokenizer_supported(hf_tokenizer_or_name):
     else:
         hf_tokenizer = hf_tokenizer_or_name
     return get_tokenizer_real_class(hf_tokenizer) in SUPPORTED_TOKENIZERS
+
+
+def get_tokenizer_charset(hf_tokenizer):
+    return set("".join(hf_tokenizer.vocab.keys()))

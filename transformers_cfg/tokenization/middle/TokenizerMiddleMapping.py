@@ -9,6 +9,8 @@ from transformers import (
     LlamaTokenizerFast,
 )
 
+from transformers_cfg.tokenization.utils import get_tokenizer_charset
+
 log = logging.getLogger(__name__)
 
 
@@ -43,6 +45,16 @@ class TokenizerMiddleMapping:
             raise NotImplementedError(
                 f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
             )
+
+    @staticmethod
+    def auto_infer(hf_tokenizer):
+        "beta version, not sure if it will work for all cases"
+        charset = get_tokenizer_charset(hf_tokenizer)
+        size = len(charset)
+        if size >= 256 and size < 256 + 30:
+            return GPT2TokenizerMiddleMapping(hf_tokenizer)
+        elif "▁" in charset:
+            return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
 
 
 class GPT2TokenizerMiddleMapping(TokenizerMiddleMapping):
