@@ -4,8 +4,13 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 💭Latest News
+- **Support for LLAMA-3** (2024-07-08)
 
+- **support [JSON Schema as constraint](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md)**(2024-05-13)
+  
 - **[Token masking optimization](#efficiency)(** (2024-04-25)
+
+- **[Support for Phi](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
 
 - **Online [Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF space** (2024-04-10)
   
