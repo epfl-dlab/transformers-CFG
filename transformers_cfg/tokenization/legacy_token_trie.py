@@ -13,7 +13,7 @@ LEAF = -1
 
 
 class TokenTrie:
-    # TODO, should be phased out by only using ByteTrie
+    # Not used anymore, replaced by ByteTrie
     def __init__(self, hf_tokenizer):
         self.eos_token_id = hf_tokenizer.eos_token_id
         self.tcfg_tokenizer = TCFG_Tokenizer.from_hf_tokenizer(hf_tokenizer)

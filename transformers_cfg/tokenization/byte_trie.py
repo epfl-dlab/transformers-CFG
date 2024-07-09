@@ -107,6 +107,17 @@ class ByteTrie:
             token_acceptance[eos_token_id] = False
         return token_acceptance
 
+    def visualize(self, max_depth=3):
+        def _visualize(node, prefix, depth):
+            if depth > max_depth:
+                return
+            for char, next_node in node.children.items():
+                print(f"{prefix}{char} (Token ID: {next_node.token_id})")
+                _visualize(next_node, prefix + "  ", depth + 1)
+
+        print("Visualizing ByteTrie:")
+        _visualize(self.root, "", 1)
+
 
 def _dfs(
     node,
@@ -164,8 +175,10 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2", fast=True)
 
-    trie = ByteTrie.from_tokenizer(tokenizer, unicode=True)
+    trie = ByteTrie.from_tokenizer(tokenizer)
     print(f"length of trie: {len(trie)}=={len(tokenizer.vocab.items())}")
+
+    trie.visualize(max_depth=0)
 
     #
     # print(trie.search("hello"))  # Example, replace with actual words from the vocab
