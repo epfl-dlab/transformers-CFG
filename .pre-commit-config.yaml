@@ -31,3 +31,16 @@ repos:
             'types': [ python ]
             pass_filenames: false
             stages: [ commit ]
+
+-   repo: https://github.com/PyCQA/autoflake # remove unused imports
+    rev: v2.2.1
+    hooks:
+    -   id: autoflake
+        args: [--remove-all-unused-imports, --in-place]
+
+-   repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.2.0
+    hooks:
+    -   id: conventional-pre-commit
+        stages: [commit-msg]
+        args: []

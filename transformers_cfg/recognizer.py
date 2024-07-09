@@ -1,4 +1,3 @@
-import copy
 import logging
 from functools import lru_cache
 from typing import List, Tuple, Set, Optional

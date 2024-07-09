@@ -1,13 +1,3 @@
-transformers.models.bloom.tokenization_bloom_fast.BloomTokenizerFast:
-- bigscience/bloom-560m
-- bigscience/bloomz-560m
-- bigscience/bloom-7b1
-- bigscience/bloom-1b1
-- bigscience/bloom-1b7
-- bigscience/bloomz-3b
-- bigscience/bloom-3b
-- bigscience/bloomz-7b1
-- bigscience/bloomz-1b1
 transformers.models.codegen.tokenization_codegen_fast.CodeGenTokenizerFast:
 - microsoft/phi-1_5
 transformers.models.gpt2.tokenization_gpt2_fast.GPT2TokenizerFast:
@@ -37,10 +27,6 @@ transformers.models.gpt2.tokenization_gpt2_fast.GPT2TokenizerFast:
 - KoboldAI/OPT-13B-Erebus
 - KoboldAI/OPT-6.7B-Erebus
 - ai-forever/mGPT
-transformers.models.gpt_neox.tokenization_gpt_neox_fast.GPTNeoXTokenizerFast:
-- EleutherAI/pythia-160m-deduped
-- mosaicml/mpt-7b
-- EleutherAI/pythia-70m-deduped
 transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast:
 - mistralai/Mistral-7B-v0.1
 - teknium/OpenHermes-2-Mistral-7B
@@ -87,8 +73,6 @@ transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast:
 - LeoLM/leo-hessianai-7b
 transformers.models.t5.tokenization_t5_fast.T5TokenizerFast:
 - Vamsi/T5_Paraphrase_Paws
-transformers.models.xglm.tokenization_xglm_fast.XGLMTokenizerFast:
-- facebook/xglm-564M
 transformers.tokenization_utils_fast.PreTrainedTokenizerFast:
 - tiiuae/falcon-40b-instruct
 - tiiuae/falcon-7b-instruct

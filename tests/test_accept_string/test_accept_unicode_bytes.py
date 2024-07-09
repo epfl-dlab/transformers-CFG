@@ -1,14 +1,10 @@
-import unittest
 from unittest import TestCase
 
-from transformers_cfg.recognizer import StringRecognizer, AcceptState
+from transformers_cfg.recognizer import StringRecognizer
 
 from transformers_cfg.parser import parse_ebnf
-from tests.json_utils import is_json_parsable
 
 import logging
-
-from transformers_cfg.utf8_utils import PartialUTF8
 
 
 class TestUnicode(TestCase):

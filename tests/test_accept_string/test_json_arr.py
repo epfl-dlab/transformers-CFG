@@ -1,13 +1,10 @@
 from unittest import TestCase
-from json import loads
 
-import json
-import logging
 
 from tests.json_utils import is_json_parsable
 
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.recognizer import StringRecognizer, AcceptState
+from transformers_cfg.recognizer import StringRecognizer
 
 
 class TestJsonArray(TestCase):

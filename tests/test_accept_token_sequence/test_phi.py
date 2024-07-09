@@ -2,9 +2,9 @@ import unittest
 
 from transformers import CodeGenTokenizerFast
 
-from tests._test_token_seq_recognizer_many_tokenizer_common import TokenizerTesterMixin
-
-import logging
+from tests.test_accept_token_sequence._test_accept_tokens_mixin import (
+    TokenizerTesterMixin,
+)
 
 
 # @unittest.skip("CodeGen is not supported and will be removed")

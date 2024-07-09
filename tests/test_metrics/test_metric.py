@@ -1,7 +1,6 @@
 import math
-from unittest import TestCase, mock
+from unittest import TestCase
 import torch
-from datasets import Metric
 from transformers_cfg.metrics import ConstrainedDecodingMetric
 from transformers_cfg.metrics.metrics import ConstrainedDecodingMetricOutput
 

@@ -7,10 +7,9 @@ import torch
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.tokenization.trie import ByteTrie
-from transformers_cfg.tokenization.vocab_struct import LEAF, TokenTrie
+from transformers_cfg.tokenization.byte_trie import ByteTrie
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
-    getTokenizerMiddleMapping,
+    TokenizerMiddleMapping,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,11 +23,10 @@ class AbsTokenRecognizer(ABC):
         self.use_unicode = unicode
 
         self.eos_token_id = tokenizer.eos_token_id
-        self.token_trie = TokenTrie(tokenizer)
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        self.unicode_trie = ByteTrie.from_tokenizer(tokenizer)
-        self.mapping = getTokenizerMiddleMapping(tokenizer)
+        self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
+        self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         stacks = parsing_state.stacks
@@ -46,7 +44,7 @@ class AbsTokenRecognizer(ABC):
                 return False
         # for code_point in self.mapping.map(token_id):
         #     stacks = self.grammar._consume_char_code_point(code_point, stacks)
-        bytes_or_codepoints = self.mapping.map(token_id, verbose=False)
+        bytes_or_codepoints = self.homomorphism.map(token_id, verbose=False)
         new_acc_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state, verbose=False
         )
@@ -66,7 +64,7 @@ class AbsTokenRecognizer(ABC):
         if not parsing_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.mapping)
+            vocab_size = len(self.homomorphism)
             logger.debug(f"Empty stack, sum of acceptance: {0}")
             # size of the vocab
             accepts = [False] * vocab_size
@@ -121,7 +119,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     f"the stacks are {parsing_state.stacks}"
                 )
 
-        bytes_or_codepoints = self.mapping.map(token_id)
+        bytes_or_codepoints = self.homomorphism.map(token_id)
         parsing_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state
         )
@@ -236,13 +234,13 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
             accept_f = lambda x: self.string_recognizer._try_accept_bytes(
                 x, {stack}, partial_utf8=partial_utf8
             )
-            token_acceptance = self.unicode_trie.get_next_token_acceptance(
+            token_acceptance = self.byte_trie.get_next_token_acceptance(
                 accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
             )
         else:
-            accepts = [False] * len(self.mapping)
+            accepts = [False] * len(self.homomorphism)
             token_acceptance = check_token_acceptance_in_trie(
-                self.token_trie.trie,
+                self.byte_trie.root,
                 [stack],
                 self.string_recognizer,
                 self.eos_token_id,
@@ -253,17 +251,54 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         return x_eos
 
 
-def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
+# def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
 
-    for byte, next_trie in trie.items():
-        if byte == LEAF:
-            token_id = next_trie
-            if token_id != eos_token_id:
-                # if the stacks is not empty, it means we can still continue to parse
-                # so we should accept the token
-                accepts[token_id] = bool(stacks)
-            continue
+#     for byte, next_trie in trie.items():
+#         if byte == LEAF:
+#             token_id = next_trie
+#             if token_id != eos_token_id:
+#                 # if the stacks is not empty, it means we can still continue to parse
+#                 # so we should accept the token
+#                 accepts[token_id] = bool(stacks)
+#             continue
 
+#         new_stacks = set()
+#         for stk in stacks:
+#             if not stk:
+#                 continue
+
+#             next_element_offset = stk[-1]
+#             num_chars = grammar.grammar_encoding[next_element_offset]
+
+#             if not grammar.char_acceptance_at_element(next_element_offset).get(
+#                 byte, False
+#             ):
+#                 # if the current byte is not accepted by the current rule, we need to try next rule
+#                 continue
+
+#             next_element_offset += num_chars + 1
+#             new_stack = list(stk[:-1])
+#             if grammar.grammar_encoding[next_element_offset]:
+#                 new_stack.append(next_element_offset)
+#             new_stacks.update(grammar.expand_stack_head(tuple(new_stack)))
+
+#         if new_stacks:
+#             check_token_acceptance_in_trie(
+#                 next_trie, new_stacks, grammar, eos_token_id, accepts
+#             )
+
+#     return accepts
+
+
+def check_token_acceptance_in_trie(trie_node, stacks, grammar, eos_token_id, accepts):
+    if trie_node.is_end_of_word:
+        token_id = trie_node.token_id
+        if token_id != eos_token_id:
+            # if the stacks is not empty, it means we can still continue to parse
+            # so we should accept the token
+            accepts[token_id] = bool(stacks)
+
+    for byte, next_trie_node in trie_node.children.items():
         new_stacks = set()
         for stk in stacks:
             if not stk:
@@ -286,7 +321,7 @@ def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts)
 
         if new_stacks:
             check_token_acceptance_in_trie(
-                next_trie, new_stacks, grammar, eos_token_id, accepts
+                next_trie_node, new_stacks, grammar, eos_token_id, accepts
             )
 
     return accepts

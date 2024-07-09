@@ -1,12 +1,8 @@
 import torch
-import argparse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
-from transformers_cfg.recognizer import StringRecognizer
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
-from transformers_cfg.parser import parse_ebnf
 import time
-import os
 import sys
 from dataclasses import dataclass
 
