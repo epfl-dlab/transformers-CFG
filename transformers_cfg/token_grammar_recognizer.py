@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class AbsTokenRecognizer(ABC):
-    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None):
+    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None,homomorphism=None):
         self.use_unicode = unicode
         self.eos_token_id = tokenizer.eos_token_id
         self.tokenizer = tokenizer
@@ -28,7 +28,10 @@ class AbsTokenRecognizer(ABC):
             self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
         else:
             self.byte_trie = trie
-        self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        if homomorphism is None:
+            self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        else:
+            self.homomorphism = homomorphism
         # self.set_grammar(grammar_str, start_rule_name)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
@@ -108,8 +111,8 @@ class AbsTokenRecognizer(ABC):
     #     self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
 
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None):
-        super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie)
+    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None,homomorphism=None):
+        super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie,homomorphism=homomorphism)
         self.last_size = None
 
     def _update_state_with_token_id(
