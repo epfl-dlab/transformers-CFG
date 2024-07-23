@@ -16,17 +16,20 @@ logger = logging.getLogger(__name__)
 
 
 class AbsTokenRecognizer(ABC):
-    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False):
+    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None):
         self.use_unicode = unicode
         self.eos_token_id = tokenizer.eos_token_id
         self.tokenizer = tokenizer
-        # parsed_grammar = parse_ebnf(grammar_str)
-        # grammar_encoding = parsed_grammar.grammar_encoding
-        # self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
-        # self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
+        parsed_grammar = parse_ebnf(grammar_str)
+        grammar_encoding = parsed_grammar.grammar_encoding
+        self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
+        self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
+        if trie is None:
+            self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
+        else:
+            self.byte_trie = trie
         self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
-        self.set_grammar(grammar_str, start_rule_name)
+        # self.set_grammar(grammar_str, start_rule_name)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         stacks = parsing_state.stacks
@@ -91,27 +94,22 @@ class AbsTokenRecognizer(ABC):
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
     
-    def set_grammar(self, grammar_str: str, start_rule_name: str = "root"):
-        """
-        Set the grammar of the recognizer while keeping the same tokenizer.
+    # def set_grammar(self, grammar_str: str, start_rule_name: str = "root"):
+    #     """
+    #     Set the grammar of the recognizer while keeping the same tokenizer.
         
-        Args:
-            grammar_str (str): The new grammar string in EBNF format.
-            start_rule_name (str, optional): The new start rule name. Defaults to "root".
-        """
-        parsed_grammar = parse_ebnf(grammar_str)
-        grammar_encoding = parsed_grammar.grammar_encoding
-        self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
-        self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        
-        # Reset the last_size for IncrementalTokenRecognizer
-        if hasattr(self, 'last_size'):
-            self.last_size = None
-
+    #     Args:
+    #         grammar_str (str): The new grammar string in EBNF format.
+    #         start_rule_name (str, optional): The new start rule name. Defaults to "root".
+    #     """
+    #     parsed_grammar = parse_ebnf(grammar_str)
+    #     grammar_encoding = parsed_grammar.grammar_encoding
+    #     self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
+    #     self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
 
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False):
-        super().__init__(grammar_str, tokenizer, start_rule_name, unicode)
+    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None):
+        super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie)
         self.last_size = None
 
     def _update_state_with_token_id(
