@@ -39,6 +39,10 @@ class TokenizerMiddleMapping:
         ):
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, LlamaTokenizerFast):
+            # deepseek, though inheriting from LlamaTokenizerFast, is actually a GPT2TokenizerFast
+            # check https://github.com/epfl-dlab/transformers-CFG/issues/72
+            if hf_tokenizer.name_or_path.startswith("deepseek-ai/deepseek-coder"):
+                return GPT2TokenizerMiddleMapping(hf_tokenizer)
             return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, T5TokenizerFast):
             return T5TokenizerMiddleMapping(hf_tokenizer)
