@@ -242,6 +242,10 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         acceptance = acceptance_matrix.reshape(len(parsing_state.stacks), -1).any(dim=0)
         return acceptance
 
+    # If running with device as a this cache will continue to fill up gpu memory
+    # this might be leaking memory when multiple instances of this object
+    # are created in the same process because the caches stay around after
+    # the object is dereferenced
     @lru_cache(maxsize=32768)
     def get_next_token_acceptance_for_single_stack(self, stack, partial_utf8, device):
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
