@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 class AbsTokenRecognizer(ABC):
     def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None,homomorphism=None):
-        self.use_unicode = unicode
-        self.eos_token_id = tokenizer.eos_token_id
-        self.tokenizer = tokenizer
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
+        self.use_unicode = unicode
+
+        self.eos_token_id = tokenizer.eos_token_id
+        self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
         if trie is None:
             self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
@@ -32,7 +33,6 @@ class AbsTokenRecognizer(ABC):
             self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
         else:
             self.homomorphism = homomorphism
-        # self.set_grammar(grammar_str, start_rule_name)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         stacks = parsing_state.stacks
@@ -97,19 +97,6 @@ class AbsTokenRecognizer(ABC):
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
     
-    # def set_grammar(self, grammar_str: str, start_rule_name: str = "root"):
-    #     """
-    #     Set the grammar of the recognizer while keeping the same tokenizer.
-        
-    #     Args:
-    #         grammar_str (str): The new grammar string in EBNF format.
-    #         start_rule_name (str, optional): The new start rule name. Defaults to "root".
-    #     """
-    #     parsed_grammar = parse_ebnf(grammar_str)
-    #     grammar_encoding = parsed_grammar.grammar_encoding
-    #     self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
-    #     self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
     def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None,homomorphism=None):
         super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie,homomorphism=homomorphism)
@@ -242,10 +229,8 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         acceptance = acceptance_matrix.reshape(len(parsing_state.stacks), -1).any(dim=0)
         return acceptance
 
-    # If running with device as a this cache will continue to fill up gpu memory
-    # this might be leaking memory when multiple instances of this object
-    # are created in the same process because the caches stay around after
-    # the object is dereferenced
+    # If running on a GPU device this cache can continue to fill up GPU memory
+    # Dereferencing the object will not clear the cache
     @lru_cache(maxsize=32768)
     def get_next_token_acceptance_for_single_stack(self, stack, partial_utf8, device):
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
