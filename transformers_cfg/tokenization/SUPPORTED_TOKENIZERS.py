@@ -5,6 +5,7 @@ from transformers import (
     T5TokenizerFast,
     CodeGenTokenizerFast,
     PreTrainedTokenizerFast,
+    GemmaTokenizerFast
 )
 
 SUPPORTED_TOKENIZERS = {
@@ -14,4 +15,5 @@ SUPPORTED_TOKENIZERS = {
     T5TokenizerFast,
     CodeGenTokenizerFast,
     PreTrainedTokenizerFast,
+    GemmaTokenizerFast
 }
