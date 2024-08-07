@@ -7,6 +7,7 @@ from transformers import (
     T5TokenizerFast,
     CodeGenTokenizerFast,
     PreTrainedTokenizerFast,
+    GemmaTokenizerFast
 )
 
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
@@ -53,7 +54,7 @@ class TCFG_Tokenizer:
             (GPT2TokenizerFast, BartTokenizerFast),
         ):
             return TCFG_GPT2Tokenizer(hf_tokenizer)
-        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, T5TokenizerFast)):
+        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast, T5TokenizerFast)):
             return TCFG_LlamaTokenizer(hf_tokenizer)
         elif isinstance(hf_tokenizer, CodeGenTokenizerFast):
             # phi reuses the codegen tokenizer
