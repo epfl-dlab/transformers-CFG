@@ -1,8 +1,11 @@
 import math
 from unittest import TestCase
+
 import torch
-from transformers_cfg.metrics import ConstrainedDecodingMetric
-from transformers_cfg.metrics.metrics import ConstrainedDecodingMetricOutput
+from transformers_cfg.metrics.metrics import (
+    ConstrainedDecodingMetric,
+    ConstrainedDecodingMetricOutput,
+)
 
 
 class TestConstrainedDecodingMetric(TestCase):
