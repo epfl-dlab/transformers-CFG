@@ -7,7 +7,7 @@
 
 - **Support for [Gemma-2](https://github.com/epfl-dlab/transformers-CFG/pull/75) Thanks to @fillassuncao** (2024-08-16)
 
-- **Support for [DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73) (2024-07-24)
+- **Support for [DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
 
 - **Support for LLAMA-3** (2024-07-08)
 
