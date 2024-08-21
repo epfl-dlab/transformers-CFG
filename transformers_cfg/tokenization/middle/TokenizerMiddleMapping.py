@@ -8,6 +8,7 @@ from transformers import (
     CodeGenTokenizerFast,
     LlamaTokenizerFast,
     PreTrainedTokenizerFast,
+    GemmaTokenizerFast
 )
 
 from transformers_cfg.tokenization.utils import get_tokenizer_charset
@@ -38,7 +39,11 @@ class TokenizerMiddleMapping:
             hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast, CodeGenTokenizerFast)
         ):
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
-        elif isinstance(hf_tokenizer, LlamaTokenizerFast):
+        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast)):
+            # deepseek, though inheriting from LlamaTokenizerFast, is actually a GPT2TokenizerFast
+            # check https://github.com/epfl-dlab/transformers-CFG/issues/72
+            if hf_tokenizer.name_or_path.startswith("deepseek-ai/deepseek-coder"):
+                return GPT2TokenizerMiddleMapping(hf_tokenizer)
             return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, T5TokenizerFast):
             return T5TokenizerMiddleMapping(hf_tokenizer)

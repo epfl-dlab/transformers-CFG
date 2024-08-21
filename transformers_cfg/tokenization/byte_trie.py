@@ -1,6 +1,6 @@
 import logging
 from functools import lru_cache
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 from collections import deque
 
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
@@ -54,9 +54,13 @@ class ByteTrie:
         mapping = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
         TCFG_tokenizer = TCFG_Tokenizer.from_hf_tokenizer(tokenizer)
 
+        token_ids_to_ignore: Set[
+            int
+        ] = TCFG_tokenizer.get_special_token_ids_to_excluded()
         for token_id in range(TCFG_tokenizer.real_vocab_size()):
-            byte_repr = mapping.map(token_id)
-            trie.insert(byte_repr, token_id)
+            if token_id not in token_ids_to_ignore:
+                byte_repr = mapping.map(token_id)
+                trie.insert(byte_repr, token_id)
         trie.vocab_size = len(vocab)
         return trie
 
