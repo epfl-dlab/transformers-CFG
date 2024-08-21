@@ -4,16 +4,21 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 💭Latest News
+
+- **Support for [Gemma-2](https://github.com/epfl-dlab/transformers-CFG/pull/75) Thanks to @fillassuncao** (2024-08-16)
+
+- **Support for [DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73) (2024-07-24)
+
 - **Support for LLAMA-3** (2024-07-08)
 
 - **support [JSON Schema as constraint](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md)**(2024-05-13)
-  
+
 - **[Token masking optimization](#efficiency)(** (2024-04-25)
 
 - **[Support for Phi](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
 
 - **Online [Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF space** (2024-04-10)
-  
+
 - **Support for Unicode(multilingual) grammars** (2024-02-29)
 
 - **Integration with Text-Generation-WebUI** (2023-12-17)
@@ -188,7 +193,7 @@ Advanced grammar debugging guide can be found [here](docs/debugging_custom_gramm
 
 ### Automatic Grammar Generation
 
-You can use custom grammars to constrain the output of a language model. 
+You can use custom grammars to constrain the output of a language model.
 Check out the [documentation](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md) on json schema to grammar conversion to learn how to automatically create custom grammars for complex json objects.
 
 ### Grammar Collection
