@@ -22,9 +22,11 @@ jobs:
     - name: Extract tag name
       id: tag
       run: echo ::set-output name=TAG_NAME::$(echo $GITHUB_REF | cut -d / -f 3)
-    - name: Update version in setup.py
-      run: >-
-        sed -i "s/{{VERSION_PLACEHOLDER}}/${{ steps.tag.outputs.TAG_NAME }}/g" setup.py
+    - name: Extract version from __init__.py
+      id: get_version
+      run: |
+        VERSION=$(grep '__version__' your_package/__init__.py | cut -d'"' -f2)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - name: Build a binary wheel
       run: >-
         python setup.py sdist bdist_wheel
