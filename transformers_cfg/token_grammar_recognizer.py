@@ -29,14 +29,13 @@ class AbsTokenRecognizer(ABC):
         self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
-        stacks = parsing_state.stacks
-        if self.string_recognizer._must_stop(stacks):
+        if parsing_state.must_stop():
             if token_id == self.eos_token_id:
                 return True
             else:
                 return False
         if token_id == self.eos_token_id:
-            if self.string_recognizer._can_stop(stacks):
+            if parsing_state.can_stop():
                 # if at least one of the stack is empty, we can stop
                 # we clear all the stacks, meaning that we don't accept any token after EOS
                 return True
@@ -100,7 +99,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
     def _update_state_with_token_id(
         self, token_id: int, parsing_state: AcceptState
     ) -> AcceptState:
-        if self.string_recognizer._must_stop(parsing_state.stacks):
+        if parsing_state.must_stop():
             if token_id == self.eos_token_id:
                 return self.string_recognizer.get_termination_parsing_state()
             else:
@@ -109,7 +108,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                         This error is likely due to the previous token not being accepted by the grammar."
                 )
         if token_id == self.eos_token_id:
-            if self.string_recognizer._can_stop(parsing_state.stacks):
+            if parsing_state.can_stop():
                 # if at least one of the stack is empty, we can stop
                 # we clear all the stacks, meaning that we don't accept any token after EOS
                 return self.string_recognizer.get_termination_parsing_state()

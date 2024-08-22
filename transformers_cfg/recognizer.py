@@ -22,6 +22,20 @@ class AcceptState:
     def empty_state():
         return AcceptState(set(), PartialUTF8())
 
+    def can_stop(self):
+        # This happens in practice, but maybe it shouldn't? TODO
+        if len(self.stacks) == 0:
+            return True
+        # if any of the stack is empty, we can stop
+        for stack in self.stacks:
+            if len(stack) == 0:
+                return True
+            else:
+                return False
+
+    def must_stop(self):
+        return len(self.stacks) == 0 or all(len(stack) == 0 for stack in self.stacks)
+
 
 class StringRecognizer:
     def __init__(
@@ -406,20 +420,6 @@ class StringRecognizer:
             len(stack) == 0 for stack in new_parsing_state.stacks
         )
         return at_least_one_stack_is_empty
-
-    def _can_stop(self, stacks: Set[Tuple[int]]):
-        # This happens in practice, but maybe it shouldn't? TODO
-        if len(stacks) == 0:
-            return True
-        # if any of the stack is empty, we can stop
-        for stack in stacks:
-            if len(stack) == 0:
-                return True
-        else:
-            return False
-
-    def _must_stop(self, stacks: Set[Tuple[int]]):
-        return len(stacks) == 0 or all(len(stack) == 0 for stack in stacks)
 
     #############################
     #
