@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from transformers_cfg import __version__
 
 setup(
     name="transformers_cfg",
-    version="{{VERSION_PLACEHOLDER}}",
+    version=__version__,
     author="EPFL-dlab",
     author_email="saibo.geng@epfl.ch",
     description="Extension of Transformers library for Context-Free Grammar Constrained Decoding with EBNF grammars",
