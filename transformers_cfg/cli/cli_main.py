@@ -38,16 +38,17 @@ def parse_arguments(args=None):
     )
     generate_parser.add_argument(
         "-p",
-        "--prefix_prompt",
+        "--prompt",
         type=str,
         required=True,
-        help="Prefix prompt for generation",
+        help="Prompt for generation",
     )
     generate_parser.add_argument(
         "-d",
         "--device",
         type=str,
         default="cuda" if torch.cuda.is_available() else "cpu",
+        choices=["cpu", "cuda"],
         help="Device to run the model on",
     )
     generate_parser.add_argument(
@@ -211,8 +212,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-
-
-# TODO, add support to unicode grammar constraints
 
 # TODO, add support for device selection for parsing

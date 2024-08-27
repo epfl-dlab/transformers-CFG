@@ -3,63 +3,80 @@
 ![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## 💭Latest News
+## 💭 Latest News
 
-- **Support for [Gemma-2](https://github.com/epfl-dlab/transformers-CFG/pull/75) Thanks to @fillassuncao** (2024-08-16)
-
-- **Support for [DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
-
-- **Support for LLAMA-3** (2024-07-08)
-
-- **support [JSON Schema as constraint](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md)**(2024-05-13)
-
-- **[Token masking optimization](#efficiency)(** (2024-04-25)
-
-- **[Support for Phi](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
-
-- **Online [Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF space** (2024-04-10)
-
-- **Support for Unicode(multilingual) grammars** (2024-02-29)
-
+- **[Gemma-2 Support](https://github.com/epfl-dlab/transformers-CFG/pull/75)** — Thanks to @fillassuncao (2024-08-16)
+- **[DeepSeek Support](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
+- **LLAMA-3 Support** (2024-07-08)
+- **[JSON Schema as Constraint Support](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md)** (2024-05-13)
+- **[Token Masking Optimization](#efficiency)** (2024-04-25)
+- **[Phi Support](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
+- **[Online Demo with JSON Grammar](http://saibo-creator.xyz:7860/) at HF Space** (2024-04-10)
+- **Unicode (Multilingual) Grammar Support** (2024-02-29)
 - **Integration with Text-Generation-WebUI** (2023-12-17)
 
-We are thrilled to announce that `transformers_cfg` has been used in the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project.
-This integration enables users to utilize our CFG capabilities within the popular, 30.5K-starred web interface for text generation.
-For more details, see [Relevent Pull Request](https://github.com/oobabooga/text-generation-webui/pull/4953)
+We are thrilled to announce that `transformers-cfg` has been integrated into the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project, enabling users to utilize our CFG capabilities within this popular web interface for text generation. For more details, see the [relevant pull request](https://github.com/oobabooga/text-generation-webui/pull/4953).
 
+## 🚀 Introduction
 
-## 🚀Introduction
-`transformers_cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG).
-This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
+`transformers-cfg` is an extension library for the popular Transformers library by Hugging Face, tailored for working with context-free grammars (CFG). This package provides additional tools and functionalities to enhance your experience with natural language processing tasks involving CFGs.
 
-It was initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library.
-See relevant discussion [here](https://github.com/huggingface/transformers/pull/27557).
+Initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library, you can find the relevant discussion [here](https://github.com/huggingface/transformers/pull/27557).
 
 ## 💻 Installation
 
-- You can install the stable version of `transformers-cfg` using pip:
+- **Stable Version:**
+
+  Install the stable version of `transformers-cfg` using pip:
+
+  ```bash
+  pip install transformers-cfg
+  ```
+
+- **Development Version:**
+
+  For the latest code and updates, install directly from the GitHub repository:
+
+  ```bash
+  pip install git+https://github.com/epfl-dlab/transformers-CFG.git@main
+  ```
+
+  This installs the package from the `main` branch.
+
+## 🔧 Quick Start: Force LLM to Generate a Valid JSON Object
+
+### Command-Line Interface
+
+`transformers-cfg-cli` is a command-line tool that allows you to generate text using a model and a grammar. You can specify the model, grammar, prompts, and other parameters to generate text that conforms to the specified grammar.
 
 ```bash
-pip install transformers-cfg
-```
-
-- For the latest code and updates, you can install directly from the GitHub repository:
-
-```
-pip install git+https://github.com/epfl-dlab/transformers-CFG.git@main
-```
-This will install the package directly from the `main` branch of the repository.
-
-## 🔧QuickStart: Force LLM to generate a valid json object
-
-Command-line interface:
-```bash
-transformers-cfg-cli generate -m "microsoft/Phi-3-mini-4k-instruct" -g "examples/grammars/json.ebnf" --max_new_tokens 50 --p "This is a valid json string for http request: " --use_4bit
+transformers-cfg-cli generate \
+    -m "microsoft/Phi-3-mini-4k-instruct" \
+    -g "examples/grammars/json.ebnf" \
+    -p "This is a valid json string for http request:" \
+    --use_4bit \
+    --max_new_tokens 60 \
+    --repetition_penalty 1.1
 # {"name":"John","age":30,"car":null}
 ```
 
+We support also Unicode characters in the grammar:
+
+```bash
+transformers-cfg-cli generate \
+    -m "microsoft/Phi-3-mini-4k-instruct" \
+    -g "examples/grammars/chinese.ebnf" \
+    -p "Translate the following sentence into Chinese: My neighbor is a very nice person. -> " \
+    --use_4bit \
+    --max_new_tokens 60 \
+    --repetition_penalty 1.1
+```
+
+`transformers-cfg-cli generate --help` provides a list of available options and arguments.
+
+
 <details>
-<summary>Click here to see a example to generate json object with minimal changes to HF code, or check it out in `examples/generate_json.py` </summary>
+<summary>Click here to see an example of generating a JSON object with minimal changes to HF code, or check it out in <code>examples/generate_json.py</code></summary>
 
 ```python
 import torch
@@ -78,21 +95,18 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(model_id).to(
-        device
-    )  # Load model to defined device
+    model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
     model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
-    # Load json grammar
+    # Load JSON grammar
     with open("examples/grammars/json.ebnf", "r") as file:
         grammar_str = file.read()
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate
-    prefix1 = "This is a valid json string for http request:"
-    prefix2 = "This is a valid json string for shopping cart:"
-    input_ids = tokenizer([prefix1, prefix2], add_special_tokens=False, return_tensors="pt", padding=True)["input_ids"]
+    prompts = ["This is a valid json string for http request:", "This is a valid json string for shopping cart:"]
+    input_ids = tokenizer(prompts, add_special_tokens=False, return_tensors="pt", padding=True)["input_ids"]
 
     output = model.generate(
         input_ids,
@@ -101,33 +115,34 @@ if __name__ == "__main__":
         repetition_penalty=1.1,
         num_return_sequences=1,
     )
-    # decode output
+    # Decode output
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)
     print(generations)
 
     """
-    'This is a valid json string for http request:{ "request": { "method": "GET", "headers": [], "content": "Content","type": "application" }}
-    'This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }
+    'This is a valid json string for http request:{ "request": { "method": "GET", "headers": [], "content": "Content","type": "application" }}'
+    'This is a valid json string for shopping cart:{ "name": "MyCart", "price": 0, "value": 1 }'
     """
 ```
 
 </details>
 
-
 <details>
-<summary>Click here to see an example with HF pipeline API, or check it out in `examples/pipeline_json.py` </summary>
+<summary>Click here to see an example with HF pipeline API, or check it out in <code>examples/pipeline_json.py</code></summary>
 
 ```python
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+
 # Load model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 tokenizer.pad_token = tokenizer.eos_token
-# Load model to defined device
 model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
 
 # Load grammar
 with open(f"examples/grammars/json.ebnf", "r") as file:
     grammar_str = file.read()
-
 grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
 grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
@@ -150,23 +165,22 @@ generations = pipe(
     logits_processor=[grammar_processor],
 )
 ```
+
 </details>
 
+## 💡 Why Should I Use `transformers-cfg`?
 
-## 💡Why should I use transformers-CFG?
+- **EBNF Grammar Support:** We support the Extended Backus-Naur Form (EBNF) for grammar description.
+- **Seamless Integration:** Our grammar interface is compatible with the llama-cpp project, allowing you to replace llama-cpp with `transformers-cfg` easily.
+- **Model Compatibility:** Use any model from the 🤗 Transformers library, including those not supported by llama-cpp.
+- **Multilingual Grammar Support:** We support grammars in multiple languages, allowing you to use characters from various languages, including 中文, 日本語, 한국어, हिन्दी, العربية, עברית, and emoji 🤗.
 
-- We support EBNF grammar description format
-- We offer the same grammar interface as llama-cpp project, allowing you to drop-in replace llama-cpp with transformers-CFG.
-- We allow you to use any of the models in the 🤗 Transformers library, including the ones that are not supported by llama-cpp.
-- We support multilingual grammars, you can use any character from any language in your grammar, e.g. 中文, 日本語, 한국어, हिन्दी, العربية, עברית, or emoji 🤗.
-
-## 🤔What is grammar ?
+## 🤔 What Is a Grammar?
 
 TL;DR: Think of it as an enhanced version of regular expressions.
 
 <details>
-
-<summary>Here is a simple example of a simplified JSON grammar:</summary>
+<summary>Here is a simple example of a JSON grammar:</summary>
 
 ```bnf
 # A JSON object is the root of the grammar
@@ -185,67 +199,56 @@ string ::= '"' [a-zA-Z0-9]* '"'
 value ::= string | object | "true" | "false" | "null"
 ```
 
-This grammar describes the structure of a JSON object. It specifies that a JSON object is a pair of key-value pairs, where the key is a string and the value can be a string, another object, or a boolean value.
+This grammar describes the structure of a JSON object. It specifies that a JSON object consists of key-value pairs, where the key is a string, and the value can be a string, another object, or a boolean value.
 
-Grammar doesn't need to be complicated.
-You can use it to describe very simple but useful things, like a valid email address, a valid URL, or phone number.
+You can use grammars to describe simple but useful constructs, such as valid email addresses, URLs, or phone numbers:
+
 ```
 phone_number ::= "+" [0-9]+
 ```
 
 </details>
 
-You can also force it to [generate only emojis](examples/generate_emoji.py) or [generate only korean characters](examples/generate_korean.py).
-```
-['Describe your feeling with emoji: 🙌🙂😍😯😅🙏🙇🙈🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆🙅🙄🙁🙂🙀🙉🙎🙊🙋🙃🙆', 'Write a poem with emoji: 🙏😍🙏🙏🙌🙏🙏🙏🙏😁😅🙏🙏🙏🙏🙏🙏🙇🙏🙏🙏🙏🙏🙏🙏🙏🙏🙋🙏🙏🙏🙏🙏🙏']
-```
 
+For advanced grammar debugging, check out our [debugging guide](docs/debugging_custom_grammars.md).
 
-More details can be found in this [doc from llama-cpp](https://github.com/ggerganov/llama.cpp/tree/master/grammars)
-Advanced grammar debugging guide can be found [here](docs/debugging_custom_grammars.md)
+## Automatic JSON Schema Grammar Conversion[Experimental]
 
-### Automatic Grammar Generation
+Learn how to automatically create custom grammars for complex JSON objects in our [documentation](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md) on JSON schema to grammar conversion.
 
-You can use custom grammars to constrain the output of a language model.
-Check out the [documentation](examples%2Fgrammars%2Fcustom_json_grammars%2FREADME.md) on json schema to grammar conversion to learn how to automatically create custom grammars for complex json objects.
+## Grammar Collection
 
-### Grammar Collection
+We provide a collection of grammars in the `examples/grammars` folder, which are mostly identical to the grammars in the llama-cpp project. We try to keep these grammars up-to-date with the original project, though we cannot yet guarantee that all grammars from llama-cpp can be directly used in `transformers-cfg`.
 
-We provide a collection of grammars in the `examples/grammars` folder, which are mostly identical to the grammars in llama-cpp project.
-We try to keep the grammars up-to-date with the original grammars from llama-cpp project.
-But up to now, we can not yet guarantee that all grammars from llama-cpp project can be directly used in transformers-CFG.
+Available grammars include:
 
-The list of grammars contains:
-- [json.ebnf](examples%2Fgrammars%2Fjson.ebnf): A grammar for generating valid json objects.
-- [json_arr.ebnf](examples%2Fgrammars%2Fjson_arr.ebnf): A grammar for generating valid json arrays.
-- [c.ebnf](examples%2Fgrammars%2Fc.ebnf): A grammar for generating valid C programs.
-- [chess.ebnf](examples%2Fgrammars%2Fchess.ebnf): A grammar for generating valid chess moves.
-- [arithmetic.ebnf](examples%2Fgrammars%2Farithmetic.ebnf): A grammar for generating valid arithmetic expressions.
-
+- [json.ebnf](examples%2Fgrammars%2Fjson.ebnf): For generating valid JSON objects.
+- [json_arr.ebnf](examples%2Fgrammars%2Fjson_arr.ebnf): For generating valid JSON arrays.
+- [c.ebnf](examples%2Fgrammars%2Fc.ebnf): For generating valid C programs.
+- [chess.ebnf](examples%2Fgrammars%2Fchess.ebnf): For generating valid chess moves.
+- [arithmetic.ebnf](examples%2Fgrammars%2Farithmetic.ebnf): For generating valid arithmetic expressions.
 
 ## Supported Models
 
-- [LLaMa family models](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf)
-- [GPT family models](https://huggingface.co/openai-community/gpt2)
-- [Bloom family models](https://huggingface.co/bigscience/bloom)
-- [Mistral family models](https://huggingface.co/mistralai/Mistral-7B-v0.1)
-- [Falcon family models](https://huggingface.co/tiiuae/falcon-7b)
+- [LLaMa Family Models](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf)
+- [GPT Family Models](https://huggingface.co/openai-community/gpt2)
+- [Bloom Family Models](https://huggingface.co/bigscience/bloom)
+- [Mistral Family Models](https://huggingface.co/mistralai/Mistral-7B-v0.1)
+- [Falcon Family Models](https://huggingface.co/tiiuae/falcon-7b)
 - ...
 
 See [supported_models.yaml](docs%2Fsupported_models.yaml) for the full list of supported models.
 
-As a rule of thumb, all models with the same tokenizer should naturally be supported.
+As a rule of thumb, all models with the same tokenizer should be naturally supported.
+
 If you find any model that is not supported, please open an issue or submit a pull request.
 
-## Efficiency
-Our update in the `transformers_cfg` library has significantly improved the performance of grammar-constrained decoding (especially for complicated grammars).
-
-<img src="docs/assets/plots/benchmarking_results.png" style="width: 60%; height: auto;">
 
 ## Citation
 
-**Please consider citing our work, if you found the provided resources useful.**<br>
-```
+**Please consider citing our work if you find the provided resources useful:**
+
+```bibtex
 @inproceedings{geng-etal-2023-grammar,
 	title        = {Grammar-Constrained Decoding for Structured {NLP} Tasks without Finetuning},
 	author       = {Geng, Saibo  and Josifoski, Martin  and Peyrard, Maxime  and West, Robert},
@@ -259,10 +262,10 @@ Our update in the `transformers_cfg` library has significantly improved the perf
 }
 ```
 
-
 ## License
+
 This project is licensed under the [MIT License](LICENSE).
 
-## Acknowledgement
+## Acknowledgements
 
-This project is derived from the [torch-grammars](https://github.com/Shopify/torch-grammar) project, which was derived from the [llama-cpp](https://github.com/ggerganov/llama.cpp) project.
+This project is derived from the [torch-grammars](https://github.com/Shopify/torch-grammar) project, which was itself derived from the [llama-cpp](https://github.com/ggerganov/llama.cpp) project.
