@@ -59,12 +59,14 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         return masked_logits
 
     # TODO: batching
-    def process_logits(self, input_ids, scores):
+    def process_logits(self, input_ids, scores,device=None):
         """
         :param input_ids:
         :param scores:
         :return:
         """
+        if device is None:
+            device = scores.device
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_parsing_states is None:
             self.batch_parsing_states = [
@@ -96,7 +98,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         )
         logger.debug(f"input_ids: {input_ids}")
 
-        masked_scores = self.mask_logits(scores, scores.device)
+        masked_scores = self.mask_logits(scores, device)
         return masked_scores
 
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)

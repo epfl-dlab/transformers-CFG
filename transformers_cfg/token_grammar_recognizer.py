@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class AbsTokenRecognizer(ABC):
-    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False):
+    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None,homomorphism=None):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
@@ -25,8 +25,14 @@ class AbsTokenRecognizer(ABC):
         self.eos_token_id = tokenizer.eos_token_id
         self.tokenizer = tokenizer
         self.string_recognizer = StringRecognizer(grammar_encoding, self.start_rule_id)
-        self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
-        self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        if trie is None:
+            self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
+        else:
+            self.byte_trie = trie
+        if homomorphism is None:
+            self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        else:
+            self.homomorphism = homomorphism
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         if parsing_state.must_stop():
@@ -89,11 +95,10 @@ class AbsTokenRecognizer(ABC):
     def accept_token_ids(self, token_ids, stacks) -> bool:
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
-
-
+    
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False):
-        super().__init__(grammar_str, tokenizer, start_rule_name, unicode)
+    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None,homomorphism=None):
+        super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie,homomorphism=homomorphism)
         self.last_size = None
 
     def _update_state_with_token_id(
@@ -223,6 +228,8 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         acceptance = acceptance_matrix.reshape(len(parsing_state.stacks), -1).any(dim=0)
         return acceptance
 
+    # If running on a GPU device this cache can continue to fill up GPU memory
+    # Dereferencing the object will not clear the cache
     @lru_cache(maxsize=32768)
     def get_next_token_acceptance_for_single_stack(self, stack, partial_utf8, device):
         # stack = list(stack)  # needs to come in as a tuple for lru_cache

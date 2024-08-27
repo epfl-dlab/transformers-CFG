@@ -61,7 +61,7 @@ class TCFG_Tokenizer:
             return TCFG_PhiTokenizer(hf_tokenizer)
         elif isinstance(
             hf_tokenizer, PreTrainedTokenizerFast
-        ) and hf_tokenizer.name_or_path.startswith("meta-llama/Meta-Llama-3"):
+        ) and 'Meta-Llama-3' in hf_tokenizer.name_or_path:
             return TCFG_LlamaTokenizer(hf_tokenizer)
         else:
             raise NotImplementedError(
