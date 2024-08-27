@@ -17,9 +17,7 @@ def main(args):
     # Load grammar
     with open(args.grammar_file_path, "r") as file:
         grammar_str = file.read()
-    grammar = IncrementalGrammarConstraint(
-        grammar_str, "root", tokenizer, unicode=False
-    )
+    grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate

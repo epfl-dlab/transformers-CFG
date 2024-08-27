@@ -74,6 +74,18 @@ def parse_arguments(args=None):
         help="Load the model in 8-bit mode using bitsandbytes",
     )
 
+    generate_parser.add_argument(
+        "--no_contrast_mode",
+        action="store_true",
+        help="Disable contrast mode (enabled by default)",
+    )
+
+    generate_parser.add_argument(
+        "--save_to",
+        type=str,
+        help="File path to save the generated text",
+    )
+
     return parser.parse_args(args)
 
 
@@ -128,8 +140,8 @@ def generate_text(args):
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
-    # Generate
-    output = model.generate(
+    # Generate with grammar constraints
+    constrained_output = model.generate(
         input_ids,
         attention_mask=attention_mask,
         do_sample=False,
@@ -139,8 +151,53 @@ def generate_text(args):
         num_return_sequences=1,
     )
 
-    generations = tokenizer.batch_decode(output, skip_special_tokens=True)
-    print(generations)
+    # remove prefix from the output
+    constrained_output = constrained_output[:, len(input_ids[0]) :]
+
+    constrained_generations = tokenizer.batch_decode(
+        constrained_output, skip_special_tokens=True
+    )
+
+    # print prompt first in color
+    print("\033[92m" + "Prompt:" + args.prefix_prompt + "\033[0m")
+
+    # Store results for optional file output
+    result = f"Prompt: {args.prefix_prompt}\n\n"
+
+    # Generate without grammar constraints (if contrast mode is enabled)
+    if not args.no_contrast_mode:
+        unconstrained_output = model.generate(
+            input_ids,
+            attention_mask=attention_mask,
+            do_sample=False,
+            max_new_tokens=args.max_new_tokens,
+            repetition_penalty=args.repetition_penalty,
+            num_return_sequences=1,
+        )
+        # remove prefix from the output
+        unconstrained_output = unconstrained_output[:, len(input_ids[0]) :]
+        unconstrained_generations = tokenizer.batch_decode(
+            unconstrained_output, skip_special_tokens=True
+        )
+
+        # Print results in different colors
+        print("\033[91m" + "Unconstrained Generation:" + "\033[0m")
+        result += "Unconstrained Generation:\n"
+        for generation in unconstrained_generations:
+            print(generation)
+            result += generation + "\n"
+
+    print("\033[94m" + "Constrained Generation:" + "\033[0m")
+    result += "Constrained Generation:\n"
+    for generation in constrained_generations:
+        print(generation)
+        result += generation + "\n"
+
+    # Save to file if save_to is provided
+    if args.save_to:
+        with open(args.save_to, "w") as f:
+            f.write(result)
+        print(f"\nResults saved to {args.save_to}")
 
 
 def main(args=None):
@@ -156,8 +213,6 @@ if __name__ == "__main__":
     main()
 
 
-# TODO, add contrast mode where we generate text without grammar constraints and compare the outputs
-# TODO, add option to save the generated text to a file
 # TODO, add support to unicode grammar constraints
 
 # TODO, add support for device selection for parsing
