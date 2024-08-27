@@ -29,6 +29,18 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         acceptance = self.grammar_constraint.batch_filter_vocab(
             self.batch_parsing_states, device
         )
+        
+        # if the logits size of the model is more than the tokennizer vocab
+        # we artificially expand the acceptance tensor and block everything
+        # beyond the tokenizer vocab size
+        acceptance_vocab_size = acceptance.shape[-1]
+        masked_logits_vocab_size = masked_logits.shape[-1]
+        if masked_logits_vocab_size != acceptance_vocab_size:
+            assert acceptance_vocab_size < masked_logits_vocab_size, "impossible for tokenizer vocab to be less than model vocab"
+            vocab_size_diff = masked_logits_vocab_size - acceptance_vocab_size
+            false_tensor = torch.zeros((*acceptance.shape[:-1], vocab_size_diff), dtype=torch.bool, device=device)
+            acceptance = torch.cat((acceptance, false_tensor), dim=-1)
+
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
         # do the following operation only in debug mode
