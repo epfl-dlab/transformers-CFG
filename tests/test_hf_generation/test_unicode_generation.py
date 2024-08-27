@@ -1,12 +1,28 @@
 from unittest import TestCase
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
+from transformers_cfg.token_grammar_recognizer import AbsTokenRecognizer
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 
 
 UNICODE_MODEL_IDS = [
     "JackFram/llama-68m",
 ]
+
+
+class TestDetectUnicode(TestCase):
+    def test_detect_unicode(self):
+        # Test with a string containing only ASCII characters
+        self.assertFalse(AbsTokenRecognizer.detect_unicode("Hello, world!"))
+
+        # Test with a string containing Unicode characters
+        self.assertTrue(AbsTokenRecognizer.detect_unicode("你好，世界！"))
+
+        # Test with an empty string
+        self.assertFalse(AbsTokenRecognizer.detect_unicode(""))
+
+        # Test with a string containing a mix of ASCII and Unicode characters
+        self.assertTrue(AbsTokenRecognizer.detect_unicode("Hello, René!"))
 
 
 class TestGreedyDecoding(TestCase):
@@ -30,7 +46,7 @@ class TestGreedyDecoding(TestCase):
             tokenizer = self.tokenizers[model_id]
 
             grammar = IncrementalTokenRecognizer(
-                grammar_str, start_rule_name="root", tokenizer=tokenizer, unicode=True
+                grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 

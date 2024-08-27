@@ -16,11 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class AbsTokenRecognizer(ABC):
-    def __init__(self, grammar_str, tokenizer, start_rule_name="root", unicode=False, trie=None,homomorphism=None):
+    def __init__(
+        self,
+        grammar_str,
+        tokenizer,
+        start_rule_name="root",
+        trie=None,
+        homomorphism=None,
+    ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
-        self.use_unicode = unicode
+        self.use_unicode = self.detect_unicode(grammar_str)
 
         self.eos_token_id = tokenizer.eos_token_id
         self.tokenizer = tokenizer
@@ -95,10 +102,24 @@ class AbsTokenRecognizer(ABC):
     def accept_token_ids(self, token_ids, stacks) -> bool:
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
-    
+
+    @staticmethod
+    def detect_unicode(text: str) -> bool:
+        # check if the text contains any unicode characters
+        return any(ord(char) > 127 for char in text)
+
+
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False, trie=None,homomorphism=None):
-        super().__init__(grammar_str, tokenizer, start_rule_name, unicode, trie=trie,homomorphism=homomorphism)
+    def __init__(
+        self, grammar_str, start_rule_name, tokenizer, trie=None, homomorphism=None
+    ):
+        super().__init__(
+            grammar_str,
+            tokenizer,
+            start_rule_name,
+            trie=trie,
+            homomorphism=homomorphism,
+        )
         self.last_size = None
 
     def _update_state_with_token_id(
@@ -334,8 +355,8 @@ def check_token_acceptance_in_trie(trie_node, stacks, grammar, eos_token_id, acc
 
 
 class NonIncrementalTokenSeqRecognizer(IncrementalTokenRecognizer):
-    def __init__(self, grammar_str, start_rule_name, tokenizer, unicode=False):
-        super().__init__(grammar_str, start_rule_name, tokenizer, unicode)
+    def __init__(self, grammar_str, start_rule_name, tokenizer):
+        super().__init__(grammar_str, start_rule_name, tokenizer)
 
     def update_state_with_batch_token_seqs(
         self, input_ids, batch_parsing_states, valid_token_start_idx=None
@@ -391,10 +412,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     tokenRecognizer = IncrementalTokenRecognizer(
-        grammar_str=input_text,
-        start_rule_name="root",
-        tokenizer=tokenizer,
-        unicode=True,
+        grammar_str=input_text, start_rule_name="root", tokenizer=tokenizer
     )
 
     japanese = "トリーム"  # "こんにちは"

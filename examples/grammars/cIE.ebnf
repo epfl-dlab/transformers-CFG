@@ -1,8 +1,10 @@
+# This is just for illustration purposes. Depending on the actual use case, the set of entities and relations can be extended to include more entities and relations.
 root ::= triplet ( delim triplet )*
 triplet ::= "[s] " subject " [r] " predicate " [o] " object
 delim ::= " [e] "
-subject ::= entity
+subject ::= subject_entity
 predicate ::= relation
-object ::= entity
-entity ::= "entity1" | "entity2" | "entity3" | "entity4"
-relation ::= "relation1" | "relation2" | "relation3" | "relation4"
+object ::= object_entity
+subject_entity ::= "Rene Descartes" | "Isaac Newton" | "Albert Einstein" | "Stephen Hawking" | "Galileo Galilei" | "Nikola Tesla" | "Leonardo da Vinci" | "Aristotle" | "Plato" | "Socrates" | "Pythagoras" | "Euclid" | "Archimedes" | "Hippocrates" | "Ptolemy" | "Nicolaus Copernicus" | "Johannes Kepler" | "Galileo Galilei" | "Isaac Newton" | "Albert Einstein" | "Stephen Hawking" | "Nikola Tesla" | "Leonardo da Vinci" | "Aristotle"
+object_entity ::= "France" | "England" | "Germany" | "Italy" | "Greece" | "Egypt" | "China" | "India" | "Russia" | "USA" | "Canada" | "Brazil" | "Australia" | "Japan" | "South Africa" | "Mexico" | "Argentina" | "Spain" | "Portugal" | "Netherlands" | "Belgium" | "Sweden" | "Norway" | "Denmark" | "Finland" | "Poland" | "Czech Republic" | "Slovakia" | "Hungary" | "Romania" | "Bulgaria" | "Greece" | "Turkey" | "Iran" | "Iraq" | "Syria"
+relation ::= "was born in" | "died in" | "lived in" | "worked in" | "studied in" | "invented" | "discovered" | "wrote" | "painted" | "sculpted" | "composed" | "played" | "sang" | "acted" | "directed" | "produced" | "won" | "lost" | "was awarded" | "was nominated" | "was married to" | "was divorced from" | "had children with" | "was friends with" | "was enemies with"

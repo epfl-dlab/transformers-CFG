@@ -1,8 +1,0 @@
-root ::= triplet ( delim triplet )*
-triplet ::= "[s] " subject " [r] " predicate " [o] " object
-delim ::= " [e] "
-subject ::= entity
-predicate ::= relation
-object ::= entity
-entity ::= "entity1" | "entity2" | "entity3" | "entity4"
-relation ::= "relation1" | "relation2" | "relation3" | "relation4"

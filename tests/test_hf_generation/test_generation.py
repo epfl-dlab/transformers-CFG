@@ -178,7 +178,7 @@ class TestGreedyDecoding(TestCase):
             tokenizer = self.tokenizers[model_id]
 
             grammar = IncrementalTokenRecognizer(
-                grammar_str, start_rule_name="root", tokenizer=tokenizer, unicode=True
+                grammar_str, start_rule_name="root", tokenizer=tokenizer
             )
             grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
