@@ -52,7 +52,14 @@ This will install the package directly from the `main` branch of the repository.
 
 ## 🔧QuickStart: Force LLM to generate a valid json object
 
-The below example can be found in `examples/generate_json.py`
+Command-line interface:
+```bash
+transformers-cfg-cli generate -m "microsoft/Phi-3-mini-4k-instruct" -g "examples/grammars/json.ebnf" --max_new_tokens 50 --p "This is a valid json string for http request: " --use_4bit
+# {"name":"John","age":30,"car":null}
+```
+
+<details>
+<summary>Click here to see a example to generate json object with minimal changes to HF code, or check it out in `examples/generate_json.py` </summary>
 
 ```python
 import torch
@@ -104,10 +111,11 @@ if __name__ == "__main__":
     """
 ```
 
-Alternatively, you can use `transformers-cfg` to perform grammar-constrained decoding with huggingface pipeline.
+</details>
+
 
 <details>
-<summary>Click here to see an example, or check it out in `examples/pipeline_json.py` </summary>
+<summary>Click here to see an example with HF pipeline API, or check it out in `examples/pipeline_json.py` </summary>
 
 ```python
 # Load model and tokenizer
@@ -156,7 +164,10 @@ generations = pipe(
 
 TL;DR: Think of it as an enhanced version of regular expressions.
 
-Here is an example of a simplified JSON grammar:
+<details>
+
+<summary>Here is a simple example of a simplified JSON grammar:</summary>
+
 ```bnf
 # A JSON object is the root of the grammar
 root ::= object
@@ -181,6 +192,8 @@ You can use it to describe very simple but useful things, like a valid email add
 ```
 phone_number ::= "+" [0-9]+
 ```
+
+</details>
 
 You can also force it to [generate only emojis](examples/generate_emoji.py) or [generate only korean characters](examples/generate_korean.py).
 ```
