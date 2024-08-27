@@ -15,11 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
-    def __init__(self, grammar_constraint, valid_token_start_idx=None):
+    def __init__(self, grammar_constraint, valid_token_start_idx=None, device=None):
         self.last_size = None
         self.grammar_constraint = grammar_constraint
         self.batch_parsing_states = None
-        self.valid_token_start_idx = None
+        self.valid_token_start_idx = valid_token_start_idx
+        self.device = device
 
     def mask_logits(self, logits, device):
         masked_logits = logits.clone()
@@ -29,16 +30,22 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         acceptance = self.grammar_constraint.batch_filter_vocab(
             self.batch_parsing_states, device
         )
-        
+
         # if the logits size of the model is more than the tokennizer vocab
         # we artificially expand the acceptance tensor and block everything
         # beyond the tokenizer vocab size
         acceptance_vocab_size = acceptance.shape[-1]
         masked_logits_vocab_size = masked_logits.shape[-1]
         if masked_logits_vocab_size != acceptance_vocab_size:
-            assert acceptance_vocab_size < masked_logits_vocab_size, "impossible for tokenizer vocab to be less than model vocab"
+            assert (
+                acceptance_vocab_size < masked_logits_vocab_size
+            ), "impossible for tokenizer vocab to be less than model vocab"
             vocab_size_diff = masked_logits_vocab_size - acceptance_vocab_size
-            false_tensor = torch.zeros((*acceptance.shape[:-1], vocab_size_diff), dtype=torch.bool, device=device)
+            false_tensor = torch.zeros(
+                (*acceptance.shape[:-1], vocab_size_diff),
+                dtype=torch.bool,
+                device=device,
+            )
             acceptance = torch.cat((acceptance, false_tensor), dim=-1)
 
         # acceptance is a tensor of shape (batch_size, vocab_size)
@@ -70,14 +77,13 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
-    # TODO: batching
-    def process_logits(self, input_ids, scores,device=None):
+    def process_logits(self, input_ids, scores):
         """
         :param input_ids:
         :param scores:
         :return:
         """
-        if device is None:
+        if self.device is None:
             device = scores.device
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_parsing_states is None:
