@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from importlib import import_module
 from transformers_cfg.tokenization.utils import is_tokenizer_supported
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
@@ -108,7 +109,7 @@ def generate_text(args):
     # Load the model with bitsandbytes if 8bit or 4bit flag is set
     if args.use_8bit or args.use_4bit:
         try:
-            pass
+            import_module("bitsandbytes")
         except ImportError:
             raise ImportError(
                 "You need to install bitsandbytes to use 8-bit or 4-bit modes. Install it with `pip install bitsandbytes`."
