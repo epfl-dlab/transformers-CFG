@@ -131,7 +131,7 @@ def generate_text(args):
     model.generation_config.pad_token_id = tokenizer.pad_token_id
 
     inputs = tokenizer(
-        args.prefix_prompt, add_special_tokens=False, return_tensors="pt", padding=True
+        args.prompt, add_special_tokens=False, return_tensors="pt", padding=True
     )
     input_ids = inputs["input_ids"].to(args.device)
     attention_mask = inputs["attention_mask"].to(args.device)
@@ -161,10 +161,10 @@ def generate_text(args):
     )
 
     # print prompt first in color
-    print("\033[92m" + "Prompt:" + args.prefix_prompt + "\033[0m")
+    print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
 
     # Store results for optional file output
-    result = f"Prompt: {args.prefix_prompt}\n\n"
+    result = f"Prompt: {args.prompt}\n\n"
 
     # Generate without grammar constraints (if contrast mode is enabled)
     if not args.no_contrast_mode:
