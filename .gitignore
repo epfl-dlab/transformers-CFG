@@ -4,6 +4,7 @@ examples/jupyter
 profiling
 debug
 dev
+git_diff.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
