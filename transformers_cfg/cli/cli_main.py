@@ -105,6 +105,9 @@ def check_model_support(model_name):
 
 
 def generate_text(args):
+    # Store results for optional file output
+    result = f"Prompt: {args.prompt}\n\n"
+
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_id)
     tokenizer.pad_token = tokenizer.eos_token
@@ -129,6 +132,23 @@ def generate_text(args):
 
         model, _ = load(args.model_id)
 
+        if not args.no_contrast_mode:
+            print("\033[91m" + "Unconstrained Generation:" + "\033[0m")
+            result += "Unconstrained Generation:\n"
+            generation_stream = stream_generate(
+                model,
+                tokenizer,
+                prompt=args.prompt,
+                max_tokens=args.max_new_tokens,
+                repetition_penalty=args.repetition_penalty,
+            )
+
+            for token in generation_stream:
+                result += token
+                print(token, end="", flush=True)
+
+            print()
+
         def logits_processor(input_ids: mx.array, logits: mx.array) -> mx.array:
             torch_input_ids = torch.tensor(np.array(input_ids[None, :]), device=args.device)
             torch_logits = torch.tensor(np.array(logits), device=args.device)
@@ -149,10 +169,18 @@ def generate_text(args):
         print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
 
         print("\033[94m" + "Constrained Generation:" + "\033[0m")
+        result += "Constrained Generation:\n"
         for token in generation_stream:
+            result += token
             print(token, end="", flush=True)
 
         print()
+
+        if args.save_to:
+            with open(args.save_to, "w") as f:
+                f.write(result)
+            print(f"\nResults saved to {args.save_to}")
+
         return
 
     # Load the model with bitsandbytes if 8bit or 4bit flag is set
@@ -205,9 +233,6 @@ def generate_text(args):
 
     # print prompt first in color
     print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
-
-    # Store results for optional file output
-    result = f"Prompt: {args.prompt}\n\n"
 
     # Generate without grammar constraints (if contrast mode is enabled)
     if not args.no_contrast_mode:
