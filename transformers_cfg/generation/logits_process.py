@@ -2,6 +2,7 @@ import copy
 import math
 import os
 import pprint
+from typing import Optional
 
 import torch
 import logging
@@ -11,18 +12,20 @@ from transformers.generation.logits_process import (
 )
 from transformers.utils import add_start_docstrings
 
+from transformers_cfg.token_grammar_recognizer import AbsTokenRecognizer
+
 logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
-    def __init__(self, grammar_constraint, valid_token_start_idx=None, device=None):
+    def __init__(self, grammar_constraint: AbsTokenRecognizer, valid_token_start_idx: Optional[int] = None, device: Optional[torch.device] = None) -> None:
         self.last_size = None
         self.grammar_constraint = grammar_constraint
         self.batch_parsing_states = None
         self.valid_token_start_idx = valid_token_start_idx
         self.device = device
 
-    def mask_logits(self, logits, device):
+    def mask_logits(self, logits: torch.FloatTensor, device: torch.device) -> torch.FloatTensor:
         masked_logits = logits.clone()
         # resolve each stack to a tensor of True/False for each token
         # indicating acceptance
@@ -77,7 +80,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
-    def process_logits(self, input_ids, scores):
+    def process_logits(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
         """
         :param input_ids:
         :param scores:
