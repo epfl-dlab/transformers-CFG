@@ -75,17 +75,20 @@ def parse_arguments(args=None):
         action="store_true",
         help="Load the model in 8-bit mode using bitsandbytes",
     )
-
     generate_parser.add_argument(
         "--no_contrast_mode",
         action="store_true",
         help="Disable contrast mode (enabled by default)",
     )
-
     generate_parser.add_argument(
         "--save_to",
         type=str,
         help="File path to save the generated text",
+    )
+    generate_parser.add_argument(
+        "--use_mlx",
+        action="store_true",
+        help="Use MLX on max to speed up generation",
     )
 
     return parser.parse_args(args)
@@ -105,6 +108,52 @@ def generate_text(args):
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_id)
     tokenizer.pad_token = tokenizer.eos_token
+
+    # Load grammar
+    with open(args.grammar_file_path, "r") as file:
+        grammar_str = file.read()
+    grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
+    grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
+
+    if args.use_mlx:
+        try:
+            import_module("mlx_lm")
+        except ImportError:
+            raise ImportError(
+                "You need to install mlx to use MLX. Install it with `pip install 'git+https://github.com/nathanrchn/mlx-examples.git@logits_processor#subdirectory=llms'`."
+            )
+        
+        import numpy as np
+        import mlx.core as mx
+        from mlx_lm import load, stream_generate
+
+        model, _ = load(args.model_id)
+
+        def logits_processor(input_ids: mx.array, logits: mx.array) -> mx.array:
+            torch_input_ids = torch.tensor(np.array(input_ids[None, :]), device=args.device)
+            torch_logits = torch.tensor(np.array(logits), device=args.device)
+
+            torch_processed_logits = grammar_processor(torch_input_ids, torch_logits)
+            return mx.array(torch_processed_logits.cpu().numpy())
+
+        generation_stream = stream_generate(
+            model,
+            tokenizer,
+            prompt=args.prompt,
+            max_tokens=args.max_new_tokens,
+            repetition_penalty=args.repetition_penalty,
+            logits_processor=logits_processor
+        )
+
+        # print prompt first in color
+        print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
+
+        print("\033[94m" + "Constrained Generation:" + "\033[0m")
+        for token in generation_stream:
+            print(token, end="", flush=True)
+
+        print()
+        return
 
     # Load the model with bitsandbytes if 8bit or 4bit flag is set
     if args.use_8bit or args.use_4bit:
@@ -135,12 +184,6 @@ def generate_text(args):
     )
     input_ids = inputs["input_ids"].to(args.device)
     attention_mask = inputs["attention_mask"].to(args.device)
-
-    # Load grammar
-    with open(args.grammar_file_path, "r") as file:
-        grammar_str = file.read()
-    grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
-    grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate with grammar constraints
     constrained_output = model.generate(
