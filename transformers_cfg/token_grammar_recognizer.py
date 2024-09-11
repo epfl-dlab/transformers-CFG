@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import List, Optional
 
 import torch
+from transformers import PreTrainedTokenizer
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
@@ -18,11 +19,11 @@ logger = logging.getLogger(__name__)
 class AbsTokenRecognizer(ABC):
     def __init__(
         self,
-        grammar_str,
-        tokenizer,
-        start_rule_name="root",
-        trie=None,
-        homomorphism=None,
+        grammar_str: str,
+        tokenizer: PreTrainedTokenizer,
+        start_rule_name: Optional[str] = "root",
+        trie: Optional[ByteTrie] = None,
+        homomorphism: Optional[TokenizerMiddleMapping] = None,
     ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
@@ -66,13 +67,13 @@ class AbsTokenRecognizer(ABC):
         """Process a list of tokens according to the grammar rules."""
         raise NotImplementedError
 
-    def batch_filter_vocab(self, batch_parsing_states, device) -> torch.Tensor:
+    def batch_filter_vocab(self, batch_parsing_states: List[AcceptState], device: torch.device) -> torch.Tensor:
         batch_acceptance = []
         for parsing_state in batch_parsing_states:
             batch_acceptance.append(self.filter_vocab(parsing_state, device))
         return torch.stack(batch_acceptance)
 
-    def filter_vocab(self, parsing_state, device) -> torch.Tensor:
+    def filter_vocab(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
         if not parsing_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
@@ -87,7 +88,7 @@ class AbsTokenRecognizer(ABC):
 
         return acceptance
 
-    def get_next_token_acceptance(self, parsing_state, device) -> torch.Tensor:
+    def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
         raise NotImplementedError
 
     def validate_and_set_eos_acceptance(self, acceptance: torch.Tensor) -> torch.Tensor:
@@ -111,7 +112,12 @@ class AbsTokenRecognizer(ABC):
 
 class IncrementalTokenRecognizer(AbsTokenRecognizer):
     def __init__(
-        self, grammar_str, start_rule_name, tokenizer, trie=None, homomorphism=None
+        self,
+        grammar_str: str,
+        start_rule_name: str,
+        tokenizer: PreTrainedTokenizer,
+        trie: Optional[ByteTrie] = None,
+        homomorphism: Optional[TokenizerMiddleMapping] = None,
     ):
         super().__init__(
             grammar_str,
@@ -154,8 +160,11 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         # In this case, do nothing.
 
     def update_state_with_batch_token_seqs(
-        self, input_ids, batch_parsing_states, valid_token_start_idx=None
-    ):
+        self,
+        input_ids: torch.LongTensor,
+        batch_parsing_states: list[AcceptState],
+        valid_token_start_idx: Optional[int] = None
+    ) -> list[AcceptState]:
 
         if self.last_size is None:
             valid_prefix_tokens = [
