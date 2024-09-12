@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
 from importlib import import_module
 from transformers_cfg.tokenization.utils import is_tokenizer_supported
@@ -116,15 +115,8 @@ def generate_text(args):
     # Load grammar
     with open(args.grammar_file_path, "r") as file:
         grammar_str = file.read()
-
-    import time 
-    start = time.time()
-    
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
-
-    print(f"Time taken to load grammar: {time.time() - start} seconds")
-    # return
 
     if args.use_mlx:
         try:
@@ -174,7 +166,7 @@ def generate_text(args):
         )
 
         # print prompt first in color
-        print("\033[92m" + "Prompt: " + args.prompt + "\033[0m")
+        print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
 
         print("\033[94m" + "Constrained Generation:" + "\033[0m")
         result += "Constrained Generation:\n"
