@@ -205,13 +205,16 @@ def _parse_rhs_negated_char_ranges(src: str, outbuf: List[int]) -> str:
         )
     
     # Compute allowed chars ranges
-    neg_outbuf.sort()
-    neg_outbuf.insert(0, -1)
-    neg_outbuf.append(0xFF + 1)
-    for s, e in zip(neg_outbuf[:-1], neg_outbuf[1:]):
-        outbuf.append(s + 1)
-        outbuf.append(e - 1)
-
+    neg_outbuf = [-1] + sorted(set(neg_outbuf)) + [0xFF + 1] # min ord, ..., max ord
+    
+    # Generate allowed ranges
+    for start, end in zip(neg_outbuf[:-1], neg_outbuf[1:]):
+        allowed_start = start + 1
+        allowed_end = end - 1
+        if allowed_start <= allowed_end:
+            outbuf.append(allowed_start)
+            outbuf.append(allowed_end)
+    
     outbuf[start_idx] = len(outbuf) - start_idx - 1
     return remaining_src[1:]
 
