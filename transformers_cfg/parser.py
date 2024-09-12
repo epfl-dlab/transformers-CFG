@@ -178,6 +178,44 @@ def _parse_rhs_literal_string(src: str, outbuf: List[int]) -> str:
     return remaining_src[1:]
 
 
+def _parse_rhs_negated_char_ranges(src: str, outbuf: List[int]) -> str:
+    assert src[:2] == "[^", f"rule should start with '[^', but got {src[:2]}"
+    remaining_src = src[2:]
+    start_idx = len(outbuf)
+    # num chars in range - replaced at end of loop
+    outbuf.append(TO_BE_FILLED_MARKER)
+    neg_outbuf = []
+    while remaining_src and remaining_src[0] != "]":
+        char, remaining_src = parse_char(remaining_src)
+
+        neg_outbuf.append(ord(char))
+        if remaining_src[0] == "-" and remaining_src[1] != "]":
+            endchar_pair, remaining_src = parse_char(remaining_src[1:])
+
+            # This is not optimal, but it works. TODO: improve it
+            endchar_pair_ord = ord(endchar_pair)
+            neg_outbuf.extend(range(ord(char) + 1, endchar_pair_ord))
+        else:
+            # This is the case for enumerate, e.g., [^0123456789], [^abcdef]
+            # Each char is considered as a range of itself, i.e., c-c
+            neg_outbuf.append(ord(char))
+    if not remaining_src:
+        raise RuntimeError(
+            f"expecting an ] at {src},but not found, is the char range closed?"
+        )
+    
+    # Compute allowed chars ranges
+    neg_outbuf.sort()
+    neg_outbuf.insert(0, -1)
+    neg_outbuf.append(0xFF + 1)
+    for s, e in zip(neg_outbuf[:-1], neg_outbuf[1:]):
+        outbuf.append(s + 1)
+        outbuf.append(e - 1)
+
+    outbuf[start_idx] = len(outbuf) - start_idx - 1
+    return remaining_src[1:]
+
+
 def _parse_rhs_char_ranges(src: str, outbuf: List[int]) -> str:
     assert src[0] == "[", f"rule should start with '[', but got {src[0]}"
     remaining_src = src[1:]
@@ -297,6 +335,10 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
             remaining_rhs = _parse_rhs_literal_string(remaining_rhs, outbuf)
+        elif remaining_rhs[:2] == "[^":  # negated char range(s)
+            # mark the start of the last symbol, for repetition operator
+            last_sym_start = len(outbuf)
+            remaining_rhs = _parse_rhs_negated_char_ranges(remaining_rhs, outbuf)
         elif remaining_rhs[0] == "[":  # char range(s)
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
