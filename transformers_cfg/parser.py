@@ -243,7 +243,8 @@ def _parse_rhs_repetition_operators(
         "*",
         "+",
         "?",
-    ), f"rule should start with '*', '+', or '?', but got {remaining_src[0]}"
+        "{",
+    ), f"rule should start with '*', '+', '?' or '{{', but got {remaining_src[0]}"
     out_grammar = state.grammar_encoding
     # last_sym_start = len(outbuf)
 
@@ -309,7 +310,7 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
             remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, outbuf)
-        elif remaining_rhs[0] in ("*", "+", "?"):  # repetition operator
+        elif remaining_rhs[0] in ("*", "+", "?", "{"):  # repetition operator
             # No need to mark the start of the last symbol, because we already did it
             if len(outbuf) - simple_rhs_offset - 1 == 0:
                 raise RuntimeError(
