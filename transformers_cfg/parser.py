@@ -204,6 +204,18 @@ def _parse_rhs_char_ranges(src: str, outbuf: List[int]) -> str:
     return remaining_src[1:]
 
 
+def _parse_rhs_any_char(src: str, outbuf: List[int]) -> str:
+    assert src[0] == ".", f"rule should start with '.', but got {src[0]}"
+    remaining_src = src[1:]
+    # The only symbol not allowed is '\n'
+    outbuf.append(4) # [0;ord('\n') - 1], [ord('\n') + 1;0xFF]
+    outbuf.append(0)
+    outbuf.append(ord('\n') - 1)
+    outbuf.append(ord('\n') + 1)
+    outbuf.append(0xFF)
+    return remaining_src
+
+
 def _parse_rhs_symbol_reference(src: str, state: ParseState, outbuf: List[int]) -> str:
     assert is_word_char(src[0]), f"rule should start with a word char, but got {src[0]}"
     name, remaining_src = parse_name(src)
@@ -301,6 +313,10 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
             remaining_rhs = _parse_rhs_char_ranges(remaining_rhs, outbuf)
+        elif remaining_rhs[0] == ".":
+            # mark the start of the last symbol, for repetition operator
+            last_sym_start = len(outbuf)
+            remaining_rhs = _parse_rhs_any_char(remaining_rhs, outbuf)
         elif is_word_char(remaining_rhs[0]):  # rule reference
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
