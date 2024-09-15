@@ -171,3 +171,6 @@ launch.json
 
 # Profiling
 *.prof
+
+# MacOS
+.DS_Store

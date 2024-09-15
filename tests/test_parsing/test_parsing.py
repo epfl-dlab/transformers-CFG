@@ -3,6 +3,7 @@ from unittest import TestCase
 from transformers_cfg.parser import (
     remove_leading_white_space,
     parse_name,
+    _parse_rhs_negated_char_ranges,
     _parse_rhs_char_ranges,
     _parse_rhs_literal_string,
     ParseState,
@@ -86,6 +87,32 @@ class Test(TestCase):
             _rule.startswith("\n"),
             f"_rule: {_rule} starts with newline, but should not",
         )
+
+    def test__parse_rhs_negated_char_ranges(self):
+        src = "[^a-z]"
+        outbuf = []
+        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        self.assertEqual(5, len(outbuf), f"len(outbuf): {len(outbuf)} != 5")
+
+        self.assertListEqual([4, 0, 96, 122, 255], outbuf)
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
+
+        src = "[^aeiou]"
+        outbuf = []
+        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        self.assertEqual(13, len(outbuf), f"len(outbuf): {len(outbuf)} != 13")
+        self.assertListEqual(
+            [12, 0, 96, 98, 100, 102, 104, 106, 110, 112, 116, 118, 255], outbuf
+        )
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
+
+        src = "[^0-9a-z]"
+        outbuf = []
+
+        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        self.assertEqual(7, len(outbuf), f"len(outbuf): {len(outbuf)} != 7")
+        self.assertListEqual([6, 0, 47, 57, 96, 122, 255], outbuf)
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
     def test__parse_char_ranges(self):
         src = "[0-9]"
