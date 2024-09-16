@@ -5,6 +5,7 @@ from transformers_cfg.parser import (
     parse_name,
     _parse_rhs_char_ranges,
     _parse_rhs_literal_string,
+    _parse_rhs_any_char,
     ParseState,
     parse_simple_rhs,
     END_OF_RULE_MARKER,
@@ -108,6 +109,15 @@ class Test(TestCase):
         self.assertEqual(
             "[0-9]", remaining_src, f"remaining_src: {remaining_src} != ''"
         )
+
+    def test__parse_rhs_any_char(self):
+        src = "."
+        outbuf = []
+
+        remaining_src = _parse_rhs_any_char(src, outbuf)
+        self.assertEqual(5, len(outbuf), f"len(outbuf): {len(outbuf)} != 1")
+        self.assertListEqual([4, 0, 9, 11, 255], outbuf)
+        self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
     def test__parse_literal_string(self):
         single_char_src = '"a"'
