@@ -300,7 +300,6 @@ def _parse_rhs_numbered_repetition_operators(
     n_src, m_src = numbers_src.split(",") if "," in numbers_src else (numbers_src, numbers_src) # {n} -> {n, n}
     n = int(n_src) if n_src else 0
     m = int(m_src) if m_src else None
-    print(f"n: {n}, m: {m}")
 
     # rules:
     # S{n} = S{n, n} --> S' ::= S S S ... S (n times)
@@ -452,7 +451,6 @@ def parse_ebnf(grammar_text: str) -> ParseState:
             last_grammar_repr = remaining_grammar_text
             remaining_grammar_text = parse_rule(state, remaining_grammar_text)
         state.grammar_encoding.append(END_OF_GRAMMAR_MARKER)
-        print(state.grammar_encoding)
         return state
     except RuntimeError as err:
         logger.warning("error parsing grammar:", err)
