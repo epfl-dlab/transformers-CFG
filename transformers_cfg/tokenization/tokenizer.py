@@ -7,7 +7,8 @@ from transformers import (
     T5TokenizerFast,
     CodeGenTokenizerFast,
     PreTrainedTokenizerFast,
-    GemmaTokenizerFast
+    GemmaTokenizerFast,
+    Qwen2TokenizerFast
 )
 
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
@@ -51,7 +52,7 @@ class TCFG_Tokenizer:
 
         if isinstance(
             hf_tokenizer,
-            (GPT2TokenizerFast, BartTokenizerFast),
+            (GPT2TokenizerFast, BartTokenizerFast, Qwen2TokenizerFast),
         ):
             return TCFG_GPT2Tokenizer(hf_tokenizer)
         elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast, T5TokenizerFast)):
