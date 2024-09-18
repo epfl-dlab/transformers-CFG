@@ -254,9 +254,9 @@ def _parse_rhs_repetition_operators(
     # S+ --> S' ::= S S' | S
     # S? --> S' ::= S |
     # S{n} --> S' ::= S S S ... S (n times)
-    # S{n, m} TODO
-    # S{n,} TODO
-    # S{,m} TODO
+    # S{n, m} --> S' ::= S S S ... S (n times) | S S S ... S (n + 1 times) | ... | S S S ... S (m times)
+    # S{n,} --> S' ::= S S S ... S+ (n times)
+    # S{,m} --> S' ::= S | S S | S S S | ... | S S S ... S (m times)
     sub_rule_id = generate_symbol_id(state, rule_name)
     out_grammar.append(sub_rule_id)
     sub_rule_offset = len(out_grammar)
@@ -328,7 +328,7 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             # No need to mark the start of the last symbol, because we already did it
             if len(outbuf) - simple_rhs_offset - 1 == 0:
                 raise RuntimeError(
-                    "expecting preceeding item to */+/? at " + remaining_rhs
+                    "expecting preceeding item to */+/?/{ at " + remaining_rhs
                 )
             remaining_rhs = _parse_rhs_repetition_operators(
                 remaining_rhs, state, rule_name, last_sym_start, outbuf
@@ -411,6 +411,7 @@ def parse_ebnf(grammar_text: str) -> ParseState:
             last_grammar_repr = remaining_grammar_text
             remaining_grammar_text = parse_rule(state, remaining_grammar_text)
         state.grammar_encoding.append(END_OF_GRAMMAR_MARKER)
+        print(state.grammar_encoding)
         return state
     except RuntimeError as err:
         logger.warning("error parsing grammar:", err)
