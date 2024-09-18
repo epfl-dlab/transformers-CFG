@@ -253,13 +253,27 @@ def _parse_rhs_repetition_operators(
     # S* --> S' ::= S S' |
     # S+ --> S' ::= S S' | S
     # S? --> S' ::= S |
+    # S{n} --> S' ::= S S S ... S (n times)
+    # S{n, m} TODO
+    # S{n,} TODO
+    # S{,m} TODO
     sub_rule_id = generate_symbol_id(state, rule_name)
     out_grammar.append(sub_rule_id)
     sub_rule_offset = len(out_grammar)
     # placeholder for size of 1st alternate
     out_grammar.append(TO_BE_FILLED_MARKER)
     # add preceding symbol to generated rule
-    out_grammar.extend(outbuf[last_sym_start:])
+    if remaining_src[0] == "{":
+        # parse the number of times the preceding symbol should be repeated
+        # we expect the number to be a single digit
+        closing_brace_idx = remaining_src.index("}")
+        num_times = int(remaining_src[1:closing_brace_idx])
+        for _ in range(num_times):
+            out_grammar.extend(outbuf[last_sym_start:])
+
+        remaining_src = remaining_src[closing_brace_idx:]
+    else:
+        out_grammar.extend(outbuf[last_sym_start:])
     if remaining_src[0] in ("*", "+"):
         # cause generated rule to recurse
         out_grammar.append(REF_RULE_MARKER)
