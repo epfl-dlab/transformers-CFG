@@ -8,7 +8,8 @@ from transformers import (
     CodeGenTokenizerFast,
     LlamaTokenizerFast,
     PreTrainedTokenizerFast,
-    GemmaTokenizerFast
+    GemmaTokenizerFast,
+    Qwen2TokenizerFast
 )
 
 from transformers_cfg.tokenization.utils import get_tokenizer_charset
@@ -36,7 +37,7 @@ class TokenizerMiddleMapping:
             type(hf_tokenizer) in SUPPORTED_TOKENIZERS
         ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
         if isinstance(
-            hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast, CodeGenTokenizerFast)
+            hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast, CodeGenTokenizerFast, Qwen2TokenizerFast)
         ):
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast)):
