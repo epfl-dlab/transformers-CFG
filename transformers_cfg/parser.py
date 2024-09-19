@@ -337,6 +337,56 @@ def _parse_rhs_repetition_operators(
     return remaining_src[1:]
 
 
+def _parse_rhs_numbered_repetition_operators(
+    remaining_src: str,
+    state: ParseState,
+    rule_name: str,
+    last_sym_start: int,
+    outbuf: List[int],
+) -> str:
+    assert remaining_src[0] == "{", f"rule should start with '{{', but got {remaining_src[0]}"
+    out_grammar = state.grammar_encoding
+
+    # parse numbers
+    closing_brace_idx = remaining_src.find("}")
+    numbers_src = remaining_src[1:closing_brace_idx]
+    n_src, m_src = numbers_src.split(",") if "," in numbers_src else (numbers_src, numbers_src) # {n} -> {n, n}
+    n = int(n_src) if n_src else 0
+    m = int(m_src) if m_src else None
+
+    # rules:
+    # S{n} = S{n, n} --> S' ::= S S S ... S (n times)
+    # S{n, m} --> S' ::= S S S ... S (n times) | S S S ... S (n + 1 times) | ... | S S S ... S (m times)
+    # S{n,} --> S' ::= S S S ... S+ (n times)
+    # S{,m} = S{0, m} --> S' ::= S | S S | S S S | ... | S S S ... S (m times)
+    if not m: n -= 1 # remove the last S to replace with S+
+
+    sub_rule_id = generate_symbol_id(state, rule_name)
+    out_grammar.append(sub_rule_id)
+
+    for i in range(max(n, 1), m + 1 if m else n + 1):
+        sub_rule_offset = len(out_grammar)
+        out_grammar.append(TO_BE_FILLED_MARKER)
+        out_grammar.extend(outbuf[last_sym_start:] * i)
+        out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
+        if not m:
+            out_grammar.append(REF_RULE_MARKER)
+            out_grammar.append(sub_rule_id)
+        out_grammar.append(END_OF_ALTERNATE_MARKER)
+
+    if not m:
+        sub_rule_offset = len(out_grammar)
+        out_grammar.append(TO_BE_FILLED_MARKER)
+        out_grammar.extend(outbuf[last_sym_start:])
+        out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
+        out_grammar.append(END_OF_ALTERNATE_MARKER)
+
+    out_grammar.append(END_OF_RULE_MARKER)
+
+    outbuf[last_sym_start:] = [REF_RULE_MARKER, sub_rule_id]
+    return remaining_src[closing_brace_idx + 1:]
+
+
 def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
     simple_rhs_offset = len(outbuf)
 
@@ -370,15 +420,20 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             # mark the start of the last symbol, for repetition operator
             last_sym_start = len(outbuf)
             remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, outbuf)
-        elif remaining_rhs[0] in ("*", "+", "?"):  # repetition operator
+        elif remaining_rhs[0] in ("*", "+", "?", "{"):  # repetition operator
             # No need to mark the start of the last symbol, because we already did it
             if len(outbuf) - simple_rhs_offset - 1 == 0:
                 raise RuntimeError(
-                    "expecting preceeding item to */+/? at " + remaining_rhs
+                    "expecting preceeding item to */+/?/{ at " + remaining_rhs
                 )
-            remaining_rhs = _parse_rhs_repetition_operators(
-                remaining_rhs, state, rule_name, last_sym_start, outbuf
-            )
+            if remaining_rhs[0] == "{":
+                remaining_rhs = _parse_rhs_numbered_repetition_operators(
+                    remaining_rhs, state, rule_name, last_sym_start, outbuf
+                )
+            else:
+                remaining_rhs = _parse_rhs_repetition_operators(
+                    remaining_rhs, state, rule_name, last_sym_start, outbuf
+                )
         else:
             # case for newline, i.e., end of rule
             assert remaining_rhs[0] in [
