@@ -1,7 +1,9 @@
 import argparse
 import logging
 import sys
-from typing import List
+from typing import List, Tuple
+from dataclasses import dataclass
+from functools import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -9,8 +11,8 @@ END_OF_ALTERNATE_MARKER = 0
 END_OF_RULE_MARKER = 0
 END_OF_GRAMMAR_MARKER = 0xFFFF
 TO_BE_FILLED_MARKER = 0
-REF_RULE_MARKER = 1
-LITERAL_MARKER = 2
+REF_RULE_MARKER = 1 # Deprecated
+LITERAL_MARKER = 2 # Deprecated
 
 
 ########################
@@ -18,10 +20,82 @@ LITERAL_MARKER = 2
 ########################
 
 
+@dataclass
+class GrammarElement:
+    def is_terminated(self) -> bool:
+        raise NotImplementedError()
+
+    def serialize(self) -> List[int]:
+        raise NotImplementedError()
+
+    @classmethod
+    def deserialize(cls, data: List[int]) -> "GrammarElement":
+        raise NotImplementedError()
+
+
+@dataclass
+class GrammarRule:
+    id: int
+    name: str
+    elements: List[GrammarElement]
+
+    def serialize(self) -> List[int]:
+        outbuf = [self.id]
+        for element in self.elements:
+            outbuf.extend(element.serialize())
+        outbuf.append(END_OF_RULE_MARKER)
+        return outbuf
+    
+    @classmethod
+    def deserialize(cls, data: List[int]) -> "GrammarRule":
+        raise NotImplementedError()
+
+
+@dataclass
+class TerminatedElement(GrammarElement):
+    ranges: List[Tuple[int, int]]
+
+    def is_terminated(self) -> bool:
+        return True
+    
+    def serialize(self) -> List[int]:
+        outbuf = [len(self.ranges)]
+        for range in self.ranges:
+            outbuf.extend(range)
+        outbuf.append(END_OF_ALTERNATE_MARKER)
+        return outbuf
+    
+    @classmethod
+    def deserialize(cls, data: List[int]) -> GrammarElement:
+        return super().deserialize(data)
+
+
+@dataclass
+class ReferenceElement(GrammarElement):
+    reference: GrammarRule
+
+    def is_terminated(self) -> bool:
+        return False
+    
+    def serialize(self) -> List[int]:
+        return [REF_RULE_MARKER, self.reference.id]
+    
+    @classmethod
+    def deserialize(cls, data: List[int]) -> GrammarElement:
+        return super().deserialize(data)
+
+
 class ParseState:
     def __init__(self):
         self.symbol_table = {}
-        self.grammar_encoding = []  # old name: out_grammar
+        self.grammar_rules: List[GrammarRule] = []
+
+    @cached_property
+    def grammar_encoding(self) -> List[int]: # old name: out_grammar
+        outbuf = []
+        for rule in self.grammar_rules:
+            pass
+        return outbuf
 
     def print(self, file=sys.stdout):
         print_grammar(file, self)
@@ -95,7 +169,7 @@ def remove_leading_white_space(src, rm_leading_newline):
     return src[pos:]
 
 
-def parse_name(src) -> (str, str):
+def parse_name(src: str) -> Tuple[str, str]:
     """
     parse the leading name from the input string
     Args:
@@ -112,7 +186,7 @@ def parse_name(src) -> (str, str):
     return src[:pos], src[pos:]
 
 
-def parse_char(src) -> (str, str):
+def parse_char(src: str) -> Tuple[str, str]:
     """
     parse the leading char from the input string
     :param src:
