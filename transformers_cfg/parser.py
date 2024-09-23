@@ -284,13 +284,11 @@ def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -
     while remaining_src and remaining_src[0] != "]":
         char, remaining_src = parse_char(remaining_src)
 
-        neg_outbuf.append(range)
+        neg_outbuf.append(ord(char))
         if remaining_src[0] == "-" and remaining_src[1] != "]":
             endchar_pair, remaining_src = parse_char(remaining_src[1:])
 
-            # This is not optimal, but it works. TODO: improve it
-            endchar_pair_ord = ord(endchar_pair)
-            neg_outbuf.extend(range(ord(char) + 1, endchar_pair_ord))
+            neg_outbuf.extend(range(ord(char) + 1,  ord(endchar_pair)))
         else:
             # This is the case for enumerate, e.g., [^0123456789], [^abcdef]
             # Each char is considered as a range of itself, i.e., c-c
