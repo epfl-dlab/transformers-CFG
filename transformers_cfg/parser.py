@@ -1,9 +1,10 @@
 import argparse
 import logging
 import sys
+from abc import ABC
 from typing import List, Tuple
-from dataclasses import dataclass
 from functools import cached_property
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +12,7 @@ END_OF_ALTERNATE_MARKER = 0
 END_OF_RULE_MARKER = 0
 END_OF_GRAMMAR_MARKER = 0xFFFF
 TO_BE_FILLED_MARKER = 0
-REF_RULE_MARKER = 1 # Deprecated
-LITERAL_MARKER = 2 # Deprecated
+REF_RULE_MARKER = 1
 
 
 ########################
@@ -20,36 +20,20 @@ LITERAL_MARKER = 2 # Deprecated
 ########################
 
 
+class Codable(ABC):
+    def serialize(self) -> List[int]:
+        pass
+
+    @classmethod
+    def deserialize(cls, data: List[int]) -> "Codable":
+        pass
+
+
 @dataclass
-class GrammarElement:
+class GrammarElement(Codable):
     def is_terminated(self) -> bool:
         raise NotImplementedError()
-
-    def serialize(self) -> List[int]:
-        raise NotImplementedError()
-
-    @classmethod
-    def deserialize(cls, data: List[int]) -> "GrammarElement":
-        raise NotImplementedError()
-
-
-@dataclass
-class GrammarRule:
-    id: int
-    name: str
-    elements: List[GrammarElement]
-
-    def serialize(self) -> List[int]:
-        outbuf = [self.id]
-        for element in self.elements:
-            outbuf.extend(element.serialize())
-        outbuf.append(END_OF_RULE_MARKER)
-        return outbuf
     
-    @classmethod
-    def deserialize(cls, data: List[int]) -> "GrammarRule":
-        raise NotImplementedError()
-
 
 @dataclass
 class TerminatedElement(GrammarElement):
@@ -59,30 +43,63 @@ class TerminatedElement(GrammarElement):
         return True
     
     def serialize(self) -> List[int]:
-        outbuf = [len(self.ranges)]
+        outbuf = [len(self.ranges) * 2]
         for range in self.ranges:
             outbuf.extend(range)
-        outbuf.append(END_OF_ALTERNATE_MARKER)
         return outbuf
     
     @classmethod
-    def deserialize(cls, data: List[int]) -> GrammarElement:
-        return super().deserialize(data)
+    def from_range(cls, start: int, end: int) -> "GrammarElement":
+        return cls([(start, end)])
 
 
 @dataclass
 class ReferenceElement(GrammarElement):
-    reference: GrammarRule
+    reference_id: int
 
     def is_terminated(self) -> bool:
         return False
     
     def serialize(self) -> List[int]:
-        return [REF_RULE_MARKER, self.reference.id]
+        return [REF_RULE_MARKER, self.reference_id]
     
-    @classmethod
-    def deserialize(cls, data: List[int]) -> GrammarElement:
-        return super().deserialize(data)
+
+@dataclass
+class AlternativeElements(Codable):
+    elements: List[GrammarElement] = field(default_factory=list)
+
+    def add_element(self, element: GrammarElement) -> None:
+        self.elements.append(element)
+
+    def serialize(self) -> List[int]:
+        outbuf = [TO_BE_FILLED_MARKER]
+        for element in self.elements:
+            outbuf.extend(element.serialize())
+        outbuf[0] = len(outbuf)
+        outbuf.append(END_OF_ALTERNATE_MARKER)
+        return outbuf
+
+
+@dataclass
+class GrammarRule(Codable):
+    id: int
+    name: str
+    alternatives: List[AlternativeElements] = field(default_factory=list)
+
+    def add_alternative(self, alternative: AlternativeElements) -> None:
+        self.alternatives.append(alternative)
+
+    def add_empty_alternative(self) -> AlternativeElements:
+        new_alternative = AlternativeElements()
+        self.alternatives.append(new_alternative)
+        return new_alternative
+
+    def serialize(self) -> List[int]:
+        outbuf = [self.id]
+        for alternative in self.alternatives:
+            outbuf.extend(alternative.serialize())
+        outbuf.append(END_OF_RULE_MARKER)
+        return outbuf
 
 
 class ParseState:
@@ -90,11 +107,21 @@ class ParseState:
         self.symbol_table = {}
         self.grammar_rules: List[GrammarRule] = []
 
+    def add_rule(self, rule: GrammarRule) -> None:
+        self.grammar_rules.append(rule)
+
+    def get_rule_by_id(self, id: int) -> GrammarRule:
+        for rule in self.grammar_rules:
+            if rule.id == id:
+                return rule
+        raise ValueError(f"No rule with id {id} found")
+
     @cached_property
     def grammar_encoding(self) -> List[int]: # old name: out_grammar
         outbuf = []
         for rule in self.grammar_rules:
-            pass
+            outbuf.extend(rule.serialize())
+        outbuf.append(END_OF_GRAMMAR_MARKER)
         return outbuf
 
     def print(self, file=sys.stdout):
@@ -233,16 +260,14 @@ def parse_char(src: str) -> Tuple[str, str]:
     raise RuntimeError("unexpected end of input")
 
 
-def _parse_rhs_literal_string(src: str, outbuf: List[int]) -> str:
+def _parse_rhs_literal_string(src: str, alternative: AlternativeElements) -> str:
     assert src[0] == '"', f"rule should start with '\"', but got {src[0]}"
     remaining_src = src[1:]
 
     # advance until we get an end quote or run out of input
     while remaining_src and remaining_src[0] != '"':
         char, remaining_src = parse_char(remaining_src)
-        outbuf.append(LITERAL_MARKER)
-        outbuf.append(ord(char))
-        outbuf.append(ord(char))
+        alternative.add_element(TerminatedElement([(ord(char), ord(char))]))
 
     # in case we ran out of input before finding the end quote
     if not remaining_src:
@@ -252,17 +277,14 @@ def _parse_rhs_literal_string(src: str, outbuf: List[int]) -> str:
     return remaining_src[1:]
 
 
-def _parse_rhs_negated_char_ranges(src: str, outbuf: List[int]) -> str:
+def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -> str:
     assert src[:2] == "[^", f"rule should start with '[^', but got {src[:2]}"
     remaining_src = src[2:]
-    start_idx = len(outbuf)
-    # num chars in range - replaced at end of loop
-    outbuf.append(TO_BE_FILLED_MARKER)
     neg_outbuf = []
     while remaining_src and remaining_src[0] != "]":
         char, remaining_src = parse_char(remaining_src)
 
-        neg_outbuf.append(ord(char))
+        neg_outbuf.append(range)
         if remaining_src[0] == "-" and remaining_src[1] != "]":
             endchar_pair, remaining_src = parse_char(remaining_src[1:])
 
@@ -282,66 +304,57 @@ def _parse_rhs_negated_char_ranges(src: str, outbuf: List[int]) -> str:
     neg_outbuf = [-1] + sorted(set(neg_outbuf)) + [0xFF + 1] # min ord, ..., max ord
     
     # Generate allowed ranges
+    ranges = []
     for start, end in zip(neg_outbuf[:-1], neg_outbuf[1:]):
         allowed_start = start + 1
         allowed_end = end - 1
         if allowed_start <= allowed_end:
-            outbuf.append(allowed_start)
-            outbuf.append(allowed_end)
+            ranges.append((allowed_start, allowed_end))
     
-    outbuf[start_idx] = len(outbuf) - start_idx - 1
+    alternative.add_element(TerminatedElement(ranges))
     return remaining_src[1:]
 
 
-def _parse_rhs_char_ranges(src: str, outbuf: List[int]) -> str:
+def _parse_rhs_char_ranges(src: str, alternative: AlternativeElements) -> str:
     assert src[0] == "[", f"rule should start with '[', but got {src[0]}"
     remaining_src = src[1:]
-    start_idx = len(outbuf)
-    # num chars in range - replaced at end of loop
-    outbuf.append(TO_BE_FILLED_MARKER)
+    ranges = []
     while remaining_src and remaining_src[0] != "]":
         char, remaining_src = parse_char(remaining_src)
 
-        outbuf.append(ord(char))
         if remaining_src[0] == "-" and remaining_src[1] != "]":
             endchar_pair, remaining_src = parse_char(remaining_src[1:])
-            outbuf.append(ord(endchar_pair))
+            ranges.append((ord(char), ord(endchar_pair)))
         else:
             # This is the case for enumerate, e.g., [0123456789], [abcdef]
             # Each char is considered as a range of itself, i.e., c-c
-            outbuf.append(ord(char))
+            ranges.append((ord(char), ord(char)))
     if not remaining_src:
         raise RuntimeError(
             f"expecting an ] at {src},but not found, is the char range closed?"
         )
-    # replace num chars with actual
-    outbuf[start_idx] = len(outbuf) - start_idx - 1
+    alternative.add_element(TerminatedElement(ranges))
     return remaining_src[1:]
 
 
-def _parse_rhs_any_char(src: str, outbuf: List[int]) -> str:
+def _parse_rhs_any_char(src: str, alternative: AlternativeElements) -> str:
     assert src[0] == ".", f"rule should start with '.', but got {src[0]}"
     remaining_src = src[1:]
     # The only symbol not allowed is '\n'
-    outbuf.append(4) # [0;ord('\n') - 1], [ord('\n') + 1;0xFF]
-    outbuf.append(0)
-    outbuf.append(ord('\n') - 1)
-    outbuf.append(ord('\n') + 1)
-    outbuf.append(0xFF)
+    alternative.add_element(TerminatedElement([(0, ord('\n') - 1), (ord('\n') + 1, 0xFF)]))
     return remaining_src
 
 
-def _parse_rhs_symbol_reference(src: str, state: ParseState, outbuf: List[int]) -> str:
+def _parse_rhs_symbol_reference(src: str, state: ParseState, alternative: AlternativeElements) -> str:
     assert is_word_char(src[0]), f"rule should start with a word char, but got {src[0]}"
     name, remaining_src = parse_name(src)
     ref_rule_id = get_symbol_id(state, name)
-    outbuf.append(REF_RULE_MARKER)
-    outbuf.append(ref_rule_id)
+    alternative.add_element(ReferenceElement(ref_rule_id))
     return remaining_src
 
 
 def _parse_rhs_grouping(
-    remaining_src: str, state: ParseState, rule_name: str, outbuf: List[int]
+    remaining_src: str, state: ParseState, rule_name: str, alternative: AlternativeElements
 ) -> str:
     assert (
         remaining_src[0] == "("
@@ -351,8 +364,7 @@ def _parse_rhs_grouping(
     synthetic_rule_id = generate_symbol_id(state, rule_name)
     remaining_src = parse_rhs(state, remaining_src, rule_name, synthetic_rule_id, True)
     # output reference to synthesized rule
-    outbuf.append(REF_RULE_MARKER)
-    outbuf.append(synthetic_rule_id)
+    alternative.add_element(ReferenceElement(synthetic_rule_id))
 
     if not remaining_src or remaining_src[0] != ")":
         raise RuntimeError("expecting ')' at " + remaining_src)
@@ -363,16 +375,13 @@ def _parse_rhs_repetition_operators(
     remaining_src: str,
     state: ParseState,
     rule_name: str,
-    last_sym_start: int,
-    outbuf: List[int],
+    alternative: AlternativeElements,
 ) -> str:
     assert remaining_src[0] in (
         "*",
         "+",
         "?",
     ), f"rule should start with '*', '+', or '?', but got {remaining_src[0]}"
-    out_grammar = state.grammar_encoding
-    # last_sym_start = len(outbuf)
 
     # apply transformation to previous symbol (last_sym_start -
     # end) according to rewrite rules:
@@ -380,34 +389,21 @@ def _parse_rhs_repetition_operators(
     # S+ --> S' ::= S S' | S
     # S? --> S' ::= S |
     sub_rule_id = generate_symbol_id(state, rule_name)
-    out_grammar.append(sub_rule_id)
-    sub_rule_offset = len(out_grammar)
-    # placeholder for size of 1st alternate
-    out_grammar.append(TO_BE_FILLED_MARKER)
+    sub_rule = GrammarRule(sub_rule_id, f"{rule_name}_{sub_rule_id}")
+    sub_rule_first_alternative = sub_rule.add_empty_alternative()
     # add preceding symbol to generated rule
-    out_grammar.extend(outbuf[last_sym_start:])
+    sub_rule_first_alternative.add_element(alternative.elements[-1])
     if remaining_src[0] in ("*", "+"):
         # cause generated rule to recurse
-        out_grammar.append(REF_RULE_MARKER)
-        out_grammar.append(sub_rule_id)
-    # apply actual size
-    out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
-    # mark end of 1st alternate
-    out_grammar.append(END_OF_ALTERNATE_MARKER)
-    sub_rule_offset = len(out_grammar)
-    # placeholder for size of 2nd alternate
-    out_grammar.append(TO_BE_FILLED_MARKER)
+        sub_rule_first_alternative.add_element(ReferenceElement(sub_rule_id))
+    sub_rule_second_alternative = AlternativeElements()
+    sub_rule.add_alternative(sub_rule_second_alternative)
     if remaining_src[0] == "+":
         # add preceding symbol as alternate only for '+'
-        out_grammar.extend(outbuf[last_sym_start:])
-    # apply actual size of 2nd alternate
-    out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
-    # mark end of 2nd alternate, then end of rule
-    out_grammar.append(END_OF_ALTERNATE_MARKER)
-    out_grammar.append(END_OF_RULE_MARKER)
+        sub_rule_second_alternative.add_element(alternative.elements[-1])
 
-    # in original rule, replace previous symbol with reference to generated rule
-    outbuf[last_sym_start:] = [REF_RULE_MARKER, sub_rule_id]
+    state.grammar_rules.append(sub_rule)
+    alternative.elements[-1] = ReferenceElement(sub_rule_id)
     return remaining_src[1:]
 
 
@@ -415,11 +411,9 @@ def _parse_rhs_numbered_repetition_operators(
     remaining_src: str,
     state: ParseState,
     rule_name: str,
-    last_sym_start: int,
-    outbuf: List[int],
+    alternative: AlternativeElements,
 ) -> str:
     assert remaining_src[0] == "{", f"rule should start with '{{', but got {remaining_src[0]}"
-    out_grammar = state.grammar_encoding
 
     # parse numbers
     closing_brace_idx = remaining_src.find("}")
@@ -436,77 +430,58 @@ def _parse_rhs_numbered_repetition_operators(
     if not m: n -= 1 # remove the last S to replace with S+
 
     sub_rule_id = generate_symbol_id(state, rule_name)
-    out_grammar.append(sub_rule_id)
+    sub_rule = GrammarRule(sub_rule_id, f"{rule_name}_{sub_rule_id}")
 
     for i in range(max(n, 1), m + 1 if m else n + 1):
-        sub_rule_offset = len(out_grammar)
-        out_grammar.append(TO_BE_FILLED_MARKER)
-        out_grammar.extend(outbuf[last_sym_start:] * i)
-        out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
+        sub_rule_alternative = AlternativeElements()
+        sub_rule.add_alternative(sub_rule_alternative)
+        for _ in range(i):
+            sub_rule_alternative.add_element(alternative.elements[-1])
         if not m:
-            out_grammar.append(REF_RULE_MARKER)
-            out_grammar.append(sub_rule_id)
-        out_grammar.append(END_OF_ALTERNATE_MARKER)
+            sub_rule_alternative.add_element(ReferenceElement(sub_rule_id))
 
     if not m:
-        sub_rule_offset = len(out_grammar)
-        out_grammar.append(TO_BE_FILLED_MARKER)
-        out_grammar.extend(outbuf[last_sym_start:])
-        out_grammar[sub_rule_offset] = len(out_grammar) - sub_rule_offset
-        out_grammar.append(END_OF_ALTERNATE_MARKER)
+        sub_rule_alternative = AlternativeElements()
+        sub_rule.add_alternative(sub_rule_alternative)
+        sub_rule_alternative.add_element(alternative.elements[-1])
 
-    out_grammar.append(END_OF_RULE_MARKER)
-
-    outbuf[last_sym_start:] = [REF_RULE_MARKER, sub_rule_id]
+    state.grammar_rules.append(sub_rule)
+    alternative.elements[-1] = ReferenceElement(sub_rule_id)
     return remaining_src[closing_brace_idx + 1:]
 
 
-def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
-    simple_rhs_offset = len(outbuf)
-
-    # sequence size, will be replaced at end when known
-    outbuf.append(TO_BE_FILLED_MARKER)
-
-    last_sym_start = len(outbuf)
+def parse_simple_rhs(state: ParseState, rhs: str, rule_name: str, rule: GrammarRule, is_nested: bool) -> str:
     remaining_rhs = rhs
+    alternative = AlternativeElements()
+
     while remaining_rhs:
-        if remaining_rhs[0] == '"':  # literal string
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_literal_string(remaining_rhs, outbuf)
-        elif remaining_rhs[:2] == "[^":  # negated char range(s)
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_negated_char_ranges(remaining_rhs, outbuf)
-        elif remaining_rhs[0] == "[":  # char range(s)
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_char_ranges(remaining_rhs, outbuf)
+        if remaining_rhs[0] == '"':
+            # literal string
+            remaining_rhs = _parse_rhs_literal_string(remaining_rhs, alternative)
+        elif remaining_rhs[:2] == "[^":
+            # negated char range(s)
+            remaining_rhs = _parse_rhs_negated_char_ranges(remaining_rhs, alternative)
+        elif remaining_rhs[0] == "[":
+            # char range(s)
+            remaining_rhs = _parse_rhs_char_ranges(remaining_rhs, alternative)
         elif remaining_rhs[0] == ".":
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_any_char(remaining_rhs, outbuf)
-        elif is_word_char(remaining_rhs[0]):  # rule reference
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_symbol_reference(remaining_rhs, state, outbuf)
-        elif remaining_rhs[0] == "(":  # grouping
-            # mark the start of the last symbol, for repetition operator
-            last_sym_start = len(outbuf)
-            remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, outbuf)
-        elif remaining_rhs[0] in ("*", "+", "?", "{"):  # repetition operator
-            # No need to mark the start of the last symbol, because we already did it
-            if len(outbuf) - simple_rhs_offset - 1 == 0:
-                raise RuntimeError(
-                    "expecting preceeding item to */+/?/{ at " + remaining_rhs
-                )
+            # any char
+            remaining_rhs = _parse_rhs_any_char(remaining_rhs, alternative)
+        elif is_word_char(remaining_rhs[0]):
+            # rule reference
+            remaining_rhs = _parse_rhs_symbol_reference(remaining_rhs, state, alternative)
+        elif remaining_rhs[0] == "(":
+            # grouping
+            remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, alternative)
+        elif remaining_rhs[0] in ("*", "+", "?", "{"):
+            # repetition operator
             if remaining_rhs[0] == "{":
                 remaining_rhs = _parse_rhs_numbered_repetition_operators(
-                    remaining_rhs, state, rule_name, last_sym_start, outbuf
+                    remaining_rhs, state, rule_name, alternative
                 )
             else:
                 remaining_rhs = _parse_rhs_repetition_operators(
-                    remaining_rhs, state, rule_name, last_sym_start, outbuf
+                    remaining_rhs, state, rule_name, alternative
                 )
         else:
             # case for newline, i.e., end of rule
@@ -522,26 +497,20 @@ def parse_simple_rhs(state, rhs: str, rule_name: str, outbuf, is_nested):
             remaining_rhs, rm_leading_newline=is_nested
         )
 
-    # apply actual size of this alternate sequence
-    outbuf[simple_rhs_offset] = len(outbuf) - simple_rhs_offset
-    # mark end of alternate
-    outbuf.append(END_OF_ALTERNATE_MARKER)
+    rule.add_alternative(alternative)
     return remaining_rhs
 
 
-def parse_rhs(state, rhs: str, rule_name, rule_id, is_nested):
-    outbuf = []
-    remaining_rhs = parse_simple_rhs(state, rhs, rule_name, outbuf, is_nested)
+def parse_rhs(state: ParseState, rhs: str, rule_name: str, rule_id: int, is_nested: bool) -> str:
+    rule = GrammarRule(rule_id, rule_name)
+    remaining_rhs = parse_simple_rhs(state, rhs, rule_name, rule, is_nested)
     while remaining_rhs and remaining_rhs[0] == "|":
         remaining_rhs = remove_leading_white_space(remaining_rhs[1:], True)
         remaining_rhs = parse_simple_rhs(
-            state, remaining_rhs, rule_name, outbuf, is_nested
+            state, remaining_rhs, rule_name, rule, is_nested
         )
 
-    # Now we have finished parsing the rhs, we can add the rule to the grammar_encoding
-    state.grammar_encoding.append(rule_id)
-    state.grammar_encoding.extend(outbuf)
-    state.grammar_encoding.append(END_OF_RULE_MARKER)
+    state.grammar_rules.append(rule)
     return remaining_rhs
 
 
@@ -585,7 +554,6 @@ def parse_ebnf(grammar_text: str) -> ParseState:
                 )
             last_grammar_repr = remaining_grammar_text
             remaining_grammar_text = parse_rule(state, remaining_grammar_text)
-        state.grammar_encoding.append(END_OF_GRAMMAR_MARKER)
         return state
     except RuntimeError as err:
         logger.warning("error parsing grammar:", err)
