@@ -22,11 +22,11 @@ REF_RULE_MARKER = 1
 
 class Codable(ABC):
     def serialize(self) -> List[int]:
-        pass
+        raise NotImplementedError()
 
     @classmethod
     def deserialize(cls, data: List[int]) -> "Codable":
-        pass
+        raise NotImplementedError()
 
 
 @dataclass
