@@ -127,6 +127,47 @@ class ParseState:
     def print(self, file=sys.stdout):
         print_grammar(file, self)
 
+    def graph(self, file: str = "grammar") -> None:
+        try:
+            from graphviz import Digraph
+        except ImportError:
+            raise RuntimeError("graphviz is not installed, please install it first by `pip install graphviz`")
+
+        graph = Digraph()
+
+        graph.node("epsilon", style="filled", fillcolor="blue")
+
+        for rule in self.grammar_rules:
+            graph.node(rule.name, style="filled", fillcolor="red")
+
+            for i, alternative in enumerate(rule.alternatives):
+                if len(alternative.elements) == 0:
+                    graph.edge(rule.name, "epsilon")
+                else:
+                    if len(alternative.elements) == 1:
+                        alternative_name = rule.name
+                    else:
+                        alternative_name = f"{rule.name}_alt_{i}"
+                        graph.node(alternative_name, style="filled", fillcolor="green")
+                        graph.edge(rule.name, alternative_name)
+                    for element in alternative.elements:
+                        if isinstance(element, ReferenceElement):
+                            graph.edge(alternative_name, self.grammar_rules[element.reference_id].name)
+                        elif isinstance(element, TerminatedElement):
+                            for range in element.ranges:
+                                chr_a = chr(range[0])
+                                chr_b = chr(range[1])
+                                if chr_a == chr_b:
+                                    char_range_label = f"\"{chr_a}\""
+                                else:
+                                    char_range_label = f"\"{chr_a}\"-\"{chr_b}\""
+                                graph.node(f"{alternative_name}_{char_range_label}", label=char_range_label, style="filled", fillcolor="yellow")
+                                graph.edge(alternative_name, f"{alternative_name}_{char_range_label}")
+                        else:
+                            raise ValueError(f"Unsupported element type: {type(element)}")
+
+        graph.render(file, format="png", cleanup=True)
+
 
 def get_symbol_id(state: ParseState, symbol_name: str) -> int:
     if symbol_name not in state.symbol_table:
@@ -698,3 +739,4 @@ if __name__ == "__main__":
     print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
 
     start_rule_id = parsed_grammar.symbol_table["root"]
+    parsed_grammar.graph()
