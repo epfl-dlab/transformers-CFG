@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from abc import ABC
-from typing import List, Tuple
+from typing import List, Tuple, Set
 from functools import cached_property
 from dataclasses import dataclass, field
 
@@ -127,7 +127,7 @@ class ParseState:
     def print(self, file=sys.stdout):
         print_grammar(file, self)
 
-    def graph(self, file: str = "grammar") -> None:
+    def graph(self, file: str = "grammar", start_rule: str = "root") -> None:
         try:
             from graphviz import Digraph
         except ImportError:
@@ -137,34 +137,26 @@ class ParseState:
 
         graph.node("epsilon", style="filled", fillcolor="blue")
 
+        edges: Set[Tuple[str, str]] = set()
         for rule in self.grammar_rules:
-            graph.node(rule.name, style="filled", fillcolor="red")
+            graph.node(rule.name, style="filled", fillcolor="red" if rule.name == start_rule else "orange")
 
             for i, alternative in enumerate(rule.alternatives):
                 if len(alternative.elements) == 0:
-                    graph.edge(rule.name, "epsilon")
+                    edges.add((rule.name, "epsilon"))
                 else:
                     if len(alternative.elements) == 1:
                         alternative_name = rule.name
                     else:
                         alternative_name = f"{rule.name}_alt_{i}"
                         graph.node(alternative_name, style="filled", fillcolor="green")
-                        graph.edge(rule.name, alternative_name)
+                        edges.add((rule.name, alternative_name))
                     for element in alternative.elements:
                         if isinstance(element, ReferenceElement):
-                            graph.edge(alternative_name, self.grammar_rules[element.reference_id].name)
-                        elif isinstance(element, TerminatedElement):
-                            for range in element.ranges:
-                                chr_a = chr(range[0])
-                                chr_b = chr(range[1])
-                                if chr_a == chr_b:
-                                    char_range_label = f"\"{chr_a}\""
-                                else:
-                                    char_range_label = f"\"{chr_a}\"-\"{chr_b}\""
-                                graph.node(f"{alternative_name}_{char_range_label}", label=char_range_label, style="filled", fillcolor="yellow")
-                                graph.edge(alternative_name, f"{alternative_name}_{char_range_label}")
-                        else:
-                            raise ValueError(f"Unsupported element type: {type(element)}")
+                            edges.add((alternative_name, self.grammar_rules[element.reference_id].name))
+
+        for u, v in edges:
+            graph.edge(u, v)
 
         graph.render(file, format="png", cleanup=True)
 
