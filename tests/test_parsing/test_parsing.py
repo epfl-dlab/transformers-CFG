@@ -495,27 +495,3 @@ class Test(TestCase):
     #     _parse_rhs_grouping(rhs_src, state=state, outbuf=outbuf,rule_name=name)
     #     logging.debug(f"outbuf: {outbuf}")
     #     import pdb; pdb.set_trace()
-
-    def test_refactor_parser(self):
-        # get all the ebnf files in examples/grammars and subdirectories
-        import os
-        from transformers_cfg.old_parser import parse_ebnf as old_parse_ebnf
-
-        files = []
-        for root, _, filenames in os.walk("examples/grammars"):
-            for filename in filenames:
-                if filename.endswith(".ebnf"):
-                    files.append(os.path.join(root, filename))
-
-        for file in files:
-            with open(file, "r") as f:
-                src = f.read()
-            
-            old_state = old_parse_ebnf(src)
-            new_state = parse_ebnf(src)
-
-            for o, n in zip(old_state.grammar_encoding, new_state.grammar_encoding):
-                if o != n:
-                    print(f"The grammar encoding of {file} is different")
-                    break
-            # self.assertListEqual(old_state.grammar_encoding, new_state.grammar_encoding, f"The grammar encoding of {file} is different")
