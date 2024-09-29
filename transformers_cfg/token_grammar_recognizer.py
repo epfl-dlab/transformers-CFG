@@ -1,17 +1,18 @@
 import logging
 from abc import ABC
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import torch
 from transformers import PreTrainedTokenizer
 
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
-from transformers_cfg.tokenization.byte_trie import ByteTrie
+from transformers_cfg.tokenization.byte_trie import ByteTrie, TrieNode
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
     TokenizerMiddleMapping,
 )
+from transformers_cfg.utf8_utils import PartialUTF8
 
 logger = logging.getLogger(__name__)
 
@@ -239,13 +240,14 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     logging.debug(f"The decoded string is {decoded_string}")
         return parsing_state
 
+    # TODO: remove this method or clarify its arguments (it is not used anywhere)
     def accept_token_ids(self, token_ids, stacks=None, as_string=True) -> bool:
         output_state = self._update_state_with_single_token_seq(
             token_ids, stacks, as_string
         ).stacks
         return True if output_state else False
 
-    def get_next_token_acceptance(self, parsing_state, device) -> torch.Tensor:
+    def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
         acceptance_matrix = torch.cat(
             [
                 self.get_next_token_acceptance_for_single_stack(
@@ -261,7 +263,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
     # If running on a GPU device this cache can continue to fill up GPU memory
     # Dereferencing the object will not clear the cache
     @lru_cache(maxsize=32768)
-    def get_next_token_acceptance_for_single_stack(self, stack, partial_utf8, device):
+    def get_next_token_acceptance_for_single_stack(self, stack: Tuple[int], partial_utf8: PartialUTF8, device: torch.device) -> torch.Tensor:
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
         assert isinstance(stack, tuple)
 
@@ -326,7 +328,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
 #     return accepts
 
 
-def check_token_acceptance_in_trie(trie_node, stacks, grammar, eos_token_id, accepts):
+def check_token_acceptance_in_trie(trie_node: TrieNode, stacks: List[Tuple[int]], recognizer: StringRecognizer, eos_token_id: int, accepts: List[bool]):
     if trie_node.is_end_of_word:
         token_id = trie_node.token_id
         if token_id != eos_token_id:
@@ -341,9 +343,9 @@ def check_token_acceptance_in_trie(trie_node, stacks, grammar, eos_token_id, acc
                 continue
 
             next_element_offset = stk[-1]
-            num_chars = grammar.grammar_encoding[next_element_offset]
+            num_chars = recognizer.grammar_encoding[next_element_offset]
 
-            if not grammar.char_acceptance_at_element(next_element_offset).get(
+            if not recognizer.char_acceptance_at_element(next_element_offset).get(
                 byte, False
             ):
                 # if the current byte is not accepted by the current rule, we need to try next rule
@@ -351,13 +353,13 @@ def check_token_acceptance_in_trie(trie_node, stacks, grammar, eos_token_id, acc
 
             next_element_offset += num_chars + 1
             new_stack = list(stk[:-1])
-            if grammar.grammar_encoding[next_element_offset]:
+            if recognizer.grammar_encoding[next_element_offset]:
                 new_stack.append(next_element_offset)
-            new_stacks.update(grammar.expand_stack_head(tuple(new_stack)))
+            new_stacks.update(recognizer.expand_stack_head(tuple(new_stack)))
 
         if new_stacks:
             check_token_acceptance_in_trie(
-                next_trie_node, new_stacks, grammar, eos_token_id, accepts
+                next_trie_node, new_stacks, recognizer, eos_token_id, accepts
             )
 
     return accepts
