@@ -2,9 +2,9 @@ import argparse
 import logging
 import sys
 from abc import ABC
-from typing import List, Tuple, Set
 from functools import cached_property
 from dataclasses import dataclass, field
+from typing import List, Tuple, Dict, Set
 
 logger = logging.getLogger(__name__)
 
@@ -66,15 +66,25 @@ class ReferenceElement(GrammarElement):
 
 @dataclass
 class AlternativeElements(Codable):
-    elements: List[GrammarElement] = field(default_factory=list)
+    buffer_elements: List[GrammarElement] = field(default_factory=list)
+    symbols: List[List[GrammarElement]] = field(default_factory=list)
 
     def add_element(self, element: GrammarElement) -> None:
-        self.elements.append(element)
+        self.buffer_elements.append(element)
+
+    def add_symbol(self, symbol: List[GrammarElement]) -> None:
+        self.symbols.append(symbol)
+
+    def close_current_symbol(self) -> None:
+        self.symbols.append(self.buffer_elements)
+        self.buffer_elements = []
 
     def serialize(self) -> List[int]:
+        if self.buffer_elements: self.close_current_symbol()
         outbuf = [TO_BE_FILLED_MARKER]
-        for element in self.elements:
-            outbuf.extend(element.serialize())
+        for symbol in self.symbols:
+            for element in symbol:
+                outbuf.extend(element.serialize())
         outbuf[0] = len(outbuf)
         outbuf.append(END_OF_ALTERNATE_MARKER)
         return outbuf
@@ -105,21 +115,20 @@ class GrammarRule(Codable):
 class ParseState:
     def __init__(self):
         self.symbol_table = {}
-        self.grammar_rules: List[GrammarRule] = []
+        self.grammar_rules: Dict[int, GrammarRule] = {}
 
     def add_rule(self, rule: GrammarRule) -> None:
-        self.grammar_rules.append(rule)
+        self.grammar_rules[rule.id] = rule
 
     def get_rule_by_id(self, id: int) -> GrammarRule:
-        for rule in self.grammar_rules:
-            if rule.id == id:
-                return rule
+        if id in self.grammar_rules:
+            return self.grammar_rules[id]
         raise ValueError(f"No rule with id {id} found")
 
     @cached_property
     def grammar_encoding(self) -> List[int]: # old name: out_grammar
         outbuf = []
-        for rule in self.grammar_rules:
+        for rule in self.grammar_rules.values():
             outbuf.extend(rule.serialize())
         outbuf.append(END_OF_GRAMMAR_MARKER)
         return outbuf
@@ -138,22 +147,23 @@ class ParseState:
         graph.node("epsilon", style="filled", fillcolor="blue")
 
         edges: Set[Tuple[str, str]] = set()
-        for rule in self.grammar_rules:
+        for rule in self.grammar_rules.values():
             graph.node(rule.name, style="filled", fillcolor="red" if rule.name == start_rule else "orange")
 
             for i, alternative in enumerate(rule.alternatives):
-                if len(alternative.elements) == 0:
+                if len(alternative.symbols) == 0:
                     edges.add((rule.name, "epsilon"))
                 else:
-                    if len(alternative.elements) == 1:
+                    if len(alternative.symbols) == 1:
                         alternative_name = rule.name
                     else:
                         alternative_name = f"{rule.name}_alt_{i}"
                         graph.node(alternative_name, style="filled", fillcolor="green")
                         edges.add((rule.name, alternative_name))
-                    for element in alternative.elements:
-                        if isinstance(element, ReferenceElement):
-                            edges.add((alternative_name, self.grammar_rules[element.reference_id].name))
+                    for symbol in alternative.symbols:
+                        for element in symbol:
+                            if isinstance(element, ReferenceElement):
+                                edges.add((alternative_name, self.grammar_rules[element.reference_id].name))
 
         for u, v in edges:
             graph.edge(u, v)
@@ -423,7 +433,7 @@ def _parse_rhs_repetition_operators(
     sub_rule = GrammarRule(sub_rule_id, f"{rule_name}_{sub_rule_id}")
     sub_rule_first_alternative = sub_rule.add_empty_alternative()
     # add preceding symbol to generated rule
-    sub_rule_first_alternative.add_element(alternative.elements[-1])
+    sub_rule_first_alternative.add_symbol(alternative.symbols[-1])
     if remaining_src[0] in ("*", "+"):
         # cause generated rule to recurse
         sub_rule_first_alternative.add_element(ReferenceElement(sub_rule_id))
@@ -431,10 +441,10 @@ def _parse_rhs_repetition_operators(
     sub_rule.add_alternative(sub_rule_second_alternative)
     if remaining_src[0] == "+":
         # add preceding symbol as alternate only for '+'
-        sub_rule_second_alternative.add_element(alternative.elements[-1])
+        sub_rule_second_alternative.add_symbol(alternative.symbols[-1])
 
-    state.grammar_rules.append(sub_rule)
-    alternative.elements[-1] = ReferenceElement(sub_rule_id)
+    state.add_rule(sub_rule)
+    alternative.symbols[-1] = [ReferenceElement(sub_rule_id)]
     return remaining_src[1:]
 
 
@@ -467,17 +477,17 @@ def _parse_rhs_numbered_repetition_operators(
         sub_rule_alternative = AlternativeElements()
         sub_rule.add_alternative(sub_rule_alternative)
         for _ in range(i):
-            sub_rule_alternative.add_element(alternative.elements[-1])
+            sub_rule_alternative.add_symbol(alternative.symbols[-1])
         if not m:
             sub_rule_alternative.add_element(ReferenceElement(sub_rule_id))
 
     if not m:
         sub_rule_alternative = AlternativeElements()
         sub_rule.add_alternative(sub_rule_alternative)
-        sub_rule_alternative.add_element(alternative.elements[-1])
+        sub_rule_alternative.add_symbol(alternative.symbols[-1])
 
     state.grammar_rules.append(sub_rule)
-    alternative.elements[-1] = ReferenceElement(sub_rule_id)
+    alternative.symbols[-1] = [ReferenceElement(sub_rule_id)]
     return remaining_src[closing_brace_idx + 1:]
 
 
@@ -528,6 +538,8 @@ def parse_simple_rhs(state: ParseState, rhs: str, rule_name: str, rule: GrammarR
             remaining_rhs, rm_leading_newline=is_nested
         )
 
+        alternative.close_current_symbol()
+
     rule.add_alternative(alternative)
     return remaining_rhs
 
@@ -541,7 +553,7 @@ def parse_rhs(state: ParseState, rhs: str, rule_name: str, rule_id: int, is_nest
             state, remaining_rhs, rule_name, rule, is_nested
         )
 
-    state.grammar_rules.append(rule)
+    state.add_rule(rule)
     return remaining_rhs
 
 
