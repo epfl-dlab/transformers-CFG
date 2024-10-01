@@ -27,12 +27,23 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
 
     def mask_logits(self, logits: torch.FloatTensor, device: torch.device) -> torch.FloatTensor:
         masked_logits = logits.clone()
-        # resolve each stack to a tensor of True/False for each token
-        # indicating acceptance
-        # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
-        acceptance = self.grammar_constraint.batch_filter_vocab(
-            self.batch_parsing_states, device
-        )
+        # try to accept the most likely token
+        acceptance = torch.zeros((logits.shape[0], len(self.grammar_constraint.homomorphism)), dtype=torch.bool, device=device)
+        next_tokens = torch.argmax(logits, dim=-1)
+        for i, next_token in enumerate(next_tokens):
+            try:
+                is_next_token_accepted = self.grammar_constraint.accept_token_ids([next_token.item()], self.batch_parsing_states[i])
+            except ValueError:
+                is_next_token_accepted = False
+            if is_next_token_accepted:
+                acceptance[i, next_token] = True
+            else:
+                # resolve each stack to a tensor of True/False for each token
+                # indicating acceptance
+                # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
+                acceptance[i] = self.grammar_constraint.filter_vocab(
+                    self.batch_parsing_states[i], device
+                )
 
         # if the logits size of the model is more than the tokennizer vocab
         # we artificially expand the acceptance tensor and block everything

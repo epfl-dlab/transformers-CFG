@@ -101,7 +101,7 @@ class AbsTokenRecognizer(ABC):
             acceptance[self.eos_token_id] = False
         return acceptance
 
-    def accept_token_ids(self, token_ids, stacks) -> bool:
+    def accept_token_ids(self, token_ids: List[int], parsing_state: Optional[AcceptState] = None, as_string: bool = True) -> bool:
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
 
@@ -219,7 +219,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         self,
         token_ids: List[int],
         parsing_state: Optional[AcceptState] = None,
-        as_string=True,
+        as_string: bool = True,
     ):
         if parsing_state is None:
             parsing_state = self.string_recognizer.get_initial_parsing_state()
@@ -240,12 +240,11 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     logging.debug(f"The decoded string is {decoded_string}")
         return parsing_state
 
-    # TODO: remove this method or clarify its arguments (it is not used anywhere)
-    def accept_token_ids(self, token_ids, stacks=None, as_string=True) -> bool:
+    def accept_token_ids(self, token_ids: List[int], parsing_state: Optional[AcceptState] = None, as_string: bool = True) -> bool:
         output_state = self._update_state_with_single_token_seq(
-            token_ids, stacks, as_string
+            token_ids, parsing_state, as_string
         ).stacks
-        return True if output_state else False
+        return bool(output_state)
 
     def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
         acceptance_matrix = torch.cat(
@@ -328,7 +327,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
 #     return accepts
 
 
-def check_token_acceptance_in_trie(trie_node: TrieNode, stacks: List[Tuple[int]], recognizer: StringRecognizer, eos_token_id: int, accepts: List[bool]):
+def check_token_acceptance_in_trie(trie_node: TrieNode, stacks: List[Tuple[int]], recognizer: StringRecognizer, eos_token_id: int, accepts: List[bool]) -> List[bool]:
     if trie_node.is_end_of_word:
         token_id = trie_node.token_id
         if token_id != eos_token_id:
