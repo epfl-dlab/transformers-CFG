@@ -243,11 +243,11 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
     def accept_token_ids(self, token_ids: List[int], parsing_state: Optional[AcceptState] = None, as_string: bool = True) -> bool:
         output_state = self._update_state_with_single_token_seq(
             token_ids, parsing_state, as_string
-        ).stacks
-        return bool(output_state)
+        )
+        return len(output_state.stacks) > 0
 
     def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
-        acceptance_matrix = torch.cat(
+        acceptance_matrix = torch.stack(
             [
                 self.get_next_token_acceptance_for_single_stack(
                     tuple(stack), parsing_state.partial_utf8, device
@@ -256,7 +256,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
             ]
         )
         # Merge stacks: any True => True
-        acceptance = acceptance_matrix.reshape(len(parsing_state.stacks), -1).any(dim=0)
+        acceptance = acceptance_matrix.any(dim=0)
         return acceptance
 
     # If running on a GPU device this cache can continue to fill up GPU memory

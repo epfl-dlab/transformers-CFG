@@ -30,9 +30,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # try to accept the most likely token
         acceptance = torch.zeros((logits.shape[0], len(self.grammar_constraint.homomorphism)), dtype=torch.bool, device=device)
         next_tokens = torch.argmax(logits, dim=-1)
-        for i, next_token in enumerate(next_tokens):
+        for i, next_token in enumerate(next_tokens.tolist()):
             try:
-                is_next_token_accepted = self.grammar_constraint.accept_token_ids([next_token.item()], self.batch_parsing_states[i])
+                is_next_token_accepted = self.grammar_constraint.accept_token_ids([next_token], self.batch_parsing_states[i])
             except ValueError:
                 is_next_token_accepted = False
             if is_next_token_accepted:
