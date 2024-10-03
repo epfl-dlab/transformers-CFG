@@ -36,7 +36,7 @@ class GrammarElement(Codable):
     
 
 @dataclass
-class TerminatedElement(GrammarElement):
+class TerminalElement(GrammarElement):
     ranges: List[Tuple[int, int]]
 
     def is_terminated(self) -> bool:
@@ -55,13 +55,13 @@ class TerminatedElement(GrammarElement):
 
 @dataclass
 class ReferenceElement(GrammarElement):
-    reference_id: int
+    referee_id: int
 
     def is_terminated(self) -> bool:
         return False
     
     def serialize(self) -> List[int]:
-        return [REF_RULE_MARKER, self.reference_id]
+        return [REF_RULE_MARKER, self.referee_id]
     
 
 @dataclass
@@ -163,7 +163,7 @@ class ParseState:
                     for symbol in alternative.symbols:
                         for element in symbol:
                             if isinstance(element, ReferenceElement):
-                                edges.add((alternative_name, self.grammar_rules[element.reference_id].name))
+                                edges.add((alternative_name, self.grammar_rules[element.referee_id].name))
 
         for u, v in edges:
             graph.edge(u, v)
@@ -310,7 +310,7 @@ def _parse_rhs_literal_string(src: str, alternative: AlternativeElements) -> str
     # advance until we get an end quote or run out of input
     while remaining_src and remaining_src[0] != '"':
         char, remaining_src = parse_char(remaining_src)
-        alternative.add_element(TerminatedElement([(ord(char), ord(char))]))
+        alternative.add_element(TerminalElement([(ord(char), ord(char))]))
 
     # in case we ran out of input before finding the end quote
     if not remaining_src:
@@ -352,7 +352,7 @@ def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -
         if allowed_start <= allowed_end:
             ranges.append((allowed_start, allowed_end))
     
-    alternative.add_element(TerminatedElement(ranges))
+    alternative.add_element(TerminalElement(ranges))
     return remaining_src[1:]
 
 
@@ -374,7 +374,7 @@ def _parse_rhs_char_ranges(src: str, alternative: AlternativeElements) -> str:
         raise RuntimeError(
             f"expecting an ] at {src},but not found, is the char range closed?"
         )
-    alternative.add_element(TerminatedElement(ranges))
+    alternative.add_element(TerminalElement(ranges))
     return remaining_src[1:]
 
 
@@ -382,7 +382,7 @@ def _parse_rhs_any_char(src: str, alternative: AlternativeElements) -> str:
     assert src[0] == ".", f"rule should start with '.', but got {src[0]}"
     remaining_src = src[1:]
     # The only symbol not allowed is '\n'
-    alternative.add_element(TerminatedElement([(0, ord('\n') - 1), (ord('\n') + 1, 0xFF)]))
+    alternative.add_element(TerminalElement([(0, ord('\n') - 1), (ord('\n') + 1, 0xFF)]))
     return remaining_src
 
 
