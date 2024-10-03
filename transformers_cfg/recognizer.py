@@ -14,15 +14,15 @@ import logging
 
 
 class AcceptState:
-    def __init__(self, stacks, partial_utf8):
+    def __init__(self, stacks: Set[Tuple[int]], partial_utf8: PartialUTF8):
         self.stacks = stacks
         self.partial_utf8 = partial_utf8
 
     @staticmethod
-    def empty_state():
+    def empty_state() -> "AcceptState":
         return AcceptState(set(), PartialUTF8())
 
-    def can_stop(self):
+    def can_stop(self) -> bool:
         # This happens in practice, but maybe it shouldn't? TODO
         if len(self.stacks) == 0:
             return True
@@ -33,7 +33,7 @@ class AcceptState:
             else:
                 return False
 
-    def must_stop(self):
+    def must_stop(self) -> bool:
         return len(self.stacks) == 0 or all(len(stack) == 0 for stack in self.stacks)
 
 
