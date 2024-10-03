@@ -285,6 +285,9 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
         x_eos = self.validate_and_set_eos_acceptance(x)
         return x_eos
+    
+    def reset(self):
+        self.last_size = None
 
 
 # def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):

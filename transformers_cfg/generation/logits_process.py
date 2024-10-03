@@ -12,6 +12,7 @@ from transformers.generation.logits_process import (
 )
 from transformers.utils import add_start_docstrings
 
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.token_grammar_recognizer import AbsTokenRecognizer
 
 logger = logging.getLogger(__name__)
@@ -127,3 +128,8 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self, input_ids: torch.LongTensor, scores: torch.FloatTensor
     ) -> torch.FloatTensor:
         return self.process_logits(input_ids, scores)
+    
+    def reset(self):
+        self.batch_parsing_states = None
+        if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
+            self.grammar_constraint.reset()
