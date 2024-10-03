@@ -114,7 +114,7 @@ class GrammarRule(Codable):
 
 class ParseState:
     def __init__(self):
-        self.symbol_table = {}
+        self.symbol_table: Dict[str, int] = {}
         self.grammar_rules: Dict[int, GrammarRule] = {}
 
     def add_rule(self, rule: GrammarRule) -> None:
