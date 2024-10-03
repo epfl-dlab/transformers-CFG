@@ -20,11 +20,6 @@ if __name__ == "__main__":
     )  # Load model to defined device
     model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
-    model = AutoModelForCausalLM.from_pretrained(model_id).to(
-        device
-    )  # Load model to defined device
-    model.generation_config.pad_token_id = model.generation_config.eos_token_id
-
     # Load grammar
     with open("examples/grammars/json.ebnf", "r") as file:
         grammar_str = file.read()
