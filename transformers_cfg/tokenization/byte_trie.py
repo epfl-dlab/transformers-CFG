@@ -1,7 +1,8 @@
 import logging
 from functools import lru_cache
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Optional
 from collections import deque
+from dataclasses import dataclass
 
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
     TokenizerMiddleMapping,
@@ -13,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 class TrieNode:
     def __init__(self):
-        self.children = {}
-        self.is_end_of_word = False
-        self.token_id = None
+        self.children: Dict[int, "TrieNode"] = {}
+        self.is_end_of_word: bool = False
+        self.token_id: Optional[int] = None
 
 
 class ByteTrie:

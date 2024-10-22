@@ -219,8 +219,8 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         self,
         token_ids: List[int],
         parsing_state: Optional[AcceptState] = None,
-        as_string: bool = True,
-    ):
+        as_string=True,
+    ) -> AcceptState:
         if parsing_state is None:
             parsing_state = self.string_recognizer.get_initial_parsing_state()
         if as_string:

@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from transformers_cfg.parser import (
+    END_OF_GRAMMAR_MARKER,
     remove_leading_white_space,
     parse_name,
     _parse_rhs_negated_char_ranges,
@@ -14,6 +15,9 @@ from transformers_cfg.parser import (
     REF_RULE_MARKER,
     parse_rhs,
     END_OF_ALTERNATE_MARKER,
+    AlternativeElements,
+    GrammarRule,
+    parse_ebnf
 )
 import logging
 
@@ -91,16 +95,18 @@ class Test(TestCase):
 
     def test__parse_rhs_negated_char_ranges(self):
         src = "[^a-z]"
-        outbuf = []
-        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        alternative = AlternativeElements()
+        remaining_src = _parse_rhs_negated_char_ranges(src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(5, len(outbuf), f"len(outbuf): {len(outbuf)} != 5")
 
         self.assertListEqual([4, 0, 96, 122, 255], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
         src = "[^aeiou]"
-        outbuf = []
-        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        alternative = AlternativeElements()
+        remaining_src = _parse_rhs_negated_char_ranges(src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(13, len(outbuf), f"len(outbuf): {len(outbuf)} != 13")
         self.assertListEqual(
             [12, 0, 96, 98, 100, 102, 104, 106, 110, 112, 116, 118, 255], outbuf
@@ -108,29 +114,31 @@ class Test(TestCase):
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
         src = "[^0-9a-z]"
-        outbuf = []
-
-        remaining_src = _parse_rhs_negated_char_ranges(src, outbuf)
+        alternative = AlternativeElements()
+        remaining_src = _parse_rhs_negated_char_ranges(src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(7, len(outbuf), f"len(outbuf): {len(outbuf)} != 7")
         self.assertListEqual([6, 0, 47, 57, 96, 122, 255], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
     def test__parse_char_ranges(self):
         src = "[0-9]"
-        outbuf = []
+        alternative = AlternativeElements()
 
         start_idx = ord("0")
         end_idx = ord("9")
 
-        remaining_src = _parse_rhs_char_ranges(src, outbuf)
+        remaining_src = _parse_rhs_char_ranges(src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, start_idx, end_idx], outbuf)
 
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
         src_enumerate = "[01234][0-9]"
-        outbuf = []
-        remaining_src = _parse_rhs_char_ranges(src_enumerate, outbuf)
+        alternative = AlternativeElements()
+        remaining_src = _parse_rhs_char_ranges(src_enumerate, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(1 + 2 * 5, len(outbuf), f"len(outbuf): {len(outbuf)} != 11")
         self.assertListEqual([10, 48, 48, 49, 49, 50, 50, 51, 51, 52, 52], outbuf)
         self.assertEqual(
@@ -139,25 +147,28 @@ class Test(TestCase):
 
     def test__parse_rhs_any_char(self):
         src = "."
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_any_char(src, outbuf)
+        remaining_src = _parse_rhs_any_char(src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(5, len(outbuf), f"len(outbuf): {len(outbuf)} != 1")
         self.assertListEqual([4, 0, 9, 11, 255], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
     def test__parse_literal_string(self):
         single_char_src = '"a"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(single_char_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(single_char_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("a"), ord("a")], outbuf)
 
         multi_char_src = '"abc"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(multi_char_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(multi_char_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
 
         num_chars = len(multi_char_src) - 2
         self.assertEqual(
@@ -169,32 +180,36 @@ class Test(TestCase):
         )
 
         non_ascii_char_src = '"你"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(non_ascii_char_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(non_ascii_char_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("你"), ord("你")], outbuf)
 
     def test__parse_escape(self):
         escaped_char_src = '"\\n"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(escaped_char_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(escaped_char_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("\n"), ord("\n")], outbuf)
 
         escaped_backslash_src = '"\\\\"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(escaped_backslash_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(escaped_backslash_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("\\"), ord("\\")], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
         escaped_backslash_src = '"\\x5C"'
-        outbuf = []
+        alternative = AlternativeElements()
 
-        remaining_src = _parse_rhs_literal_string(escaped_backslash_src, outbuf)
+        remaining_src = _parse_rhs_literal_string(escaped_backslash_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("\\"), ord("\\")], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
@@ -202,16 +217,20 @@ class Test(TestCase):
     def test__parse_escape_unicode(self):
         # Test for 16-bit Unicode escape
         escaped_unicode_16_src = '"\\u20AC"'  # Unicode for Euro symbol
-        outbuf = []
-        remaining_src = _parse_rhs_literal_string(escaped_unicode_16_src, outbuf)
+        alternative = AlternativeElements()
+
+        remaining_src = _parse_rhs_literal_string(escaped_unicode_16_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("€"), ord("€")], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
 
         # Test for 32-bit Unicode escape
         escaped_unicode_32_src = '"\\U0001F600"'  # Unicode for grinning face emoji
-        outbuf = []
-        remaining_src = _parse_rhs_literal_string(escaped_unicode_32_src, outbuf)
+        alternative = AlternativeElements()
+
+        remaining_src = _parse_rhs_literal_string(escaped_unicode_32_src, alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(3, len(outbuf), f"len(outbuf): {len(outbuf)} != 3")
         self.assertListEqual([2, ord("😀"), ord("😀")], outbuf)
         self.assertEqual("", remaining_src, f"remaining_src: {remaining_src} != ''")
@@ -225,20 +244,21 @@ class Test(TestCase):
             state=state, rhs=rhs_src, rule_name="root", rule_id=9, is_nested=False
         )
         self.assertListEqual(
-            [9, 1, END_OF_ALTERNATE_MARKER, END_OF_RULE_MARKER],
+            [9, 1, END_OF_ALTERNATE_MARKER, END_OF_RULE_MARKER, END_OF_GRAMMAR_MARKER],
             state.grammar_encoding,
             f" The first symbol in the grammar encoding should be the rule id of root, which is 0, but got {state.grammar_encoding[0]}",
         )
 
     def test_parse_rhs(self):
         state = ParseState()
-        outbuf = []
         src = 'root ::= "0"\n'
         rhs_src = '"0"\n'
         name, _ = parse_name(src)
+        rule = GrammarRule(0, "root")
         parse_simple_rhs(
-            state=state, rhs=rhs_src, rule_name="root", outbuf=outbuf, is_nested=False
+            state=state, rhs=rhs_src, rule_name="root", rule=rule, is_nested=False
         )
+        outbuf = rule.alternatives[0].serialize()
         logging.debug(f"outbuf: {outbuf}")
         self.assertEqual(
             END_OF_ALTERNATE_MARKER,
@@ -257,12 +277,12 @@ class Test(TestCase):
         )
         self.assertEqual(
             END_OF_RULE_MARKER,
-            state.grammar_encoding[-1],
+            state.grammar_encoding[-2],
             f" The last symbol in the grammar encoding should be END_OF_RULE_MARKER, but got {state.grammar_encoding[-1]}",
         )
         self.assertEqual(
             END_OF_ALTERNATE_MARKER,
-            state.grammar_encoding[-2],
+            state.grammar_encoding[-3],
             f" The second last symbol in the grammar encoding should be END_OF_SIMPLE_RULE_MARKER, but got {state.grammar_encoding[-2]}",
         )
 
@@ -377,7 +397,9 @@ class Test(TestCase):
     def test__parse_symbol_reference(self):
         state = ParseState()
         outbuf = []
-        _parse_rhs_symbol_reference("root", state, outbuf=outbuf)
+        alternative = AlternativeElements()
+        _parse_rhs_symbol_reference("root", state, alternative=alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(
             REF_RULE_MARKER, outbuf[0], f"outbuf[0]: {outbuf[0]} != REF_RULE_MARKER"
         )
@@ -389,8 +411,9 @@ class Test(TestCase):
         # case where the symbol is already in the symbol table
         state = ParseState()
         state.symbol_table["root"] = 19
-        outbuf = []
-        _parse_rhs_symbol_reference("root", state, outbuf=outbuf)
+        alternative = AlternativeElements()
+        _parse_rhs_symbol_reference("root", state, alternative=alternative)
+        outbuf = alternative.serialize()[1:-1]
         self.assertEqual(
             REF_RULE_MARKER, outbuf[0], f"outbuf[0]: {outbuf[0]} != REF_RULE_MARKER"
         )
@@ -448,11 +471,11 @@ class Test(TestCase):
         rhs_src = "[0-9]+"
 
         state = ParseState()
-        outbuf2 = []
+        rule = GrammarRule(0, "root")
         parse_simple_rhs(
-            state=state, rhs=rhs_src, rule_name="root", outbuf=outbuf2, is_nested=True
+            state=state, rhs=rhs_src, rule_name="root", rule=rule, is_nested=True
         )
-        logging.debug(f"outbuf: {outbuf2}")
+        logging.debug(f"outbuf: {rule.serialize()}")
         logging.debug(f"parse_simple_rhs: {state.grammar_encoding}")
 
     # def test_plus_vs_star(self):
