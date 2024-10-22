@@ -2,7 +2,7 @@ import copy
 import math
 import os
 import pprint
-from typing import Optional
+from typing import Optional, Literal
 
 import torch
 import logging
@@ -19,21 +19,37 @@ logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
-    def __init__(self, grammar_constraint: AbsTokenRecognizer, valid_token_start_idx: Optional[int] = None, device: Optional[torch.device] = None) -> None:
+    def __init__(self, grammar_constraint: AbsTokenRecognizer, valid_token_start_idx: Optional[int] = None, execution_mode: Literal["speculation", "full_mask"] = "speculation", device: Optional[torch.device] = None) -> None:
         self.last_size = None
         self.grammar_constraint = grammar_constraint
         self.batch_parsing_states = None
         self.valid_token_start_idx = valid_token_start_idx
+        self.execution_mode = execution_mode
         self.device = device
 
     def mask_logits(self, logits: torch.FloatTensor, device: torch.device) -> torch.FloatTensor:
         masked_logits = logits.clone()
-        # resolve each stack to a tensor of True/False for each token
-        # indicating acceptance
-        # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
-        acceptance = self.grammar_constraint.batch_filter_vocab(
-            self.batch_parsing_states, device
-        )
+        
+        if self.execution_mode == "speculation":
+            # try to accept the most likely token
+            acceptance = torch.zeros((logits.shape[0], len(self.grammar_constraint.homomorphism)), dtype=torch.bool, device=device)
+            next_tokens = torch.argmax(logits, dim=-1)
+            for i, next_token in enumerate(next_tokens.tolist()):
+                try:
+                    is_next_token_accepted = self.grammar_constraint.accept_token_ids([next_token], self.batch_parsing_states[i])
+                except ValueError:
+                    is_next_token_accepted = False
+                if is_next_token_accepted:
+                    acceptance[i, next_token] = True
+                else:
+                    # resolve each stack to a tensor of True/False for each token
+                    # indicating acceptance
+                    # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
+                    acceptance[i] = self.grammar_constraint.filter_vocab(
+                        self.batch_parsing_states[i], device
+                    )
+        else:
+            acceptance = self.grammar_constraint.batch_filter_vocab(self.batch_parsing_states, device)
 
         # if the logits size of the model is more than the tokennizer vocab
         # we artificially expand the acceptance tensor and block everything

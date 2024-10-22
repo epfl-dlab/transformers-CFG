@@ -14,7 +14,7 @@ import logging
 
 
 class AcceptState:
-    def __init__(self, stacks, partial_utf8):
+    def __init__(self, stacks: Set[Tuple[int]], partial_utf8: PartialUTF8):
         self.stacks = stacks
         self.partial_utf8 = partial_utf8
 
