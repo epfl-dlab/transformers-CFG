@@ -486,7 +486,7 @@ def _parse_rhs_numbered_repetition_operators(
         sub_rule.add_alternative(sub_rule_alternative)
         sub_rule_alternative.add_symbol(alternative.symbols[-1])
 
-    state.grammar_rules.append(sub_rule)
+    state.grammar_rules[sub_rule_id] = sub_rule
     alternative.symbols[-1] = [ReferenceElement(sub_rule_id)]
     return remaining_src[closing_brace_idx + 1:]
 
