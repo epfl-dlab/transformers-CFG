@@ -1,4 +1,4 @@
-from unittest import TestCase
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -167,71 +167,53 @@ TestCases = {
 }
 
 
-class Test_parsing_pddl_object(TestCase):
-    def setUp(self):
-        self.recognizers = {}
-        for grammar_name in TestCases:
-            with open(f"examples/grammars/PDDL/{grammar_name}.ebnf", "r") as file:
-                input_text = file.read()
+@pytest.fixture(scope="module")
+def recognizers():
+    recognizers = {}
+    for grammar_name in TestCases:
+        with open(f"examples/grammars/PDDL/{grammar_name}.ebnf", "r") as file:
+            input_text = file.read()
+        parsed_grammar = parse_ebnf(input_text)
+        start_rule_id = parsed_grammar.symbol_table["root"]
+        recognizers[grammar_name] = StringRecognizer(
+            parsed_grammar.grammar_encoding, start_rule_id
+        )
+    return recognizers
 
-            parsed_grammar = parse_ebnf(input_text)
-            print(parsed_grammar)
 
-            start_rule_id = parsed_grammar.symbol_table["root"]
+def test_valid_sentences(recognizers):
+    for grammar_name, recognizer in recognizers.items():
+        valid_full, valid_prefix, invalid = TestCases[grammar_name]
 
-            self.recognizers[grammar_name] = StringRecognizer(
-                parsed_grammar.grammar_encoding, start_rule_id
+        for PDDL_test_case in valid_full:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
             )
-        print("SetUp successfull!", flush=True)
+            assert recognizer._accept_string(PDDL_test_case.PDDL) == True, fail_msg
 
-    def test_valid_sentences(self):
-        for grammar_name, recognizer in self.recognizers.items():
-            valid_full, valid_prefix, invalid = TestCases[grammar_name]
+        for PDDL_test_case in valid_prefix + invalid:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
+            )
+            assert recognizer._accept_string(PDDL_test_case.PDDL) == False, fail_msg
 
-            for PDDL_test_case in valid_full:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
-                )
-                # print(fail_msg, flush=True)
-                self.assertEqual(
-                    True,
-                    recognizer._accept_string(PDDL_test_case.PDDL),
-                    msg=fail_msg,
-                )
-            for PDDL_test_case in valid_prefix + invalid:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
-                )
-                self.assertEqual(
-                    False,
-                    recognizer._accept_string(PDDL_test_case.PDDL),
-                    msg=fail_msg,
-                )
 
-    def test_valid_prefixes(self):
-        for grammar_name, recognizer in self.recognizers.items():
-            valid_full, valid_prefix, invalid = TestCases[grammar_name]
-            for PDDL_test_case in valid_full + valid_prefix:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
-                )
-                self.assertEqual(
-                    True,
-                    recognizer._accept_prefix(PDDL_test_case.PDDL),
-                    msg=fail_msg,
-                )
+def test_valid_prefixes(recognizers):
+    for grammar_name, recognizer in recognizers.items():
+        valid_full, valid_prefix, invalid = TestCases[grammar_name]
 
-            for PDDL_test_case in invalid:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
-                )
-                print(fail_msg, flush=True)
-                self.assertEqual(
-                    False,
-                    recognizer._accept_prefix(PDDL_test_case.PDDL),
-                    msg=fail_msg,
-                )
+        for PDDL_test_case in valid_full + valid_prefix:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
+            )
+            assert recognizer._accept_prefix(PDDL_test_case.PDDL) == True, fail_msg
+
+        for PDDL_test_case in invalid:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {PDDL_test_case.name}, {PDDL_test_case.PDDL}"
+            )
+            assert recognizer._accept_prefix(PDDL_test_case.PDDL) == False, fail_msg

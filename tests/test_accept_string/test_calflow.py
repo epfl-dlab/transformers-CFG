@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -170,43 +169,36 @@ invalid_cal_flow_sentences = [
 ]
 
 
-class Test_parsing_cal_flow_object(TestCase):
-    def setUp(self):
-        with open(f"examples/grammars/calflow.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-        start_rule_id = parsed_grammar.symbol_table["root"]
-        self.recognizer = StringRecognizer(
-            parsed_grammar.grammar_encoding, start_rule_id
-        )
-        print("SetUp successfull!", flush=True)
+@pytest.fixture(scope="module")
+def recognizer():
+    with open(f"examples/grammars/calflow.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    print("SetUp successful!", flush=True)
+    return recognizer
 
-    def test_valid_sentence(self):
 
-        for cal_flow_test_case in valid_cal_flow_sentences:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_string(cal_flow_test_case.calflow),
-                msg=f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}",
-            )
-        for cal_flow_test_case in valid_cal_flow_prefixes + invalid_cal_flow_sentences:
-            self.assertEqual(
-                False,
-                self.recognizer._accept_string(cal_flow_test_case.calflow),
-                msg=f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}",
-            )
+def test_valid_sentence(recognizer):
+    for cal_flow_test_case in valid_cal_flow_sentences:
+        assert (
+            recognizer._accept_string(cal_flow_test_case.calflow) == True
+        ), f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}"
 
-    def test_valid_prefixes(self):
-        for cal_flow_test_case in valid_cal_flow_sentences + valid_cal_flow_prefixes:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_prefix(cal_flow_test_case.calflow),
-                msg=f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}",
-            )
+    for cal_flow_test_case in valid_cal_flow_prefixes + invalid_cal_flow_sentences:
+        assert (
+            recognizer._accept_string(cal_flow_test_case.calflow) == False
+        ), f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}"
 
-        for cal_flow_test_case in invalid_cal_flow_sentences:
-            self.assertEqual(
-                False,
-                self.recognizer._accept_prefix(cal_flow_test_case.calflow),
-                msg=f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}",
-            )
+
+def test_valid_prefixes(recognizer):
+    for cal_flow_test_case in valid_cal_flow_sentences + valid_cal_flow_prefixes:
+        assert (
+            recognizer._accept_prefix(cal_flow_test_case.calflow) == True
+        ), f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}"
+
+    for cal_flow_test_case in invalid_cal_flow_sentences:
+        assert (
+            recognizer._accept_prefix(cal_flow_test_case.calflow) == False
+        ), f"Failed on {cal_flow_test_case.name}, {cal_flow_test_case.calflow}"

@@ -1,9 +1,7 @@
 import warnings
-
+import pytest
 from transformers import PreTrainedTokenizer
 from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
-
-
 from transformers_cfg.utils import pprint_token_ids
 
 
@@ -26,7 +24,8 @@ class TokenizerTesterMixin:
     # test_sentencepiece must also be set to True
     test_sentencepiece_ignore_case = False
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_tokenizer(self):
         self.tokenizer = self.get_tokenizer()
 
     def get_tokenizer(self, **kwargs) -> PreTrainedTokenizer:
@@ -59,10 +58,9 @@ class TokenizerTesterMixin:
             token_ids, as_string=False
         )
         # the json object is complete, so the stacks should be empty
-        self.assertTrue(
-            acc_state.stacks == set() or acc_state.stacks == {tuple()},
-            f"stacks: {acc_state.stacks}, not empty",
-        )
+        assert acc_state.stacks == set() or acc_state.stacks == {
+            tuple()
+        }, f"stacks: {acc_state.stacks}, not empty"
 
     def test_balanced_parentheses(self):
         # Test that we can recognize a balanced parentheses
@@ -87,10 +85,9 @@ class TokenizerTesterMixin:
             token_ids, as_string=False
         )
         # the json object is complete, so the stacks should be empty
-        self.assertTrue(
-            parsing_state.stacks == set() or parsing_state.stacks == {tuple()},
-            f"stacks: {parsing_state.stacks}, not empty",
-        )
+        assert parsing_state.stacks == set() or parsing_state.stacks == {
+            tuple()
+        }, f"stacks: {parsing_state.stacks}, not empty"
 
     def test_forcing_sequence(self):
 
@@ -120,10 +117,9 @@ class TokenizerTesterMixin:
             token_ids, as_string=False
         )
         # the json object is complete, so the stacks should be empty
-        self.assertTrue(
-            acc_state.stacks == set() or acc_state.stacks == {tuple()},
-            f"stacks: {acc_state.stacks}, not empty",
-        )
+        assert acc_state.stacks == set() or acc_state.stacks == {
+            tuple()
+        }, f"stacks: {acc_state.stacks}, not empty"
 
     def test_emoji(self):
         """
@@ -151,4 +147,4 @@ class TokenizerTesterMixin:
 
         accpetance = tokenRecognizer.accept_token_ids(token_ids, as_string=False)
 
-        self.assertTrue(accpetance, f"emoji: {emoji} not accepted, but it should be")
+        assert accpetance, f"emoji: {emoji} not accepted, but it should be"

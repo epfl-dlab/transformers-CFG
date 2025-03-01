@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -105,45 +104,35 @@ invalid_overnight_sentences = [
 ]
 
 
-class Test_parsing_overnight_object(TestCase):
-    def setUp(self):
-        with open(f"examples/grammars/overnight.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-        print("PARSED GRAMMAR:", parsed_grammar.grammar_encoding, flush=True)
-        start_rule_id = parsed_grammar.symbol_table["root"]
-        self.recognizer = StringRecognizer(
-            parsed_grammar.grammar_encoding, start_rule_id
-        )
+@pytest.fixture(scope="module")
+def recognizer():
+    with open(f"examples/grammars/overnight.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    return recognizer
 
-    def test_valid_sentence(self):
 
-        for overnight_test_case in valid_overnight_sentences:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_string(overnight_test_case.overnight),
-                msg=f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}",
-            )
-        for overnight_test_case in (
-            valid_overnight_prefixes + invalid_overnight_sentences
-        ):
-            self.assertEqual(
-                False,
-                self.recognizer._accept_string(overnight_test_case.overnight),
-                msg=f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}",
-            )
+def test_valid_sentence(recognizer):
+    for overnight_test_case in valid_overnight_sentences:
+        assert (
+            recognizer._accept_string(overnight_test_case.overnight) == True
+        ), f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}"
 
-    def test_valid_prefixes(self):
-        for overnight_test_case in valid_overnight_sentences + valid_overnight_prefixes:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_prefix(overnight_test_case.overnight),
-                msg=f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}",
-            )
+    for overnight_test_case in valid_overnight_prefixes + invalid_overnight_sentences:
+        assert (
+            recognizer._accept_string(overnight_test_case.overnight) == False
+        ), f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}"
 
-        for overnight_test_case in invalid_overnight_sentences:
-            self.assertEqual(
-                False,
-                self.recognizer._accept_prefix(overnight_test_case.overnight),
-                msg=f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}",
-            )
+
+def test_valid_prefixes(recognizer):
+    for overnight_test_case in valid_overnight_sentences + valid_overnight_prefixes:
+        assert (
+            recognizer._accept_prefix(overnight_test_case.overnight) == True
+        ), f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}"
+
+    for overnight_test_case in invalid_overnight_sentences:
+        assert (
+            recognizer._accept_prefix(overnight_test_case.overnight) == False
+        ), f"Failed on {overnight_test_case.name}, {overnight_test_case.overnight}"

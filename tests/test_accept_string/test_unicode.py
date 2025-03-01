@@ -1,39 +1,37 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.recognizer import StringRecognizer
-
 from transformers_cfg.parser import parse_ebnf
 
 
-class TestUnicode(TestCase):
-    def test_accept_japanese(self):
-        """
-        Test that we can accept japanese characters
-        """
+@pytest.fixture(scope="module")
+def japanese_recognizer():
+    with open("examples/grammars/japanese.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    return StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        japanese = "こんにちは世界"
-        with open("examples/grammars/japanese.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
 
-        start_rule_id = parsed_grammar.symbol_table["root"]
+@pytest.fixture(scope="module")
+def emoji_recognizer():
+    with open("examples/grammars/emoji.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    return StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
 
-        self.assertTrue(recognizer._accept_prefix(japanese))
+def test_accept_japanese(japanese_recognizer):
+    """
+    Test that we can accept japanese characters
+    """
+    japanese = "こんにちは世界"
+    assert japanese_recognizer._accept_prefix(japanese)
 
-    def test_emoji(self):
-        """
-        Test that we can accept emoji
-        """
 
-        emoji = "😀😄😂"
-        with open("examples/grammars/emoji.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-
-        start_rule_id = parsed_grammar.symbol_table["root"]
-
-        recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
-
-        self.assertTrue(recognizer._accept_prefix(emoji))
+def test_emoji(emoji_recognizer):
+    """
+    Test that we can accept emoji
+    """
+    emoji = "😀😄😂"
+    assert emoji_recognizer._accept_prefix(emoji)

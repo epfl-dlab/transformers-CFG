@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -150,71 +149,61 @@ TestCases = {
 }
 
 
-class Test_parsing_smiles_object(TestCase):
-    def setUp(self):
-        self.recognizers = {}
-        for grammar_name in TestCases:
-            with open(f"examples/grammars/SMILES/{grammar_name}.ebnf", "r") as file:
-                input_text = file.read()
-            parsed_grammar = parse_ebnf(input_text)
+@pytest.fixture(scope="module")
+def recognizers():
+    recognizers = {}
+    for grammar_name in TestCases:
+        with open(f"examples/grammars/SMILES/{grammar_name}.ebnf", "r") as file:
+            input_text = file.read()
+        parsed_grammar = parse_ebnf(input_text)
+        start_rule_id = parsed_grammar.symbol_table["root"]
+        recognizers[grammar_name] = StringRecognizer(
+            parsed_grammar.grammar_encoding, start_rule_id
+        )
+    return recognizers
 
-            start_rule_id = parsed_grammar.symbol_table["root"]
 
-            self.recognizers[grammar_name] = StringRecognizer(
-                parsed_grammar.grammar_encoding, start_rule_id
+def test_valid_sentence(recognizers):
+    for grammar_name, recognizer in recognizers.items():
+        valid_full, valid_prefix, invalid = TestCases[grammar_name]
+
+        for molecule_test_case in valid_full:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
             )
-        print("SetUp successfull!", flush=True)
+            assert (
+                recognizer._accept_string(molecule_test_case.molecule) == True
+            ), fail_msg
 
-    def test_valid_sentence(self):
-        for grammar_name, recognizer in self.recognizers.items():
-            valid_full, valid_prefix, invalid = TestCases[grammar_name]
+        for molecule_test_case in valid_prefix + invalid:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
+            )
+            assert (
+                recognizer._accept_string(molecule_test_case.molecule) == False
+            ), fail_msg
 
-            for molecule_test_case in valid_full:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
-                )
-                print(fail_msg, flush=True)
-                self.assertEqual(
-                    True,
-                    recognizer._accept_string(molecule_test_case.molecule),
-                    msg=fail_msg,
-                )
-            for molecule_test_case in valid_prefix + invalid:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
-                )
-                print(fail_msg, flush=True)
-                self.assertEqual(
-                    False,
-                    recognizer._accept_string(molecule_test_case.molecule),
-                    msg=fail_msg,
-                )
 
-    def test_valid_prefixes(self):
-        for grammar_name, recognizer in self.recognizers.items():
-            valid_full, valid_prefix, invalid = TestCases[grammar_name]
-            for molecule_test_case in valid_full + valid_prefix:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
-                )
-                print(fail_msg, flush=True)
-                self.assertEqual(
-                    True,
-                    recognizer._accept_prefix(molecule_test_case.molecule),
-                    msg=fail_msg,
-                )
+def test_valid_prefixes(recognizers):
+    for grammar_name, recognizer in recognizers.items():
+        valid_full, valid_prefix, invalid = TestCases[grammar_name]
 
-            for molecule_test_case in invalid:
-                fail_msg = (
-                    f"{grammar_name.capitalize()}:"
-                    + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
-                )
-                print(fail_msg, flush=True)
-                self.assertEqual(
-                    False,
-                    recognizer._accept_prefix(molecule_test_case.molecule),
-                    msg=fail_msg,
-                )
+        for molecule_test_case in valid_full + valid_prefix:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
+            )
+            assert (
+                recognizer._accept_prefix(molecule_test_case.molecule) == True
+            ), fail_msg
+
+        for molecule_test_case in invalid:
+            fail_msg = (
+                f"{grammar_name.capitalize()}:"
+                + f"Failed on {molecule_test_case.name}, {molecule_test_case.molecule}"
+            )
+            assert (
+                recognizer._accept_prefix(molecule_test_case.molecule) == False
+            ), fail_msg
