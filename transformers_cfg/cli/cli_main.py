@@ -145,9 +145,9 @@ def generate_text(args):
 
             for token in generation_stream:
                 result += token
-                print(token, end="", flush=True)
+                print("\033[91m" + token, end="", flush=True)
 
-            print()
+            print("\033[0m")
 
         def logits_processor(input_ids: mx.array, logits: mx.array) -> mx.array:
             torch_input_ids = torch.tensor(
@@ -253,16 +253,20 @@ def generate_text(args):
         )
 
         # Print results in different colors
-        print("\033[91m" + "Unconstrained Generation:" + "\033[0m")
+        print("\n" + "#" * 30)
+        print("\033[91mUnconstrained Generation" + "\033[0m")
+        print("#" * 30 + "\n")
         result += "Unconstrained Generation:\n"
         for generation in unconstrained_generations:
-            print(generation)
+            print("\033[91m" + generation + "\033[0m")
             result += generation + "\n"
 
-    print("\033[94m" + "Constrained Generation:" + "\033[0m")
+    print("\n" + "#" * 30)
+    print("\033[94mConstrained Generation" + "\033[0m")
+    print("#" * 30 + "\n")
     result += "Constrained Generation:\n"
     for generation in constrained_generations:
-        print(generation)
+        print("\033[94m" + generation + "\033[0m")
         result += generation + "\n"
 
     # Save to file if save_to is provided
