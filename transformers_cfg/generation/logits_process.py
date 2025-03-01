@@ -23,7 +23,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self,
         grammar_constraint: AbsTokenRecognizer,
         valid_token_start_idx: Optional[int] = None,
-        execution_mode: Literal["speculation", "full_mask"] = "speculation",
+        execution_mode: Literal["speculation", "full_mask"] = "full_mask",
         device: Optional[torch.device] = None,
     ) -> None:
         self.last_size = None

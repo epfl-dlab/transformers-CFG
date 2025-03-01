@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from dataclasses import dataclass
@@ -48,45 +47,36 @@ invalid_geo_query_sentences = [
 ]
 
 
-class Test_parsing_geo_query_object(TestCase):
-    def setUp(self):
-        with open(f"examples/grammars/geo_query.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
-        start_rule_id = parsed_grammar.symbol_table["root"]
-        self.recognizer = StringRecognizer(
-            parsed_grammar.grammar_encoding, start_rule_id
-        )
-        print("SetUp successfull!", flush=True)
+@pytest.fixture(scope="module")
+def recognizer():
+    with open(f"examples/grammars/geo_query.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    print("SetUp successful!", flush=True)
+    return recognizer
 
-    def test_valid_sentence(self):
 
-        for geo_query_test_case in valid_geo_query_sentences:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_string(geo_query_test_case.geo_query),
-                msg=f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}",
-            )
-        for geo_query_test_case in (
-            valid_geo_query_prefixes + invalid_geo_query_sentences
-        ):
-            self.assertEqual(
-                False,
-                self.recognizer._accept_string(geo_query_test_case.geo_query),
-                msg=f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}",
-            )
+def test_valid_sentence(recognizer):
+    for geo_query_test_case in valid_geo_query_sentences:
+        assert (
+            recognizer._accept_string(geo_query_test_case.geo_query) == True
+        ), f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}"
 
-    def test_valid_prefixes(self):
-        for geo_query_test_case in valid_geo_query_sentences + valid_geo_query_prefixes:
-            self.assertEqual(
-                True,
-                self.recognizer._accept_prefix(geo_query_test_case.geo_query),
-                msg=f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}",
-            )
+    for geo_query_test_case in valid_geo_query_prefixes + invalid_geo_query_sentences:
+        assert (
+            recognizer._accept_string(geo_query_test_case.geo_query) == False
+        ), f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}"
 
-        for geo_query_test_case in invalid_geo_query_sentences:
-            self.assertEqual(
-                False,
-                self.recognizer._accept_prefix(geo_query_test_case.geo_query),
-                msg=f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}",
-            )
+
+def test_valid_prefixes(recognizer):
+    for geo_query_test_case in valid_geo_query_sentences + valid_geo_query_prefixes:
+        assert (
+            recognizer._accept_prefix(geo_query_test_case.geo_query) == True
+        ), f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}"
+
+    for geo_query_test_case in invalid_geo_query_sentences:
+        assert (
+            recognizer._accept_prefix(geo_query_test_case.geo_query) == False
+        ), f"Failed on {geo_query_test_case.name}, {geo_query_test_case.geo_query}"

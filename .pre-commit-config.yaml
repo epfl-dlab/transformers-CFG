@@ -24,11 +24,11 @@ repos:
     -   id: black
 -   repo: local
     hooks:
-        -   id: unittest
-            name: unittest
-            entry: python -m unittest discover -s tests -p 'test_*.py'
+        -   id: pytest
+            name: pytest
+            entry: pytest tests
             language: system
-            'types': [ python ]
+            types: [ python ]
             pass_filenames: false
             stages: [ commit ]
 

@@ -1,16 +1,11 @@
-import unittest
 from transformers_cfg.cli.cli_main import check_model_support
 
 
-class TestCliModelSupport(unittest.TestCase):
-    def test_supported_model(self):
-        model = "gpt2"
-        self.assertTrue(check_model_support(model))
-
-    def test_unsupported_model(self):
-        model = "bigscience/bloom"
-        self.assertFalse(check_model_support(model))
+def test_supported_model():
+    model = "gpt2"
+    assert check_model_support(model) == True
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_unsupported_model():
+    model = "bigscience/bloom"
+    assert check_model_support(model) == False

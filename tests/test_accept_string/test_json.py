@@ -1,9 +1,7 @@
-from unittest import TestCase
-
+import pytest
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.recognizer import StringRecognizer
 from tests.json_utils import is_json_parsable
-
 
 json_examples = {
     # Simple Nested Object
@@ -29,46 +27,32 @@ json_examples = {
 }
 
 
-class Test_parsing_json_object(TestCase):
-    def setUp(self):
+@pytest.fixture(scope="module")
+def recognizer():
+    with open("examples/grammars/json.ebnf", "r") as file:
+        input_text = file.read()
+    parsed_grammar = parse_ebnf(input_text)
+    start_rule_id = parsed_grammar.symbol_table["root"]
+    recognizer = StringRecognizer(parsed_grammar.grammar_encoding, start_rule_id)
+    return recognizer
 
-        with open("examples/grammars/json.ebnf", "r") as file:
-            input_text = file.read()
-        parsed_grammar = parse_ebnf(input_text)
 
-        start_rule_id = parsed_grammar.symbol_table["root"]
+def test_minimal_json_object(recognizer):
+    """
+    Test that we can load a JSON object
+    """
+    json = '{"foo": "bar", "baz": "bat"}'
 
-        self.recognizer = StringRecognizer(
-            parsed_grammar.grammar_encoding, start_rule_id
-        )
+    assert is_json_parsable(json) == recognizer._accept_prefix(json)
+    assert is_json_parsable(json) == recognizer._accept_string(json)
 
-    def test_minimal_json_object(self):
-        """
-        Test that we can load a JSON object
-        """
-        json = '{"foo": "bar", "baz": "bat"}'
+    prefix_json = json[: len(json) // 2]
+    assert recognizer._accept_prefix(prefix_json)
+    assert not recognizer._accept_string(prefix_json)
 
-        self.assertEqual(
-            is_json_parsable(json),
-            self.recognizer._accept_prefix(json),
-        )
 
-        self.assertEqual(
-            is_json_parsable(json),
-            self.recognizer._accept_string(json),
-        )
-
-        prefix_json = json[: len(json) // 2]
-        self.assertTrue(self.recognizer._accept_prefix(prefix_json))
-
-        self.assertFalse(self.recognizer._accept_string(prefix_json))
-
-    def test_systematic_examples(self):
-
-        for name, json_object in json_examples.items():
-            # parsing_state = AcceptState.empty_state()
-            self.assertEqual(
-                is_json_parsable(json_object),
-                self.recognizer._accept_prefix(json_object),
-                msg=f"Failed on {name}, {json_object}",
-            )
+def test_systematic_examples(recognizer):
+    for name, json_object in json_examples.items():
+        assert is_json_parsable(json_object) == recognizer._accept_prefix(
+            json_object
+        ), f"Failed on {name}, {json_object}"
