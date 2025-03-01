@@ -33,7 +33,7 @@ class Codable(ABC):
 class GrammarElement(Codable):
     def is_terminated(self) -> bool:
         raise NotImplementedError()
-    
+
 
 @dataclass
 class TerminalElement(GrammarElement):
@@ -41,13 +41,13 @@ class TerminalElement(GrammarElement):
 
     def is_terminated(self) -> bool:
         return True
-    
+
     def serialize(self) -> List[int]:
         outbuf = [len(self.ranges) * 2]
         for range in self.ranges:
             outbuf.extend(range)
         return outbuf
-    
+
     @classmethod
     def from_range(cls, start: int, end: int) -> "GrammarElement":
         return cls([(start, end)])
@@ -59,10 +59,10 @@ class ReferenceElement(GrammarElement):
 
     def is_terminated(self) -> bool:
         return False
-    
+
     def serialize(self) -> List[int]:
         return [REF_RULE_MARKER, self.referee_id]
-    
+
 
 @dataclass
 class AlternativeElements(Codable):
@@ -80,7 +80,8 @@ class AlternativeElements(Codable):
         self.buffer_elements = []
 
     def serialize(self) -> List[int]:
-        if self.buffer_elements: self.close_current_symbol()
+        if self.buffer_elements:
+            self.close_current_symbol()
         outbuf = [TO_BE_FILLED_MARKER]
         for symbol in self.symbols:
             for element in symbol:
@@ -126,7 +127,7 @@ class ParseState:
         raise ValueError(f"No rule with id {id} found")
 
     @cached_property
-    def grammar_encoding(self) -> List[int]: # old name: out_grammar
+    def grammar_encoding(self) -> List[int]:  # old name: out_grammar
         outbuf = []
         for rule in self.grammar_rules.values():
             outbuf.extend(rule.serialize())
@@ -140,7 +141,9 @@ class ParseState:
         try:
             from graphviz import Digraph
         except ImportError:
-            raise RuntimeError("graphviz is not installed, please install it first by `pip install graphviz`")
+            raise RuntimeError(
+                "graphviz is not installed, please install it first by `pip install graphviz`"
+            )
 
         graph = Digraph()
 
@@ -148,7 +151,11 @@ class ParseState:
 
         edges: Set[Tuple[str, str]] = set()
         for rule in self.grammar_rules.values():
-            graph.node(rule.name, style="filled", fillcolor="red" if rule.name == start_rule else "orange")
+            graph.node(
+                rule.name,
+                style="filled",
+                fillcolor="red" if rule.name == start_rule else "orange",
+            )
 
             for i, alternative in enumerate(rule.alternatives):
                 if len(alternative.symbols) == 0:
@@ -163,7 +170,12 @@ class ParseState:
                     for symbol in alternative.symbols:
                         for element in symbol:
                             if isinstance(element, ReferenceElement):
-                                edges.add((alternative_name, self.grammar_rules[element.referee_id].name))
+                                edges.add(
+                                    (
+                                        alternative_name,
+                                        self.grammar_rules[element.referee_id].name,
+                                    )
+                                )
 
         for u, v in edges:
             graph.edge(u, v)
@@ -331,7 +343,7 @@ def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -
         if remaining_src[0] == "-" and remaining_src[1] != "]":
             endchar_pair, remaining_src = parse_char(remaining_src[1:])
 
-            neg_outbuf.extend(range(ord(char) + 1,  ord(endchar_pair)))
+            neg_outbuf.extend(range(ord(char) + 1, ord(endchar_pair)))
         else:
             # This is the case for enumerate, e.g., [^0123456789], [^abcdef]
             # Each char is considered as a range of itself, i.e., c-c
@@ -340,10 +352,10 @@ def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -
         raise RuntimeError(
             f"expecting an ] at {src},but not found, is the char range closed?"
         )
-    
+
     # Compute allowed chars ranges
-    neg_outbuf = [-1] + sorted(set(neg_outbuf)) + [0xFF + 1] # min ord, ..., max ord
-    
+    neg_outbuf = [-1] + sorted(set(neg_outbuf)) + [0xFF + 1]  # min ord, ..., max ord
+
     # Generate allowed ranges
     ranges = []
     for start, end in zip(neg_outbuf[:-1], neg_outbuf[1:]):
@@ -351,7 +363,7 @@ def _parse_rhs_negated_char_ranges(src: str, alternative: AlternativeElements) -
         allowed_end = end - 1
         if allowed_start <= allowed_end:
             ranges.append((allowed_start, allowed_end))
-    
+
     alternative.add_element(TerminalElement(ranges))
     return remaining_src[1:]
 
@@ -382,11 +394,15 @@ def _parse_rhs_any_char(src: str, alternative: AlternativeElements) -> str:
     assert src[0] == ".", f"rule should start with '.', but got {src[0]}"
     remaining_src = src[1:]
     # The only symbol not allowed is '\n'
-    alternative.add_element(TerminalElement([(0, ord('\n') - 1), (ord('\n') + 1, 0xFF)]))
+    alternative.add_element(
+        TerminalElement([(0, ord("\n") - 1), (ord("\n") + 1, 0xFF)])
+    )
     return remaining_src
 
 
-def _parse_rhs_symbol_reference(src: str, state: ParseState, alternative: AlternativeElements) -> str:
+def _parse_rhs_symbol_reference(
+    src: str, state: ParseState, alternative: AlternativeElements
+) -> str:
     assert is_word_char(src[0]), f"rule should start with a word char, but got {src[0]}"
     name, remaining_src = parse_name(src)
     ref_rule_id = get_symbol_id(state, name)
@@ -395,7 +411,10 @@ def _parse_rhs_symbol_reference(src: str, state: ParseState, alternative: Altern
 
 
 def _parse_rhs_grouping(
-    remaining_src: str, state: ParseState, rule_name: str, alternative: AlternativeElements
+    remaining_src: str,
+    state: ParseState,
+    rule_name: str,
+    alternative: AlternativeElements,
 ) -> str:
     assert (
         remaining_src[0] == "("
@@ -454,12 +473,16 @@ def _parse_rhs_numbered_repetition_operators(
     rule_name: str,
     alternative: AlternativeElements,
 ) -> str:
-    assert remaining_src[0] == "{", f"rule should start with '{{', but got {remaining_src[0]}"
+    assert (
+        remaining_src[0] == "{"
+    ), f"rule should start with '{{', but got {remaining_src[0]}"
 
     # parse numbers
     closing_brace_idx = remaining_src.find("}")
     numbers_src = remaining_src[1:closing_brace_idx]
-    n_src, m_src = numbers_src.split(",") if "," in numbers_src else (numbers_src, numbers_src) # {n} -> {n, n}
+    n_src, m_src = (
+        numbers_src.split(",") if "," in numbers_src else (numbers_src, numbers_src)
+    )  # {n} -> {n, n}
     n = int(n_src) if n_src else 0
     m = int(m_src) if m_src else None
 
@@ -468,7 +491,8 @@ def _parse_rhs_numbered_repetition_operators(
     # S{n, m} --> S' ::= S S S ... S (n times) | S S S ... S (n + 1 times) | ... | S S S ... S (m times)
     # S{n,} --> S' ::= S S S ... S+ (n times)
     # S{,m} = S{0, m} --> S' ::= S | S S | S S S | ... | S S S ... S (m times)
-    if not m: n -= 1 # remove the last S to replace with S+
+    if not m:
+        n -= 1  # remove the last S to replace with S+
 
     sub_rule_id = generate_symbol_id(state, rule_name)
     sub_rule = GrammarRule(sub_rule_id, f"{rule_name}_{sub_rule_id}")
@@ -488,10 +512,12 @@ def _parse_rhs_numbered_repetition_operators(
 
     state.grammar_rules[sub_rule_id] = sub_rule
     alternative.symbols[-1] = [ReferenceElement(sub_rule_id)]
-    return remaining_src[closing_brace_idx + 1:]
+    return remaining_src[closing_brace_idx + 1 :]
 
 
-def parse_simple_rhs(state: ParseState, rhs: str, rule_name: str, rule: GrammarRule, is_nested: bool) -> str:
+def parse_simple_rhs(
+    state: ParseState, rhs: str, rule_name: str, rule: GrammarRule, is_nested: bool
+) -> str:
     remaining_rhs = rhs
     alternative = AlternativeElements()
 
@@ -510,10 +536,14 @@ def parse_simple_rhs(state: ParseState, rhs: str, rule_name: str, rule: GrammarR
             remaining_rhs = _parse_rhs_any_char(remaining_rhs, alternative)
         elif is_word_char(remaining_rhs[0]):
             # rule reference
-            remaining_rhs = _parse_rhs_symbol_reference(remaining_rhs, state, alternative)
+            remaining_rhs = _parse_rhs_symbol_reference(
+                remaining_rhs, state, alternative
+            )
         elif remaining_rhs[0] == "(":
             # grouping
-            remaining_rhs = _parse_rhs_grouping(remaining_rhs, state, rule_name, alternative)
+            remaining_rhs = _parse_rhs_grouping(
+                remaining_rhs, state, rule_name, alternative
+            )
         elif remaining_rhs[0] in ("*", "+", "?", "{"):
             # repetition operator
             if remaining_rhs[0] == "{":
@@ -544,7 +574,9 @@ def parse_simple_rhs(state: ParseState, rhs: str, rule_name: str, rule: GrammarR
     return remaining_rhs
 
 
-def parse_rhs(state: ParseState, rhs: str, rule_name: str, rule_id: int, is_nested: bool) -> str:
+def parse_rhs(
+    state: ParseState, rhs: str, rule_name: str, rule_id: int, is_nested: bool
+) -> str:
     rule = GrammarRule(rule_id, rule_name)
     remaining_rhs = parse_simple_rhs(state, rhs, rule_name, rule, is_nested)
     while remaining_rhs and remaining_rhs[0] == "|":

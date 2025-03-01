@@ -17,7 +17,6 @@ from transformers_cfg.parser import (
     END_OF_ALTERNATE_MARKER,
     AlternativeElements,
     GrammarRule,
-    parse_ebnf
 )
 import logging
 

@@ -125,7 +125,7 @@ def generate_text(args):
             raise ImportError(
                 "You need to install mlx to use MLX. Install it with `pip install 'git+https://github.com/nathanrchn/mlx-examples.git@logits_processor#subdirectory=llms'`."
             )
-        
+
         import numpy as np
         import mlx.core as mx
         from mlx_lm import load, stream_generate
@@ -150,7 +150,9 @@ def generate_text(args):
             print()
 
         def logits_processor(input_ids: mx.array, logits: mx.array) -> mx.array:
-            torch_input_ids = torch.tensor(np.array(input_ids[None, :]), device=args.device)
+            torch_input_ids = torch.tensor(
+                np.array(input_ids[None, :]), device=args.device
+            )
             torch_logits = torch.tensor(np.array(logits), device=args.device)
 
             torch_processed_logits = grammar_processor(torch_input_ids, torch_logits)
@@ -162,7 +164,7 @@ def generate_text(args):
             prompt=args.prompt,
             max_tokens=args.max_new_tokens,
             repetition_penalty=args.repetition_penalty,
-            logits_processor=logits_processor
+            logits_processor=logits_processor,
         )
 
         # print prompt first in color

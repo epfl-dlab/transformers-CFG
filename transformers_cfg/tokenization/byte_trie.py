@@ -2,7 +2,6 @@ import logging
 from functools import lru_cache
 from typing import Dict, List, Set, Tuple, Optional
 from collections import deque
-from dataclasses import dataclass
 
 from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
     TokenizerMiddleMapping,

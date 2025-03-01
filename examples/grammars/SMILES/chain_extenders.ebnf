@@ -1,8 +1,8 @@
-root ::= (smiles bond?)* ( group_symbol_left group_bond? | group_radical_left bond? )  smiles+ | smiles+ ( bond? group_radical_right | group_bond? group_symbol_right) (bond? smiles)* 
+root ::= (smiles bond?)* ( group_symbol_left group_bond? | group_radical_left bond? )  smiles+ | smiles+ ( bond? group_radical_right | group_bond? group_symbol_right) (bond? smiles)*
 
-group_radical_left ::=  "(" ( group_symbol_left group_bond? smiles* )+ ")" 
+group_radical_left ::=  "(" ( group_symbol_left group_bond? smiles* )+ ")"
 
-group_radical_right ::= "(" ( smiles* group_bond? group_symbol_right )+ ")" 
+group_radical_right ::= "(" ( smiles* group_bond? group_symbol_right )+ ")"
 
 group_bond ::= ( "-" | "\\" | "/" )
 
@@ -50,7 +50,7 @@ element_symbol  ::= "A" ( "c" | "g" | "l" | "m" | "r" | "s" | "t" | "u" ) |
                     "S" ( "b" | "c" | "e" | "g" | "i" | "m" | "n" | "r" )? |
                     "T" ( "a" | "b" | "c" | "e" | "h" | "i" | "l" | "m" | "s" ) |
                     "U" | "V" | "W" | "Xe" | "Y" "b"? |
-                    "Z" ( "n" | "r" ) 
+                    "Z" ( "n" | "r" )
 
 
 ring_closure ::= "%" [1-9] [0-9] | [0-9]

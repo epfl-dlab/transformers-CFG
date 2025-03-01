@@ -713,7 +713,7 @@ class SchemaConverter:
 def parse_args():
     parser = argparse.ArgumentParser(
         description="""
-            Generates an EBNF grammar that produces JSON conforming to a given JSON schema. 
+            Generates an EBNF grammar that produces JSON conforming to a given JSON schema.
             Only a subset of JSON schema features are supported; more may be added in the future.
         """,
     )

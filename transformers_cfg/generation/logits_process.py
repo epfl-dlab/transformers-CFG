@@ -19,7 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
-    def __init__(self, grammar_constraint: AbsTokenRecognizer, valid_token_start_idx: Optional[int] = None, execution_mode: Literal["speculation", "full_mask"] = "speculation", device: Optional[torch.device] = None) -> None:
+    def __init__(
+        self,
+        grammar_constraint: AbsTokenRecognizer,
+        valid_token_start_idx: Optional[int] = None,
+        execution_mode: Literal["speculation", "full_mask"] = "speculation",
+        device: Optional[torch.device] = None,
+    ) -> None:
         self.last_size = None
         self.grammar_constraint = grammar_constraint
         self.batch_parsing_states = None
@@ -27,16 +33,24 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.execution_mode = execution_mode
         self.device = device
 
-    def mask_logits(self, logits: torch.FloatTensor, device: torch.device) -> torch.FloatTensor:
+    def mask_logits(
+        self, logits: torch.FloatTensor, device: torch.device
+    ) -> torch.FloatTensor:
         masked_logits = logits.clone()
-        
+
         if self.execution_mode == "speculation":
             # try to accept the most likely token
-            acceptance = torch.zeros((logits.shape[0], len(self.grammar_constraint.homomorphism)), dtype=torch.bool, device=device)
+            acceptance = torch.zeros(
+                (logits.shape[0], len(self.grammar_constraint.homomorphism)),
+                dtype=torch.bool,
+                device=device,
+            )
             next_tokens = torch.argmax(logits, dim=-1)
             for i, next_token in enumerate(next_tokens.tolist()):
                 try:
-                    is_next_token_accepted = self.grammar_constraint.accept_token_ids([next_token], self.batch_parsing_states[i])
+                    is_next_token_accepted = self.grammar_constraint.accept_token_ids(
+                        [next_token], self.batch_parsing_states[i]
+                    )
                 except ValueError:
                     is_next_token_accepted = False
                 if is_next_token_accepted:
@@ -49,7 +63,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                         self.batch_parsing_states[i], device
                     )
         else:
-            acceptance = self.grammar_constraint.batch_filter_vocab(self.batch_parsing_states, device)
+            acceptance = self.grammar_constraint.batch_filter_vocab(
+                self.batch_parsing_states, device
+            )
 
         # if the logits size of the model is more than the tokennizer vocab
         # we artificially expand the acceptance tensor and block everything
@@ -97,7 +113,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
-    def process_logits(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def process_logits(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+    ) -> torch.FloatTensor:
         """
         :param input_ids:
         :param scores:
@@ -144,7 +162,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self, input_ids: torch.LongTensor, scores: torch.FloatTensor
     ) -> torch.FloatTensor:
         return self.process_logits(input_ids, scores)
-    
+
     def reset(self):
         self.batch_parsing_states = None
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
