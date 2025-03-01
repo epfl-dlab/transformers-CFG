@@ -26,8 +26,10 @@ This [doc from llama-cpp](https://github.com/ggerganov/llama.cpp/tree/master/gra
 
 There is a vscode extension called `EBNF` which provides syntax highlighting for EBNF grammars.
 Here is how it looks like:
-![EBNF syntax highlighting](
-assets/screenshots/vscode_ebnf_syntax_highlight.png)
+<p align="center">
+    <img src="assets/screenshots/vscode_ebnf_syntax_highlight.png" alt="EBNF syntax highlighting" width="100%">
+</p>
+<p align="center"><em>Figure 1: EBNF Syntax Highlighting</em></p>
 
 ## Variants of EBNF
 
@@ -81,7 +83,12 @@ symbol_ids:
 {'root': 0, 'jp-char': 1, 'root_2': 2, 'root_3': 3, 'root_4': 4, 'root_5': 5, 'hiragana': 6, 'katakana': 7, 'punctuation': 8, 'cjk': 9}
 ```
 
-If the grammar can be parsed, it means that it is syntactically correct.
+If the grammar can be parsed, it means that it is syntactically correct. (In case you have graphviz installed, you can also generate the parse tree by adding `--graph` option)
+
+<p align="center">
+    <img src="assets/plots/arithmetic_grammar_viz.png" alt="visulization of arithmetic grammar" width="50%">
+</p>
+<p align="center"><em>Figure 2: graph visualization of the arithmetic grammar</em></p>
 
 ## Test the grammar with a simple input
 

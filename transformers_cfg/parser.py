@@ -733,6 +733,11 @@ if __name__ == "__main__":
         default="examples/grammars/json.ebnf",
         help="Path to the grammar file (default: examples/grammars/json.ebnf)",
     )
+    parser.add_argument(
+        "--graph",
+        action="store_true",
+        help="Generate a graph visualization of the grammar",
+    )
 
     args = parser.parse_args()
 
@@ -743,4 +748,5 @@ if __name__ == "__main__":
     print(f"symbol_ids: \n{parsed_grammar.symbol_table}")
 
     start_rule_id = parsed_grammar.symbol_table["root"]
-    parsed_grammar.graph()
+    if args.graph:
+        parsed_grammar.graph()
