@@ -13,10 +13,10 @@ jobs:
     - uses: actions/checkout@v3  # Updated to a specific version of the checkout action
       with:
         ref: main  # Ensure it checks out the main branch
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
-        python-version: '3.8'
+        python-version: '3.9'
     - name: Install setuptools and wheel
       run: python -m pip install setuptools wheel
     - name: Extract tag name
