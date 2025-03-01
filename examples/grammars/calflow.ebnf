@@ -1,4 +1,4 @@
-root ::= call 
+root ::= call
 
 call ::=    event | "(Yield "  org ")" | "(Yield " "(size" org "))" | "(Yield "  event ")" | "(Yield "  weather ")" |
             "(Yield " "(> " "(size"  event ")" number "))" | "(do " datetime " " call ")" | "(do " call " " call ")" | "(do " org " " call ")"
@@ -57,7 +57,7 @@ event_constraint ::=    "(& " event_constraint " " event_constraint ")" |
                         "(FindLastEvent " event_constraint ")" |
                         "(^(Event) " "EmptyStructConstraint)"
 
-location_constraint ::= "(?= " location ")" | "(roomRequest)" | "(&" location_constraint " " location_constraint ")" 
+location_constraint ::= "(?= " location ")" | "(roomRequest)" | "(&" location_constraint " " location_constraint ")"
 
 location ::= "(Event.location " event_constraint ")" | "(LocationKeyphrase.apply " string  ")"
 

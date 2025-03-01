@@ -68,13 +68,17 @@ class AbsTokenRecognizer(ABC):
         """Process a list of tokens according to the grammar rules."""
         raise NotImplementedError
 
-    def batch_filter_vocab(self, batch_parsing_states: List[AcceptState], device: torch.device) -> torch.Tensor:
+    def batch_filter_vocab(
+        self, batch_parsing_states: List[AcceptState], device: torch.device
+    ) -> torch.Tensor:
         batch_acceptance = []
         for parsing_state in batch_parsing_states:
             batch_acceptance.append(self.filter_vocab(parsing_state, device))
         return torch.stack(batch_acceptance)
 
-    def filter_vocab(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
+    def filter_vocab(
+        self, parsing_state: AcceptState, device: torch.device
+    ) -> torch.Tensor:
         if not parsing_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
@@ -89,7 +93,9 @@ class AbsTokenRecognizer(ABC):
 
         return acceptance
 
-    def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
+    def get_next_token_acceptance(
+        self, parsing_state: AcceptState, device: torch.device
+    ) -> torch.Tensor:
         raise NotImplementedError
 
     def validate_and_set_eos_acceptance(self, acceptance: torch.Tensor) -> torch.Tensor:
@@ -101,7 +107,12 @@ class AbsTokenRecognizer(ABC):
             acceptance[self.eos_token_id] = False
         return acceptance
 
-    def accept_token_ids(self, token_ids: List[int], parsing_state: Optional[AcceptState] = None, as_string: bool = True) -> bool:
+    def accept_token_ids(
+        self,
+        token_ids: List[int],
+        parsing_state: Optional[AcceptState] = None,
+        as_string: bool = True,
+    ) -> bool:
         """Accept a list of token IDs according to the grammar rules."""
         raise NotImplementedError
 
@@ -164,7 +175,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         self,
         input_ids: torch.LongTensor,
         batch_parsing_states: list[AcceptState],
-        valid_token_start_idx: Optional[int] = None
+        valid_token_start_idx: Optional[int] = None,
     ) -> list[AcceptState]:
 
         if self.last_size is None:
@@ -240,13 +251,20 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     logging.debug(f"The decoded string is {decoded_string}")
         return parsing_state
 
-    def accept_token_ids(self, token_ids: List[int], parsing_state: Optional[AcceptState] = None, as_string: bool = True) -> bool:
+    def accept_token_ids(
+        self,
+        token_ids: List[int],
+        parsing_state: Optional[AcceptState] = None,
+        as_string: bool = True,
+    ) -> bool:
         output_state = self._update_state_with_single_token_seq(
             token_ids, parsing_state, as_string
         )
         return len(output_state.stacks) > 0
 
-    def get_next_token_acceptance(self, parsing_state: AcceptState, device: torch.device) -> torch.Tensor:
+    def get_next_token_acceptance(
+        self, parsing_state: AcceptState, device: torch.device
+    ) -> torch.Tensor:
         acceptance_matrix = torch.stack(
             [
                 self.get_next_token_acceptance_for_single_stack(
@@ -262,7 +280,9 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
     # If running on a GPU device this cache can continue to fill up GPU memory
     # Dereferencing the object will not clear the cache
     @lru_cache(maxsize=32768)
-    def get_next_token_acceptance_for_single_stack(self, stack: Tuple[int], partial_utf8: PartialUTF8, device: torch.device) -> torch.Tensor:
+    def get_next_token_acceptance_for_single_stack(
+        self, stack: Tuple[int], partial_utf8: PartialUTF8, device: torch.device
+    ) -> torch.Tensor:
         # stack = list(stack)  # needs to come in as a tuple for lru_cache
         assert isinstance(stack, tuple)
 
@@ -286,7 +306,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
         x_eos = self.validate_and_set_eos_acceptance(x)
         return x_eos
-    
+
     def reset(self):
         self.last_size = None
 
@@ -330,7 +350,13 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
 #     return accepts
 
 
-def check_token_acceptance_in_trie(trie_node: TrieNode, stacks: List[Tuple[int]], recognizer: StringRecognizer, eos_token_id: int, accepts: List[bool]) -> List[bool]:
+def check_token_acceptance_in_trie(
+    trie_node: TrieNode,
+    stacks: List[Tuple[int]],
+    recognizer: StringRecognizer,
+    eos_token_id: int,
+    accepts: List[bool],
+) -> List[bool]:
     if trie_node.is_end_of_word:
         token_id = trie_node.token_id
         if token_id != eos_token_id:

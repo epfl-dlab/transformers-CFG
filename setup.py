@@ -21,10 +21,14 @@ setup(
         "transformers_cfg": ["examples/grammars/*.ebnf"],
     },
     include_package_data=True,
-    # Add any additional package configuration here
     entry_points={
         "console_scripts": [
             "transformers-cfg-cli=transformers_cfg.cli.cli_main:main",
+        ],
+    },
+    extras_require={
+        "dev": [
+            "pre-commit",
         ],
     },
 )

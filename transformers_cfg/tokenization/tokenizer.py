@@ -8,7 +8,7 @@ from transformers import (
     CodeGenTokenizerFast,
     PreTrainedTokenizerFast,
     GemmaTokenizerFast,
-    Qwen2TokenizerFast
+    Qwen2TokenizerFast,
 )
 
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
@@ -55,14 +55,17 @@ class TCFG_Tokenizer:
             (GPT2TokenizerFast, BartTokenizerFast, Qwen2TokenizerFast),
         ):
             return TCFG_GPT2Tokenizer(hf_tokenizer)
-        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast, T5TokenizerFast)):
+        elif isinstance(
+            hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast, T5TokenizerFast)
+        ):
             return TCFG_LlamaTokenizer(hf_tokenizer)
         elif isinstance(hf_tokenizer, CodeGenTokenizerFast):
             # phi reuses the codegen tokenizer
             return TCFG_PhiTokenizer(hf_tokenizer)
-        elif isinstance(
-            hf_tokenizer, PreTrainedTokenizerFast
-        ) and 'Meta-Llama-3' in hf_tokenizer.name_or_path:
+        elif (
+            isinstance(hf_tokenizer, PreTrainedTokenizerFast)
+            and "Meta-Llama-3" in hf_tokenizer.name_or_path
+        ):
             return TCFG_LlamaTokenizer(hf_tokenizer)
         else:
             raise NotImplementedError(

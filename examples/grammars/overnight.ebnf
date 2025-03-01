@@ -1,4 +1,4 @@
-root ::=  "(listValue " list_value ")" 
+root ::=  "(listValue " list_value ")"
 
 
 list_value ::= "(filter " ( list_value " " PROPERTY | list_value " " PROPERTY OP list_value | list_value " " "(ensureNumericProperty "  PROPERTY ")" OP  "(ensureNumericEntity " list_value ")" ) ")" |
@@ -15,7 +15,7 @@ PROPERTY ::= "shape" | "color" | "length" | "is_special" | "width" | "height" | 
              "(reverse " ( "left" | "right" | "above" | "below" ) ")"
 
 
-SINGLETON_VALUE ::=  "en.block"  | "en.shape"  | "en.color" 
+SINGLETON_VALUE ::=  "en.block"  | "en.shape"  | "en.color"
 
 ENTITY_VALUE ::= "en.block.block1" | "en.block.block2" | "en.shape.pyramid" | "en.shape.cube" | "en.color.red" | "en.color.green"
 
@@ -24,4 +24,4 @@ NUMBER_VALUE ::= ( "3" | "6" )  " " "en.inch" | "2"
 
 OP ::= " " ( "=" | ">" | "<" | ">=" | "<=" | "!=" ) " "
 
-AGGREGATE ::= " " ("sum" | "max" | "min" | "avg" ) " " 
+AGGREGATE ::= " " ("sum" | "max" | "min" | "avg" ) " "

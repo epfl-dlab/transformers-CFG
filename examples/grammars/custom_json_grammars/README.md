@@ -4,7 +4,7 @@ You can use custom grammars to constrain the output of a language model to gener
 
 ## Quickstart
 
-There are multiple ways to represent json schemas. 
+There are multiple ways to represent json schemas.
 We provide recommendations on how to do this for two common formats: Typescript and json.
 
 <details>
@@ -47,7 +47,7 @@ To generate custom json grammars from Typescript schemas, you can use [this onli
 
 ### From json schemas
 
-Alternatively, you can generate custom json grammars from json format schemas using the `json_schema_to_grammar.py` script, analogous to [the one in the lama.cpp repository](https://github.com/ggerganov/llama.cpp/blob/ab9a3240a9da941fdef5cd4a25f2b97c2f5a67aa/examples/json_schema_to_grammar.py). 
+Alternatively, you can generate custom json grammars from json format schemas using the `json_schema_to_grammar.py` script, analogous to [the one in the lama.cpp repository](https://github.com/ggerganov/llama.cpp/blob/ab9a3240a9da941fdef5cd4a25f2b97c2f5a67aa/examples/json_schema_to_grammar.py).
 
 
 To generate a grammar from a json schema, run the following command:
@@ -55,7 +55,6 @@ To generate a grammar from a json schema, run the following command:
 ```bash
 python3 json_schema_to_grammar.py -i schemas/product_catalog.json -o grammars/product_catalog.ebnf
 ```
-This script generates a grammar from a json schema file (see examples of json schemas in `/schemas` and the corresponding grammars in `/grammars`). The generated grammar is in the Extended Backus-Naur Form (EBNF) format and can be directly used with the `IncrementalGrammarConstraint`. 
+This script generates a grammar from a json schema file (see examples of json schemas in `/schemas` and the corresponding grammars in `/grammars`). The generated grammar is in the Extended Backus-Naur Form (EBNF) format and can be directly used with the `IncrementalGrammarConstraint`.
 
 Additional arguments allow to specify the property order of the json object as well as string formatting parameters.
-
