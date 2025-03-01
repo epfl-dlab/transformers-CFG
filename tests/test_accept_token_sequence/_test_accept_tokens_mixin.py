@@ -60,7 +60,7 @@ class TokenizerTesterMixin:
         )
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            acc_state.stacks == set() or acc_state.stacks == set(tuple()),
+            acc_state.stacks == set() or acc_state.stacks == {tuple()},
             f"stacks: {acc_state.stacks}, not empty",
         )
 
@@ -88,7 +88,7 @@ class TokenizerTesterMixin:
         )
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            parsing_state.stacks == set() or parsing_state.stacks == set(tuple()),
+            parsing_state.stacks == set() or parsing_state.stacks == {tuple()},
             f"stacks: {parsing_state.stacks}, not empty",
         )
 
@@ -121,7 +121,7 @@ class TokenizerTesterMixin:
         )
         # the json object is complete, so the stacks should be empty
         self.assertTrue(
-            acc_state.stacks == set() or acc_state.stacks == set(tuple()),
+            acc_state.stacks == set() or acc_state.stacks == {tuple()},
             f"stacks: {acc_state.stacks}, not empty",
         )
 

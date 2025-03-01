@@ -227,6 +227,7 @@ class StringRecognizer:
         new_new_stacks = set()
         for stack in new_stacks:
             if len(stack) == 0:
+                new_new_stacks.add(stack)
                 continue
             element_offset = stack[-1]
             if self.partial_utf8_accept_at_element(element_offset, new_partial_utf8):
@@ -291,6 +292,7 @@ class StringRecognizer:
             new_stack.append(element_offset)
         # # Explicitly convert list to tuple of int to make it hashable
         new_tuple_stack: Tuple[int, ...] = tuple(new_stack)
+
         return self.expand_stack_head(new_tuple_stack)
 
     def _update_state_with_code_points_for_all_stacks(

@@ -90,7 +90,6 @@ class AbsTokenRecognizer(ABC):
             return torch.tensor(accepts, dtype=torch.bool, device=device)
 
         acceptance = self.get_next_token_acceptance(parsing_state, device)
-
         return acceptance
 
     def get_next_token_acceptance(
@@ -98,13 +97,12 @@ class AbsTokenRecognizer(ABC):
     ) -> torch.Tensor:
         raise NotImplementedError
 
-    def validate_and_set_eos_acceptance(self, acceptance: torch.Tensor) -> torch.Tensor:
-        if torch.any(acceptance) == 0:
+    def validate_and_set_eos_acceptance(
+        self, acceptance: torch.Tensor, stack: Tuple[int]
+    ) -> torch.Tensor:
+        if len(stack) == 0:
+            # if the stack is empty, we can accept EOS
             acceptance[self.eos_token_id] = True
-        else:
-            if acceptance[self.eos_token_id]:
-                raise ValueError()
-            acceptance[self.eos_token_id] = False
         return acceptance
 
     def accept_token_ids(
@@ -304,7 +302,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                 accepts,
             )
         x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
-        x_eos = self.validate_and_set_eos_acceptance(x)
+        x_eos = self.validate_and_set_eos_acceptance(x, stack)
         return x_eos
 
     def reset(self):
