@@ -8,6 +8,11 @@ from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
 import torch
 
+# Define ANSI escape codes for colors
+RED = "\033[91m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
 
 def parse_arguments(args=None):
     parser = argparse.ArgumentParser(description="Transformers-CFG CLI")
@@ -133,7 +138,7 @@ def generate_text(args):
         model, _ = load(args.model_id)
 
         if not args.no_contrast_mode:
-            print("\033[91m" + "Unconstrained Generation:" + "\033[0m")
+            print(RED + "Unconstrained Generation:" + RESET)
             result += "Unconstrained Generation:\n"
             generation_stream = stream_generate(
                 model,
@@ -145,9 +150,9 @@ def generate_text(args):
 
             for token in generation_stream:
                 result += token
-                print("\033[91m" + token, end="", flush=True)
+                print(RED + token, end="", flush=True)
 
-            print("\033[0m")
+            print(RESET)
 
         def logits_processor(input_ids: mx.array, logits: mx.array) -> mx.array:
             torch_input_ids = torch.tensor(
@@ -168,9 +173,9 @@ def generate_text(args):
         )
 
         # print prompt first in color
-        print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
+        print("\033[92m" + "Prompt:" + args.prompt + RESET)
 
-        print("\033[94m" + "Constrained Generation:" + "\033[0m")
+        print(BLUE + "Constrained Generation:" + RESET)
         result += "Constrained Generation:\n"
         for token in generation_stream:
             result += token
@@ -234,7 +239,7 @@ def generate_text(args):
     )
 
     # print prompt first in color
-    print("\033[92m" + "Prompt:" + args.prompt + "\033[0m")
+    print("\033[92m" + "Prompt:" + args.prompt + RESET)
 
     # Generate without grammar constraints (if contrast mode is enabled)
     if not args.no_contrast_mode:
@@ -254,19 +259,19 @@ def generate_text(args):
 
         # Print results in different colors
         print("\n" + "#" * 30)
-        print("\033[91mUnconstrained Generation" + "\033[0m")
+        print("\033[91mUnconstrained Generation" + RESET)
         print("#" * 30 + "\n")
         result += "Unconstrained Generation:\n"
         for generation in unconstrained_generations:
-            print("\033[91m" + generation + "\033[0m")
+            print(RED + generation + RESET)
             result += generation + "\n"
 
     print("\n" + "#" * 30)
-    print("\033[94mConstrained Generation" + "\033[0m")
+    print("\033[94mConstrained Generation" + RESET)
     print("#" * 30 + "\n")
     result += "Constrained Generation:\n"
     for generation in constrained_generations:
-        print("\033[94m" + generation + "\033[0m")
+        print(BLUE + generation + RESET)
         result += generation + "\n"
 
     # Save to file if save_to is provided
