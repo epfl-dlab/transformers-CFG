@@ -9,6 +9,8 @@ git_diff.txt
 __pycache__/
 *.py[cod]
 *$py.class
+*.patch
+.secrets
 
 # C extensions
 *.so
@@ -174,3 +176,4 @@ launch.json
 
 # MacOS
 .DS_Store
+transformers_cfg/__init__.py
