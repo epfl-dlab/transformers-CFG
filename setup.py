@@ -29,6 +29,8 @@ setup(
     extras_require={
         "dev": [
             "pre-commit",
+            "pytest",
+            "twine",
         ],
     },
 )
