@@ -205,7 +205,6 @@ We maintain a collection of grammars in `examples/grammars`, aligned with llama-
 - [Qwen2](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f) and [2.5](https://huggingface.co/collections/Qwen/qwen25-66e81a666513e518adb90d9e)
 - [LLaMa Family](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf)
 - [GPT Family](https://huggingface.co/openai-community/gpt2)
-- [Bloom Family](https://huggingface.co/bigscience/bloom)
 - [Mistral Family](https://huggingface.co/mistralai/Mistral-7B-v0.1)
 - [Falcon Family](https://huggingface.co/tiiuae/falcon-7b)
 
