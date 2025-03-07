@@ -28,7 +28,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         device: Optional[torch.device] = None,
         library: str = "transformers"
     ) -> None:
-        # Initialize basic attributes.
         self.last_size = None
         self.grammar_constraint = grammar_constraint
         self.batch_parsing_states = None
@@ -36,7 +35,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.execution_mode = execution_mode
         self.device = device
         self.library = library
-        # For llama-cpp-python, initialize additional attributes.
         if self.library == "llama-cpp-python":
             self.reinit_attempts = 0
             self.reinit_max = 3
@@ -45,11 +43,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
     def mask_logits(
         self, logits: torch.FloatTensor, device: torch.device
     ) -> torch.FloatTensor:
-        # Clone logits to avoid modifying the original tensor.
         masked_logits = logits.clone()
 
         if self.execution_mode == "speculation":
-            # Try to accept the most likely token.
             acceptance = torch.zeros(
                 (logits.shape[0], len(self.grammar_constraint.homomorphism)),
                 dtype=torch.bool,
@@ -66,21 +62,14 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 if is_next_token_accepted:
                     acceptance[i, next_token] = True
                 else:
-                    # Resolve each stack to a tensor of True/False for each token
-                    # indicating acceptance.
-                    # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
                     acceptance[i] = self.grammar_constraint.filter_vocab(
                         self.batch_parsing_states[i], device
                     )
         else:
-            # In full_mask mode, filter vocabulary for the entire batch.
             acceptance = self.grammar_constraint.batch_filter_vocab(
                 self.batch_parsing_states, device
             )
 
-        # If the logits size of the model is more than the tokenizer vocab,
-        # we artificially expand the acceptance tensor and block everything
-        # beyond the tokenizer vocab size.
         acceptance_vocab_size = acceptance.shape[-1]
         masked_logits_vocab_size = masked_logits.shape[-1]
         if masked_logits_vocab_size != acceptance_vocab_size:
@@ -95,20 +84,15 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             )
             acceptance = torch.cat((acceptance, false_tensor), dim=-1)
 
-        # If in debug mode, print accepted token indices and tokens.
         if os.getenv("DEBUG_MODE") == "True":
-            # Convert acceptance to a numpy array.
             batch_size, vocab_size = acceptance.shape
             acceptance_np = acceptance.cpu().numpy()
             accepted_x, accepted_y = acceptance_np.nonzero()
-            # Dict of {batch_index: [accepted_token_indices]}
-            # Initialize the dict with empty lists.
             accepted_token_indices = {i: [] for i in range(batch_size)}
             for x, y in zip(accepted_x, accepted_y):
                 accepted_token_indices[x].append(y)
             logger.debug("Accepted token indices for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_token_indices))
-            # Convert token_ids to tokens.
             accepted_tokens = {
                 i: [
                     self.grammar_constraint.tokenizer.decode([token_id])
@@ -118,37 +102,22 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             }
             logger.debug("Accepted tokens for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_tokens))
-        # Set logits to -inf for tokens that are not accepted.
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
     def process_logits(
         self, input_ids: list, scores: torch.FloatTensor
     ) -> torch.FloatTensor:
-        """
-        Process logits by updating the grammar parsing states and masking logits.
-        
-        :param input_ids: List of token sequences.
-        :param scores: Logits tensor.
-        :return: Masked logits tensor.
-        """
         if self.device is None:
             device = scores.device
-        # Dynamically create stacks at the first call, so that we know the batch size.
         if self.batch_parsing_states is None:
             self.batch_parsing_states = [
-                # Use a deep copy of the initial parsing state.
                 copy.deepcopy(
                     self.grammar_constraint.string_recognizer.get_initial_parsing_state()
                 )
                 for _ in range(len(input_ids))
             ]
-
-        if os.getenv("DEBUG_MODE") == "True":
-            print("-" * 80)
-
         logger.debug("input_ids: \n" + pprint.pformat(input_ids))
-        # logger.debug("scores: \n" + pprint.pformat(scores))
         logger.debug("last_size: \n" + pprint.pformat(self.last_size))
         logger.debug(
             "num of stacks: \n"
@@ -156,23 +125,16 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
             )
         )
-        # Update grammar parsing states based on the current input token sequences.
         self.batch_parsing_states = (
             self.grammar_constraint.update_state_with_batch_token_seqs(
                 input_ids, self.batch_parsing_states, self.valid_token_start_idx
             )
         )
         logger.debug(f"input_ids: {input_ids}")
-
-        # Mask logits based on grammar constraints.
         masked_scores = self.mask_logits(scores, device)
         return masked_scores
 
     def _force_eos(self, scores: torch.FloatTensor) -> torch.FloatTensor:
-        """
-        Force logits so that only the EOS token is allowed; all other tokens
-        get a score of -infinity.
-        """
         eos_token = self.grammar_constraint.tokenizer.eos_token_id
         logger.warning(f"Forcing EOS token: {eos_token}")
         mask = torch.full_like(scores, fill_value=-float("inf"))
@@ -186,7 +148,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
     def __call__(
         self, input_ids, scores
     ) -> torch.FloatTensor:
-        # For the llama-cpp-python branch, perform additional normalization and error handling.
         if self.library == "llama-cpp-python":
             # Normalize input_ids to be a list of token sequences.
             if np.isscalar(input_ids):
@@ -215,8 +176,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 except Exception:
                     logger.debug(f"Added token: {new_token} (cannot decode)")
 
-            # Check for consistency: if the current length does not match the expected length,
-            # reinitialize the grammar constraint.
             current_length = len(input_ids[0])
             if hasattr(self.grammar_constraint, "last_size") and self.grammar_constraint.last_size is not None:
                 expected_length = self.grammar_constraint.last_size + 1
@@ -255,7 +214,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             return self.process_logits(input_ids, scores)
 
     def reset(self):
-        # Reset the grammar parsing states.
         self.batch_parsing_states = None
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
