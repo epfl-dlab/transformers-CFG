@@ -5,7 +5,7 @@
 
 ## 💭 Release news
 
-### Experimental development
+### Latest experimental
 
 <details>
 
@@ -13,7 +13,7 @@
 
 </details>
 
-### Latest release
+### Latest stable
 #### **[v0.2.7 Latest](https://github.com/epfl-dlab/transformers-CFG/releases/tag/v0.2.7)** (2025-03-02)
 
 #### **Features**
