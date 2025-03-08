@@ -9,7 +9,7 @@ from transformers import (
     LlamaTokenizerFast,
     PreTrainedTokenizerFast,
     GemmaTokenizerFast,
-    Qwen2TokenizerFast
+    Qwen2TokenizerFast,
 )
 
 from transformers_cfg.tokenization.utils import get_tokenizer_charset
@@ -37,20 +37,27 @@ class TokenizerMiddleMapping:
             type(hf_tokenizer) in SUPPORTED_TOKENIZERS
         ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
         if isinstance(
-            hf_tokenizer, (GPT2TokenizerFast, BartTokenizerFast, CodeGenTokenizerFast, Qwen2TokenizerFast)
+            hf_tokenizer,
+            (
+                GPT2TokenizerFast,
+                BartTokenizerFast,
+                CodeGenTokenizerFast,
+                Qwen2TokenizerFast,
+            ),
         ):
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast)):
             # deepseek, though inheriting from LlamaTokenizerFast, is actually a GPT2TokenizerFast
             # check https://github.com/epfl-dlab/transformers-CFG/issues/72
-            if hf_tokenizer.name_or_path.startswith("deepseek-ai/deepseek-coder"):
+            if "deepseek-coder" in hf_tokenizer.name_or_path:
                 return GPT2TokenizerMiddleMapping(hf_tokenizer)
             return LLAMA1TokenizerMiddleMapping(hf_tokenizer)
         elif isinstance(hf_tokenizer, T5TokenizerFast):
             return T5TokenizerMiddleMapping(hf_tokenizer)
-        elif isinstance(
-            hf_tokenizer, PreTrainedTokenizerFast
-        ) and 'Meta-Llama-3' in hf_tokenizer.name_or_path:
+        elif (
+            isinstance(hf_tokenizer, PreTrainedTokenizerFast)
+            and "Meta-Llama-3" in hf_tokenizer.name_or_path
+        ):
             return GPT2TokenizerMiddleMapping(hf_tokenizer)
 
     @staticmethod

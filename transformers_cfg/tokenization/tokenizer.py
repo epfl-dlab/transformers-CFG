@@ -88,7 +88,7 @@ class TCFG_LlamaTokenizer(TCFG_Tokenizer):
         return bytes(token, "utf-8")
 
     def get_special_token_ids_to_excluded(self):
-        if self.hf_tokenizer.name_or_path.startswith("deepseek-ai/deepseek-coder"):
+        if "deepseek-coder" in self.hf_tokenizer.name_or_path:
             # deepseek has in total 22 special tokens, with token_ids from 32000 to 32021
             # with first 13 being characters for bytes: {'õ': 32000, '÷': 32001, 'Á': 32002, 'ý': 32003, 'À': 32004, 'ÿ': 32005, 'ø': 32006, 'ú': 32007, 'þ': 32008, 'ü': 32009, 'ù': 32010, 'ö': 32011, 'û': 32012}
             # the rest are special tokens for the tokenizer: { '<｜begin▁of▁sentence｜>': 32013, '<｜end▁of▁sentence｜>': 32014, '<｜fim▁hole｜>': 32015, '<｜fim▁begin｜>': 32016, '<｜fim▁end｜>': 32017, '<pad>': 32018, '<|User|>': 32019, '<|Assistant|>': 32020, '<|EOT|>': 32021}
