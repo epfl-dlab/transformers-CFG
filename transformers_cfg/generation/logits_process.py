@@ -2,9 +2,9 @@ import copy
 import math
 import os
 import pprint
+import importlib
 from typing import Optional, Literal
 
-import numpy as np
 import torch
 import logging
 from transformers.generation.logits_process import (
@@ -26,7 +26,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         valid_token_start_idx: Optional[int] = None,
         execution_mode: Literal["speculation", "full_mask"] = "full_mask",
         device: Optional[torch.device] = None,
-        library: str = "transformers"
+        adapter: str = "transformers",
     ) -> None:
         self.last_size = None
         self.grammar_constraint = grammar_constraint
@@ -34,11 +34,30 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.valid_token_start_idx = valid_token_start_idx
         self.execution_mode = execution_mode
         self.device = device
-        self.library = library
-        if self.library == "llama-cpp-python":
-            self.reinit_attempts = 0
-            self.reinit_max = 3
-            self.accumulated_tokens = []
+
+        # Create an alias for llama-cpp-python
+        if adapter == "llama-cpp-python":
+            adapter = "llama_cpp_python"
+
+        self.adapter = adapter
+
+        # Load adapter if specified and not "transformers"
+        self._adapter_func = None
+        if adapter != "transformers":
+            try:
+                # Import the adapter module
+                adapter_module = importlib.import_module(
+                    f"transformers_cfg.adapters.{adapter}"
+                )
+                # Get the adapter function with the same name as the module
+                adapter_func = getattr(adapter_module, adapter)
+                # Create the adapter function with this processor
+                self._adapter_func = adapter_func(self)
+            except (ImportError, AttributeError) as e:
+                logger.warning(
+                    f"Failed to load adapter '{adapter}': {str(e)}. "
+                    f"Falling back to default transformers behavior."
+                )
 
     def mask_logits(
         self, logits: torch.FloatTensor, device: torch.device
@@ -46,6 +65,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         masked_logits = logits.clone()
 
         if self.execution_mode == "speculation":
+            # try to accept the most likely token
             acceptance = torch.zeros(
                 (logits.shape[0], len(self.grammar_constraint.homomorphism)),
                 dtype=torch.bool,
@@ -62,6 +82,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 if is_next_token_accepted:
                     acceptance[i, next_token] = True
                 else:
+                    # resolve each stack to a tensor of True/False for each token
+                    # indicating acceptance
+                    # acceptance = self.grammar_acceptor.filter_vocab(self.stacks, device)
                     acceptance[i] = self.grammar_constraint.filter_vocab(
                         self.batch_parsing_states[i], device
                     )
@@ -70,6 +93,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 self.batch_parsing_states, device
             )
 
+        # if the logits size of the model is more than the tokennizer vocab
+        # we artificially expand the acceptance tensor and block everything
+        # beyond the tokenizer vocab size
         acceptance_vocab_size = acceptance.shape[-1]
         masked_logits_vocab_size = masked_logits.shape[-1]
         if masked_logits_vocab_size != acceptance_vocab_size:
@@ -84,15 +110,22 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             )
             acceptance = torch.cat((acceptance, false_tensor), dim=-1)
 
+        # acceptance is a tensor of shape (batch_size, vocab_size)
+        # get the indices of the accepted tokens
+        # do the following operation only in debug mode
         if os.getenv("DEBUG_MODE") == "True":
+            # convert acceptance to numpy array
             batch_size, vocab_size = acceptance.shape
             acceptance_np = acceptance.cpu().numpy()
             accepted_x, accepted_y = acceptance_np.nonzero()
+            # dict of {batch_index: [accepted_token_indices]}
+            # initialize the dict with empty list
             accepted_token_indices = {i: [] for i in range(batch_size)}
             for x, y in zip(accepted_x, accepted_y):
                 accepted_token_indices[x].append(y)
             logger.debug("Accepted token indices for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_token_indices))
+            # convert token_ids to tokens
             accepted_tokens = {
                 i: [
                     self.grammar_constraint.tokenizer.decode([token_id])
@@ -102,22 +135,35 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             }
             logger.debug("Accepted tokens for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_tokens))
+        # Logits to -inf where False
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
     def process_logits(
-        self, input_ids: list, scores: torch.FloatTensor
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
     ) -> torch.FloatTensor:
+        """
+        :param input_ids:
+        :param scores:
+        :return:
+        """
         if self.device is None:
             device = scores.device
+        # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_parsing_states is None:
             self.batch_parsing_states = [
+                # self.grammar_constraint.init_stacks()
                 copy.deepcopy(
                     self.grammar_constraint.string_recognizer.get_initial_parsing_state()
                 )
                 for _ in range(len(input_ids))
             ]
+
+        if os.getenv("DEBUG_MODE") == "True":
+            print("-" * 80)
+
         logger.debug("input_ids: \n" + pprint.pformat(input_ids))
+        # logger.debug("scores: \n" + pprint.pformat(scores))
         logger.debug("last_size: \n" + pprint.pformat(self.last_size))
         logger.debug(
             "num of stacks: \n"
@@ -125,93 +171,25 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
             )
         )
+        # logger.debug("stacks: \n" + pprint.pformat(self.batch_parsing_states.stacks))
+
         self.batch_parsing_states = (
             self.grammar_constraint.update_state_with_batch_token_seqs(
                 input_ids, self.batch_parsing_states, self.valid_token_start_idx
             )
         )
         logger.debug(f"input_ids: {input_ids}")
+
         masked_scores = self.mask_logits(scores, device)
         return masked_scores
 
-    def _force_eos(self, scores: torch.FloatTensor) -> torch.FloatTensor:
-        eos_token = self.grammar_constraint.tokenizer.eos_token_id
-        logger.warning(f"Forcing EOS token: {eos_token}")
-        mask = torch.full_like(scores, fill_value=-float("inf"))
-        if scores.dim() == 2:
-            mask[:, eos_token] = 0
-        else:
-            mask[eos_token] = 0
-        return mask
-
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
-    def __call__(
-        self, input_ids, scores
-    ) -> torch.FloatTensor:
-        if self.library == "llama-cpp-python":
-            # Normalize input_ids to be a list of token sequences.
-            if np.isscalar(input_ids):
-                input_ids = [int(input_ids)]
-            elif isinstance(input_ids, np.ndarray):
-                input_ids = input_ids.tolist()
-            elif isinstance(input_ids, list):
-                input_ids = [int(i) if isinstance(i, np.generic) else i for i in input_ids]
-            elif isinstance(input_ids, np.generic):
-                input_ids = [int(input_ids)]
-            if input_ids and isinstance(input_ids[0], int):
-                input_ids = [input_ids]
-
-            if not isinstance(scores, torch.Tensor):
-                scores = torch.tensor(scores)
-            if scores.dim() == 1:
-                scores = scores.unsqueeze(0)
-
-            # Track token accumulation for debugging.
-            if len(input_ids[0]) > len(self.accumulated_tokens):
-                new_token = input_ids[0][-1]
-                self.accumulated_tokens.append(new_token)
-                try:
-                    token_text = self.grammar_constraint.tokenizer.decode([new_token])
-                    logger.debug(f"Added token: {new_token} ({token_text})")
-                except Exception:
-                    logger.debug(f"Added token: {new_token} (cannot decode)")
-
-            current_length = len(input_ids[0])
-            if hasattr(self.grammar_constraint, "last_size") and self.grammar_constraint.last_size is not None:
-                expected_length = self.grammar_constraint.last_size + 1
-                if current_length != expected_length:
-                    logger.warning(f"Length mismatch: current={current_length}, expected={expected_length}. Reinitializing grammar constraint.")
-                    self.grammar_constraint.reset()
-                    self.batch_parsing_states = None
-                    self.reinit_attempts = 0
-            try:
-                processed_scores = self.process_logits(input_ids, scores)
-                self.reinit_attempts = 0
-            except ValueError as e:
-                error_msg = str(e)
-                if "All stacks are empty" in error_msg:
-                    if self.reinit_attempts < self.reinit_max:
-                        logger.warning(f"Grammar constraint error: {error_msg}. Attempt {self.reinit_attempts+1}/{self.reinit_max} to recover.")
-                        self.grammar_constraint.reset()
-                        self.batch_parsing_states = None
-                        self.reinit_attempts += 1
-                        try:
-                            processed_scores = self.process_logits(input_ids, scores)
-                        except ValueError as e2:
-                            logger.error(f"Recovery failed: {str(e2)}")
-                            processed_scores = self._force_eos(scores)
-                    else:
-                        logger.error(f"Max retries ({self.reinit_max}) exceeded. Forcing EOS.")
-                        processed_scores = self._force_eos(scores)
-                else:
-                    logger.error(f"Unexpected error: {error_msg}")
-                    raise e
-            if processed_scores.dim() == 2 and processed_scores.size(0) == 1:
-                processed_scores = processed_scores.squeeze(0)
-            return processed_scores.detach().cpu().numpy()
-        else:
-            # Default transformers behavior.
-            return self.process_logits(input_ids, scores)
+    def __call__(self, input_ids, scores):
+        # If we have an adapter function, use it
+        if self._adapter_func is not None:
+            return self._adapter_func(input_ids, scores)
+        # Otherwise, use the default behavior
+        return self.process_logits(input_ids, scores)
 
     def reset(self):
         self.batch_parsing_states = None
