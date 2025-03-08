@@ -5,24 +5,32 @@
 
 ## 💭 Release news
 
+### Experimental development
+
+<details>
+
+- LlamaCPP Python wrapper support ([#116](https://github.com/epfl-dlab/transformers-CFG/pull/116))
+
+</details>
+
 ### Latest release
 #### **[v0.2.7 Latest](https://github.com/epfl-dlab/transformers-CFG/releases/tag/v0.2.7)** (2025-03-02)
 
 #### **Features**
 
-- **(CLI)** Types and MLX support (#93)
-- **(Regex)** Negation, wildcard, and repetition bracket operators (#94, #95, #96, #104)
-- **(Models)** Qwen2 and Qwen2.5 (#97)
-- **(Logits)** Resuable `GrammarConstrainedLogitsProcessor` across generations for efficiency (#100)
-- **(Backend)** Pytest for testing (#109)
-- **(CI/CD)** GitHub Actions workflow for automation (#110)
+- Types and MLX support ([#93](https://github.com/epfl-dlab/transformers-CFG/pull/93))
+- Negation, wildcard, and repetition bracket operators ([#94](https://github.com/epfl-dlab/transformers-CFG/pull/94), [#95](https://github.com/epfl-dlab/transformers-CFG/pull/95), [#96](https://github.com/epfl-dlab/transformers-CFG/pull/96), [#104](https://github.com/epfl-dlab/transformers-CFG/pull/104))
+- Qwen2 and Qwen2.5 ([#97](https://github.com/epfl-dlab/transformers-CFG/pull/97))
+- Resuable `GrammarConstrainedLogitsProcessor` for efficiency ([#100](https://github.com/epfl-dlab/transformers-CFG/pull/100))
+- Pytest for testing ([#109](https://github.com/epfl-dlab/transformers-CFG/pull/109))
+- GitHub Actions workflow for automation ([#110](https://github.com/epfl-dlab/transformers-CFG/pull/110))
 
 #### **Bug fixes**
 
-- Avoid computing full masks and optimized type additions (#101)
-- Refactored grammar encoding to improve structure (#99)
-- EOS token now correctly masks (#108)
-- Multiple bugs removed and aesthetics improved (#107)
+- Avoid computing full masks and optimized type additions ([#101](https://github.com/epfl-dlab/transformers-CFG/pull/101))
+- Refactored grammar encoding to improve structure ([#99](https://github.com/epfl-dlab/transformers-CFG/pull/99))
+- EOS token now correctly masks ([#108](https://github.com/epfl-dlab/transformers-CFG/pull/108))
+- Multiple bugs removed and aesthetics improved ([#107](https://github.com/epfl-dlab/transformers-CFG/pull/107))
 
 ### Recent releases
 
