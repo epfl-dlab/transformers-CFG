@@ -9,7 +9,11 @@
 
 <details>
 
+#### **Features**
 - LlamaCPP Python wrapper support ([#116](https://github.com/epfl-dlab/transformers-CFG/pull/116))
+
+#### **Bug fixes**
+- `pip show` license ([#117](https://github.com/epfl-dlab/transformers-CFG/pull/117))
 
 </details>
 
@@ -18,8 +22,8 @@
 
 #### **Features**
 
-- Types and MLX support ([#93](https://github.com/epfl-dlab/transformers-CFG/pull/93))
-- Negation, wildcard, and repetition bracket operators ([#94](https://github.com/epfl-dlab/transformers-CFG/pull/94), [#95](https://github.com/epfl-dlab/transformers-CFG/pull/95), [#96](https://github.com/epfl-dlab/transformers-CFG/pull/96), [#104](https://github.com/epfl-dlab/transformers-CFG/pull/104))
+- Types and MLX ([#93](https://github.com/epfl-dlab/transformers-CFG/pull/93))
+- Negation, wildcards, repetition brackets ([#94](https://github.com/epfl-dlab/transformers-CFG/pull/94), [#95](https://github.com/epfl-dlab/transformers-CFG/pull/95), [#96](https://github.com/epfl-dlab/transformers-CFG/pull/96), [#104](https://github.com/epfl-dlab/transformers-CFG/pull/104))
 - Qwen2 and Qwen2.5 ([#97](https://github.com/epfl-dlab/transformers-CFG/pull/97))
 - Resuable `GrammarConstrainedLogitsProcessor` for efficiency ([#100](https://github.com/epfl-dlab/transformers-CFG/pull/100))
 - Pytest for testing ([#109](https://github.com/epfl-dlab/transformers-CFG/pull/109))
@@ -38,10 +42,10 @@
 - **[DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
 - **LLaMA-3** (2024-07-08)
 - **[JSON Schema](examples/grammars/custom_json_grammars/README.md)** (2024-05-13)
-- **Token masking optimization** (2024-04-25)
+- **Mask optimization** (2024-04-25)
 - **[Phi](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
-- **[Online demo with JSON grammar](http://saibo-creator.xyz:7860/) at HF Space** (2024-04-10)
-- **Unicode and multilingual grammar** (2024-02-29)
+- **[Online demo](http://saibo-creator.xyz:7860/)** (2024-04-10)
+- **Unicode and foreign text** (2024-02-29)
 - **Text-Generation-WebUI** (2023-12-17)
   - We are pleased to announce that `transformers-cfg` has been integrated into the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project, allowing users to leverage CFG capabilities within this widely used text-generation interface ([Pull](https://github.com/oobabooga/text-generation-webui/pull/4953)).
 
@@ -355,10 +359,10 @@ We maintain a collection of grammars in `examples/grammars`, aligned with llama-
 
 ## ✅ Supported models
 
-- [Qwen2](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f) and [2.5](https://huggingface.co/collections/Qwen/qwen25-66e81a666513e518adb90d9e)
-- [LLaMa](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf) and Meta Llama
-- [GPT-2](https://huggingface.co/openai-community/gpt2)
-- [Mistral](https://huggingface.co/mistralai/Mistral-7B-v0.1)
+- [Qwen](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f) ≤ 2.5
+- (Meta) [LLaMa](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf) ≤ 3.0
+- [GPT](https://huggingface.co/openai-community/gpt2) ≤ 2
+- [Mistral](https://huggingface.co/mistralai/Mistral-7B-v0.1) ≤ 0.3
 - [Falcon](https://huggingface.co/tiiuae/falcon-7b)
 - [OPT](https://huggingface.co/collections/facebook/opt-66ed00e15599f02966818844)
 
