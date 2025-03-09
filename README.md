@@ -9,7 +9,11 @@
 
 <details>
 
+#### **Features**
 - LlamaCPP Python wrapper support ([#116](https://github.com/epfl-dlab/transformers-CFG/pull/116))
+
+#### **Bug fixes**
+- `pip show` license ([#117](https://github.com/epfl-dlab/transformers-CFG/pull/117))
 
 </details>
 
@@ -18,8 +22,8 @@
 
 #### **Features**
 
-- Types and MLX support ([#93](https://github.com/epfl-dlab/transformers-CFG/pull/93))
-- Negation, wildcard, and repetition bracket operators ([#94](https://github.com/epfl-dlab/transformers-CFG/pull/94), [#95](https://github.com/epfl-dlab/transformers-CFG/pull/95), [#96](https://github.com/epfl-dlab/transformers-CFG/pull/96), [#104](https://github.com/epfl-dlab/transformers-CFG/pull/104))
+- Types and MLX ([#93](https://github.com/epfl-dlab/transformers-CFG/pull/93))
+- Negation, wildcards, repetition brackets ([#94](https://github.com/epfl-dlab/transformers-CFG/pull/94), [#95](https://github.com/epfl-dlab/transformers-CFG/pull/95), [#96](https://github.com/epfl-dlab/transformers-CFG/pull/96), [#104](https://github.com/epfl-dlab/transformers-CFG/pull/104))
 - Qwen2 and Qwen2.5 ([#97](https://github.com/epfl-dlab/transformers-CFG/pull/97))
 - Resuable `GrammarConstrainedLogitsProcessor` for efficiency ([#100](https://github.com/epfl-dlab/transformers-CFG/pull/100))
 - Pytest for testing ([#109](https://github.com/epfl-dlab/transformers-CFG/pull/109))
@@ -38,10 +42,10 @@
 - **[DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
 - **LLaMA-3** (2024-07-08)
 - **[JSON Schema](examples/grammars/custom_json_grammars/README.md)** (2024-05-13)
-- **Token masking optimization** (2024-04-25)
+- **Mask optimization** (2024-04-25)
 - **[Phi](https://github.com/epfl-dlab/transformers-CFG/issues/34)** (2024-04-16)
-- **[Online demo with JSON grammar](http://saibo-creator.xyz:7860/) at HF Space** (2024-04-10)
-- **Unicode and multilingual grammar** (2024-02-29)
+- **[Online demo](http://saibo-creator.xyz:7860/)** (2024-04-10)
+- **Unicode and foreign text** (2024-02-29)
 - **Text-Generation-WebUI** (2023-12-17)
   - We are pleased to announce that `transformers-cfg` has been integrated into the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project, allowing users to leverage CFG capabilities within this widely used text-generation interface ([Pull](https://github.com/oobabooga/text-generation-webui/pull/4953)).
 
@@ -355,12 +359,86 @@ We maintain a collection of grammars in `examples/grammars`, aligned with llama-
 
 ## ✅ Supported models
 
-- [Qwen2](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f) and [2.5](https://huggingface.co/collections/Qwen/qwen25-66e81a666513e518adb90d9e)
-- [LLaMa](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf) and Meta Llama
-- [GPT-2](https://huggingface.co/openai-community/gpt2)
-- [Mistral](https://huggingface.co/mistralai/Mistral-7B-v0.1)
-- [Falcon](https://huggingface.co/tiiuae/falcon-7b)
-- [OPT](https://huggingface.co/collections/facebook/opt-66ed00e15599f02966818844)
+### Qwen  
+<details>  
+<summary>Qwen</summary>  
+  
+- [Qwen](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f) ≤ 2.5  
+
+</details>  
+
+### Meta (LLaMa)  
+<details>  
+<summary>Meta (LLaMa)</summary>  
+
+- [LLaMa](https://huggingface.co/baffo32/decapoda-research-llama-7B-hf) ≤ 3.0  
+- [huggyllama/llama-7b](https://huggingface.co/huggyllama/llama-7b)  
+- [TinyPixel/Llama-2-7B-bf16-sharded](https://huggingface.co/TinyPixel/Llama-2-7B-bf16-sharded)  
+- [OpenAssistant/llama2-13b-orca-8k-3319](https://huggingface.co/OpenAssistant/llama2-13b-orca-8k-3319)  
+- [NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf)  
+- [NousResearch/Nous-Hermes-Llama2-13b](https://huggingface.co/NousResearch/Nous-Hermes-Llama2-13b)  
+- [TheBloke/Llama-2-13B-chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-13B-chat-GPTQ)  
+- [NousResearch/Llama-2-7b-hf](https://huggingface.co/NousResearch/Llama-2-7b-hf)  
+- [fxmarty/tiny-llama-fast-tokenizer](https://huggingface.co/fxmarty/tiny-llama-fast-tokenizer)  
+- [TheBloke/Llama-2-7B-Chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-GPTQ)  
+- [lmsys/vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5)  
+- [lmsys/vicuna-13b-v1.5](https://huggingface.co/lmsys/vicuna-13b-v1.5)  
+- [togethercomputer/LLaMA-2-7B-32K](https://huggingface.co/togethercomputer/LLaMA-2-7B-32K)  
+- [openlm-research/open_llama_7b_v2](https://huggingface.co/openlm-research/open_llama_7b_v2)  
+- [NousResearch/Nous-Hermes-llama-2-7b](https://huggingface.co/NousResearch/Nous-Hermes-llama-2-7b)  
+- [TheBloke/Llama-2-7B-Chat-AWQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-AWQ)  
+- [h2oai/h2ogpt-4096-llama2-7b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-7b-chat)  
+- [h2oai/h2ogpt-4096-llama2-13b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-13b-chat)  
+- [garage-bAInd/Platypus2-7B](https://huggingface.co/garage-bAInd/Platypus2-7B)  
+
+</details>  
+
+### GPT  
+<details>  
+<summary>GPT</summary>  
+
+- [GPT](https://huggingface.co/openai-community/gpt2) ≤ 2  
+- [gpt2](https://huggingface.co/gpt2)  
+- [distilgpt2](https://huggingface.co/distilgpt2)  
+- [openai-community/gpt2-large](https://huggingface.co/openai-community/gpt2-large)  
+- [openai-community/gpt2-xl](https://huggingface.co/openai-community/gpt2-xl)  
+- [openai-community/gpt2-medium](https://huggingface.co/openai-community/gpt2-medium)  
+- [EleutherAI/gpt-neo-125m](https://huggingface.co/EleutherAI/gpt-neo-125m)  
+
+</details>  
+
+### Mistral  
+<details>  
+<summary>Mistral</summary>  
+
+- [Mistral](https://huggingface.co/mistralai/Mistral-7B-v0.1) ≤ 0.3  
+- [mistralai/Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)  
+- [mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  
+
+</details>  
+
+### Falcon  
+<details>  
+<summary>Falcon</summary>  
+
+- [Falcon](https://huggingface.co/tiiuae/falcon-7b)  
+- [tiiuae/falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)  
+- [tiiuae/falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)  
+
+</details>  
+
+### OPT  
+<details>  
+<summary>OPT</summary>  
+
+- [OPT](https://huggingface.co/collections/facebook/opt-66ed00e15599f02966818844)  
+- [facebook/opt-125m](https://huggingface.co/facebook/opt-125m)  
+- [facebook/opt-2.7b](https://huggingface.co/facebook/opt-2.7b)  
+- [facebook/opt-350m](https://huggingface.co/facebook/opt-350m)  
+- [facebook/opt-1.3b](https://huggingface.co/facebook/opt-1.3b)  
+- [facebook/opt-13b](https://huggingface.co/facebook/opt-13b)  
+
+</details>
 
 See [supported_models.yaml](docs/supported_models.yaml) for the full list whose extent is constantly being updated.
 
