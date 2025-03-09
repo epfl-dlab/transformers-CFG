@@ -55,11 +55,11 @@
 - **[Online demo](http://saibo-creator.xyz:7860/)** (2024-04-10)
 - **Unicode and foreign text** (2024-02-29)
 - **Text-Generation-WebUI** (2023-12-17)
-  - We are pleased to announce that `transformers-cfg` has been integrated into the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project, allowing users to leverage CFG capabilities within this widely used text-generation interface ([Pull](https://github.com/oobabooga/text-generation-webui/pull/4953)).
+  - We are pleased to announce that `transformers-cfg` has been integrated into the [Text-Generation-WebUI](https://github.com/oobabooga/text-generation-webui) project, allowing users to leverage CFG capabilities within this widely used text-generation interface ([PR](https://github.com/oobabooga/text-generation-webui/pull/4953)).
 
 ## 🚀 Introduction
 
-Initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library ([Pull](https://github.com/huggingface/transformers/pull/27557)), `transformers-cfg` extends the Hugging Face Transformers library to support constrained decoding through context-free grammars (CFG), offering a Transformers parellel for LlamaCPP's GBNF support, but with stricter generation rules.
+Initially developed as a pull request to the [Hugging Face Transformers](https://github.com/huggingface/transformers) library ([PR](https://github.com/huggingface/transformers/pull/27557)), `transformers-cfg` extends the Hugging Face Transformers library to support constrained decoding through context-free grammars (CFG), offering a Transformers parellel for LlamaCPP's GBNF support, but with stricter generation rules.
 
 ## 💻 Installation
 
