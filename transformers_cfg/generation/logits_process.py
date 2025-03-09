@@ -2,6 +2,7 @@ import copy
 import math
 import os
 import pprint
+import importlib
 from typing import Optional, Literal
 
 import torch
@@ -25,6 +26,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         valid_token_start_idx: Optional[int] = None,
         execution_mode: Literal["speculation", "full_mask"] = "full_mask",
         device: Optional[torch.device] = None,
+        adapter: str = "transformers",
     ) -> None:
         self.last_size = None
         self.grammar_constraint = grammar_constraint
@@ -32,6 +34,30 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.valid_token_start_idx = valid_token_start_idx
         self.execution_mode = execution_mode
         self.device = device
+
+        # Create an alias for llama-cpp-python
+        if adapter == "llama-cpp-python":
+            adapter = "llama_cpp_python"
+
+        self.adapter = adapter
+
+        # Load adapter if specified and not "transformers"
+        self._adapter_func = None
+        if adapter != "transformers":
+            try:
+                # Import the adapter module
+                adapter_module = importlib.import_module(
+                    f"transformers_cfg.adapters.{adapter}"
+                )
+                # Get the adapter function with the same name as the module
+                adapter_func = getattr(adapter_module, adapter)
+                # Create the adapter function with this processor
+                self._adapter_func = adapter_func(self)
+            except (ImportError, AttributeError) as e:
+                logger.warning(
+                    f"Failed to load adapter '{adapter}': {str(e)}. "
+                    f"Falling back to default transformers behavior."
+                )
 
     def mask_logits(
         self, logits: torch.FloatTensor, device: torch.device
@@ -158,9 +184,11 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         return masked_scores
 
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
-    def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
-    ) -> torch.FloatTensor:
+    def __call__(self, input_ids, scores):
+        # If we have an adapter function, use it
+        if self._adapter_func is not None:
+            return self._adapter_func(input_ids, scores)
+        # Otherwise, use the default behavior
         return self.process_logits(input_ids, scores)
 
     def reset(self):
