@@ -113,7 +113,7 @@ The `transformers-cfg-cli` tool enables text generation using a model and a spec
 transformers-cfg-cli generate \
     -m "facebook/opt-125m" \
     -g "examples/grammars/animal.ebnf" \
-    -p 'The text says, "The animal is a dog." The answer is obvious.' \
+    -p 'The text says, "The animal is a dog." The answer is obvious. ' \
     --max_new_tokens 50 \
 # The animal is a cat.
 ```
@@ -154,8 +154,8 @@ if __name__ == "__main__":
 
     # Define prompts
     prompts = [
-        'The text says, "The animal is a dog." The answer is obvious.',
-        'I\'m going to say "The animal is a dog." Here I go!'
+        'The text says, "The animal is a dog." The answer is obvious. ',
+        'I\'m going to say "The animal is a dog." Here I go! '
     ]
     
     # Tokenize prompts
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     # Define prompt
     prompts = [
-        'The text says, "The animal is a dog." The answer is obvious.'
+        'The text says, "The animal is a dog." The answer is obvious. '
     ]
     
     # Tokenize prompt
@@ -279,8 +279,8 @@ pipe = pipeline(
 
 # Define prompts
 prompts = [
-    'The text says, "The animal is a dog." The answer is obvious.',
-    'I\'m going to say "The animal is a dog." Here I go!'
+    'The text says, "The animal is a dog." The answer is obvious. ',
+    'I\'m going to say "The animal is a dog." Here I go! '
 ]
 
 # Generate constrained text using the pipeline.
@@ -332,7 +332,7 @@ grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
 grammar_processor = GrammarConstrainedLogitsProcessor(grammar, adapter="llama-cpp-python")
 
 # Define prompt.
-prompt = 'The text says, "The animal is a dog." The answer is obvious.'
+prompt = 'The text says, "The animal is a dog." The answer is obvious. '
 
 # Generate constrained text (non-streaming).
 response = model.create_completion(
@@ -379,7 +379,7 @@ grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
 grammar_processor = GrammarConstrainedLogitsProcessor(grammar, adapter="llama-cpp-python")
 
 # Define prompt.
-prompt = 'The text says, "The animal is a dog." The answer is obvious.'
+prompt = 'The text says, "The animal is a dog." The answer is obvious. '
 
 # Generate constrained text with streaming
 response = model.create_completion(
