@@ -3,8 +3,8 @@ from functools import lru_cache
 from typing import Dict, List, Set, Tuple, Optional
 from collections import deque
 
-from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
-    TokenizerMiddleMapping,
+from transformers_cfg.tokenization.mapping.token2byte import (
+    Token2ByteMapping,
 )
 from transformers_cfg.tokenization.tokenizer import TCFG_Tokenizer
 
@@ -51,7 +51,7 @@ class ByteTrie:
     def from_tokenizer(cls, tokenizer):
         vocab: Dict[str, int] = tokenizer.get_vocab()
         trie = cls()
-        mapping = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+        mapping = Token2ByteMapping.from_hf_tokenizer(tokenizer)
         TCFG_tokenizer = TCFG_Tokenizer.from_hf_tokenizer(tokenizer)
 
         token_ids_to_ignore: Set[

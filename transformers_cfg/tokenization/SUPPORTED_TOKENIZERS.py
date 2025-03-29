@@ -7,6 +7,7 @@ from transformers import (
     PreTrainedTokenizerFast,
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
+    ByT5Tokenizer,
 )
 
 SUPPORTED_TOKENIZERS = {
@@ -18,4 +19,5 @@ SUPPORTED_TOKENIZERS = {
     PreTrainedTokenizerFast,
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
+    ByT5Tokenizer,
 }
