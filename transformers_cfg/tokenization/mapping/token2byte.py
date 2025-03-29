@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import torch
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
 from .ByteProxyMapping import ByteProxyMapping, LLAMAByteProxyMapping
@@ -19,7 +21,7 @@ from transformers_cfg.tokenization.utils import get_tokenizer_charset
 log = logging.getLogger(__name__)
 
 
-class Token2ByteMapping:
+class Token2ByteMapping(ABC):
     def __init__(self, tokenizer):
         self.eos_token_id = tokenizer.eos_token_id
         self.bos_token_id = tokenizer.bos_token_id
@@ -30,8 +32,9 @@ class Token2ByteMapping:
     def __len__(self):
         return self._length
 
+    @abstractmethod
     def map(self, token_id: int, verbose=False) -> bytes:
-        raise NotImplementedError("This method should be implemented in the subclass")
+        pass
 
     @classmethod
     def from_hf_tokenizer(cls, hf_tokenizer):
