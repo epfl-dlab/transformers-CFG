@@ -9,8 +9,8 @@ from transformers import PreTrainedTokenizer
 from transformers_cfg.recognizer import StringRecognizer, AcceptState
 from transformers_cfg.parser import parse_ebnf
 from transformers_cfg.tokenization.byte_trie import ByteTrie, TrieNode
-from transformers_cfg.tokenization.middle.TokenizerMiddleMapping import (
-    TokenizerMiddleMapping,
+from transformers_cfg.tokenization.mapping.token2byte import (
+    Token2ByteMapping,
 )
 from transformers_cfg.utf8_utils import PartialUTF8
 
@@ -24,7 +24,7 @@ class AbsTokenRecognizer(ABC):
         tokenizer: PreTrainedTokenizer,
         start_rule_name: Optional[str] = "root",
         trie: Optional[ByteTrie] = None,
-        homomorphism: Optional[TokenizerMiddleMapping] = None,
+        homomorphism: Optional[Token2ByteMapping] = None,
     ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
@@ -39,7 +39,7 @@ class AbsTokenRecognizer(ABC):
         else:
             self.byte_trie = trie
         if homomorphism is None:
-            self.homomorphism = TokenizerMiddleMapping.from_hf_tokenizer(tokenizer)
+            self.homomorphism = Token2ByteMapping.from_hf_tokenizer(tokenizer)
         else:
             self.homomorphism = homomorphism
 
@@ -127,7 +127,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
         start_rule_name: str,
         tokenizer: PreTrainedTokenizer,
         trie: Optional[ByteTrie] = None,
-        homomorphism: Optional[TokenizerMiddleMapping] = None,
+        homomorphism: Optional[Token2ByteMapping] = None,
     ):
         super().__init__(
             grammar_str,

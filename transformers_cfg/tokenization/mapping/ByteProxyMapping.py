@@ -53,7 +53,7 @@ class ByteProxyMapping:
         return bytes(bytes_seq)
 
 
-class LLAMAByteProxyMapper:
+class LLAMAByteProxyMapping:
     def __init__(self):
         pass
 
