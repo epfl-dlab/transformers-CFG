@@ -34,6 +34,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self.valid_token_start_idx = valid_token_start_idx
         self.execution_mode = execution_mode
         self.device = device
+        self._vocab_mismatch_logged = False  # Flag to log warning only once
 
         # Create an alias for llama-cpp-python
         if adapter == "llama-cpp-python":
@@ -93,22 +94,89 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 self.batch_parsing_states, device
             )
 
-        # if the logits size of the model is more than the tokennizer vocab
-        # we artificially expand the acceptance tensor and block everything
-        # beyond the tokenizer vocab size
+        # --- START OF MODIFIED PATCH for vocab size mismatch ---
         acceptance_vocab_size = acceptance.shape[-1]
         masked_logits_vocab_size = masked_logits.shape[-1]
+
         if masked_logits_vocab_size != acceptance_vocab_size:
-            assert (
-                acceptance_vocab_size < masked_logits_vocab_size
-            ), "impossible for tokenizer vocab to be less than model vocab"
-            vocab_size_diff = masked_logits_vocab_size - acceptance_vocab_size
-            false_tensor = torch.zeros(
-                (*acceptance.shape[:-1], vocab_size_diff),
-                dtype=torch.bool,
-                device=device,
-            )
-            acceptance = torch.cat((acceptance, false_tensor), dim=-1)
+            vocab_diff = acceptance_vocab_size - masked_logits_vocab_size
+
+            # --- Log details and warning only once ---
+            if not self._vocab_mismatch_logged:
+                logger.warning(
+                    f"Vocab size mismatch detected: Model logits size = {masked_logits_vocab_size}, "
+                    f"Tokenizer/Acceptance mask size = {acceptance_vocab_size} (Difference: {vocab_diff})"
+                )
+
+                # Identify and log extra tokens
+                if vocab_diff > 0:  # acceptance mask is larger
+                    extra_token_ids = list(
+                        range(
+                            masked_logits_vocab_size, acceptance_vocab_size
+                        )
+                    )
+                    try:
+                        # Attempt to decode extra tokens using the tokenizer
+                        extra_tokens_str = self.grammar_constraint.tokenizer.decode(
+                            extra_token_ids
+                        )
+                        logger.warning(
+                            f"Tokenizer/Acceptance mask seems to have {vocab_diff} extra token IDs "
+                            f"(IDs {extra_token_ids[0]} to {extra_token_ids[-1]}) compared to the model's logits dimension. "
+                            f"Decoded extra tokens (approximate): '{extra_tokens_str}'. "
+                            f"Truncating acceptance mask."
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"Tokenizer/Acceptance mask seems to have {vocab_diff} extra token IDs "
+                            f"(IDs {extra_token_ids[0]} to {extra_token_ids[-1]}) compared to the model's logits dimension, "
+                            f"but decoding failed: {e}. Truncating acceptance mask."
+                        )
+                elif vocab_diff < 0:  # model logits is larger
+                    extra_token_ids = list(
+                        range(
+                            acceptance_vocab_size, masked_logits_vocab_size
+                        )
+                    )
+                    logger.warning(
+                        f"Model logits dimension seems to be {abs(vocab_diff)} larger than the tokenizer's vocab size. "
+                        f"The extra model token IDs are from {extra_token_ids[0]} to {extra_token_ids[-1]}. "
+                        f"Padding acceptance mask with 'False'."
+                        f" (Cannot decode model-specific token IDs from here)."
+                    )
+
+                self._vocab_mismatch_logged = True  # Set flag after logging details once
+            # --- End log details and warning only once ---
+
+            # --- Apply the fix (runs every time a mismatch occurs) ---
+            if vocab_diff > 0:  # acceptance mask is larger
+                # Truncate the acceptance mask to match the logits size
+                acceptance = acceptance[..., :masked_logits_vocab_size]
+                logger.debug(
+                    f"Truncated acceptance mask to shape: {acceptance.shape}"
+                )
+            elif vocab_diff < 0:  # model logits is larger
+                # Pad the acceptance mask with False to match the logits size
+                num_padding = abs(vocab_diff)
+                padding_tensor = torch.zeros(
+                    (*acceptance.shape[:-1], num_padding),
+                    dtype=torch.bool,
+                    device=device,
+                )
+                acceptance = torch.cat((acceptance, padding_tensor), dim=-1)
+                logger.debug(
+                    f"Padded acceptance mask to shape: {acceptance.shape}"
+                )
+
+            # Final check to ensure shapes now match after correction
+            if acceptance.shape[-1] != masked_logits.shape[-1]:
+                # Keep this error outside the flag check as it indicates alignment failure
+                raise RuntimeError(
+                    f"Automatic vocab size alignment failed. "
+                    f"Adjusted acceptance shape: {acceptance.shape}, "
+                    f"Masked logits shape: {masked_logits.shape}"
+                )
+        # --- END OF MODIFIED PATCH ---
 
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
@@ -135,7 +203,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             }
             logger.debug("Accepted tokens for the current batch:")
             logger.debug("\n" + pprint.pformat(accepted_tokens))
+
         # Logits to -inf where False
+        # Shapes should match perfectly now due to the patch above
         masked_logits[~acceptance] = -math.inf
         return masked_logits
 
@@ -149,6 +219,9 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         """
         if self.device is None:
             device = scores.device
+        else:
+            device = self.device  # Use explicitly set device if available
+
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_parsing_states is None:
             self.batch_parsing_states = [
@@ -193,5 +266,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
 
     def reset(self):
         self.batch_parsing_states = None
+        self._vocab_mismatch_logged = False  # Reset flag on reset
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
