@@ -94,7 +94,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 self.batch_parsing_states, device
             )
 
-        # --- START OF REFINED HACKY PATCH for vocab size mismatch ---
+        # --- START OF MODIFIED PATCH for vocab size mismatch ---
         acceptance_vocab_size = acceptance.shape[-1]
         masked_logits_vocab_size = masked_logits.shape[-1]
 
@@ -108,70 +108,75 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                     f"Tokenizer/Acceptance mask size = {acceptance_vocab_size} (Difference: {vocab_diff})"
                 )
 
-                # Try to identify the boundary token if mismatch is exactly 1
-                if abs(vocab_diff) == 1:
-                    if vocab_diff == 1:  # acceptance mask is 1 larger
-                        boundary_token_id = masked_logits_vocab_size # ID missing from model logits
-                        try:
-                            # Decode using the transformers tokenizer
-                            boundary_token_str = self.grammar_constraint.tokenizer.decode([boundary_token_id])
-                            logger.warning(
-                                f"Tokenizer seems to have an extra token ID {boundary_token_id} ('{boundary_token_str}') "
-                                f"compared to the model's logits dimension. Truncating acceptance mask."
-                            )
-                        except Exception as e:
-                            logger.warning(
-                                f"Tokenizer seems to have an extra token ID {boundary_token_id} "
-                                f"compared to the model's logits dimension, but decoding failed: {e}. Truncating acceptance mask."
-                            )
-                    else:  # vocab_diff == -1, model logits is 1 larger
-                        boundary_token_id = acceptance_vocab_size # ID missing from tokenizer range
-                        logger.warning(
-                            f"Model logits dimension seems to be 1 larger than the tokenizer's vocab size. "
-                            f"The extra model token ID is {boundary_token_id}. Padding acceptance mask with 'False'."
-                            f" (Cannot decode model-specific token ID {boundary_token_id} from here)."
+                # Identify and log extra tokens
+                if vocab_diff > 0:  # acceptance mask is larger
+                    extra_token_ids = list(
+                        range(
+                            masked_logits_vocab_size, acceptance_vocab_size
                         )
-                else:
-                    # If the mismatch is not exactly 1, log this before raising error
-                     logger.error(
-                        f"Unhandled vocabulary size mismatch difference: {vocab_diff}. Cannot automatically align."
-                     )
+                    )
+                    try:
+                        # Attempt to decode extra tokens using the tokenizer
+                        extra_tokens_str = self.grammar_constraint.tokenizer.decode(
+                            extra_token_ids
+                        )
+                        logger.warning(
+                            f"Tokenizer/Acceptance mask seems to have {vocab_diff} extra token IDs "
+                            f"(IDs {extra_token_ids[0]} to {extra_token_ids[-1]}) compared to the model's logits dimension. "
+                            f"Decoded extra tokens (approximate): '{extra_tokens_str}'. "
+                            f"Truncating acceptance mask."
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"Tokenizer/Acceptance mask seems to have {vocab_diff} extra token IDs "
+                            f"(IDs {extra_token_ids[0]} to {extra_token_ids[-1]}) compared to the model's logits dimension, "
+                            f"but decoding failed: {e}. Truncating acceptance mask."
+                        )
+                elif vocab_diff < 0:  # model logits is larger
+                    extra_token_ids = list(
+                        range(
+                            acceptance_vocab_size, masked_logits_vocab_size
+                        )
+                    )
+                    logger.warning(
+                        f"Model logits dimension seems to be {abs(vocab_diff)} larger than the tokenizer's vocab size. "
+                        f"The extra model token IDs are from {extra_token_ids[0]} to {extra_token_ids[-1]}. "
+                        f"Padding acceptance mask with 'False'."
+                        f" (Cannot decode model-specific token IDs from here)."
+                    )
 
-                self._vocab_mismatch_logged = True # Set flag after logging details once
+                self._vocab_mismatch_logged = True  # Set flag after logging details once
             # --- End log details and warning only once ---
 
-
             # --- Apply the fix (runs every time a mismatch occurs) ---
-            if abs(vocab_diff) == 1:
-                if vocab_diff == 1:  # acceptance mask is 1 larger
-                    acceptance = acceptance[..., :masked_logits_vocab_size]  # Truncate
-                else:  # vocab_diff == -1, model logits is 1 larger
-                    # Pad with False at the end
-                    false_tensor = torch.zeros(
-                        (*acceptance.shape[:-1], 1),
-                        dtype=torch.bool,
-                        device=device,
-                    )
-                    acceptance = torch.cat((acceptance, false_tensor), dim=-1) # Pad
-            else:
-                # If the mismatch is not exactly 1, raise the error
-                raise RuntimeError(
-                    f"Unhandled vocabulary size mismatch: "
-                    f"Model logits size = {masked_logits_vocab_size}, "
-                    f"Acceptance mask size = {acceptance_vocab_size}. "
-                    f"Difference is {vocab_diff}, expected 0 or +/-1."
+            if vocab_diff > 0:  # acceptance mask is larger
+                # Truncate the acceptance mask to match the logits size
+                acceptance = acceptance[..., :masked_logits_vocab_size]
+                logger.debug(
+                    f"Truncated acceptance mask to shape: {acceptance.shape}"
+                )
+            elif vocab_diff < 0:  # model logits is larger
+                # Pad the acceptance mask with False to match the logits size
+                num_padding = abs(vocab_diff)
+                padding_tensor = torch.zeros(
+                    (*acceptance.shape[:-1], num_padding),
+                    dtype=torch.bool,
+                    device=device,
+                )
+                acceptance = torch.cat((acceptance, padding_tensor), dim=-1)
+                logger.debug(
+                    f"Padded acceptance mask to shape: {acceptance.shape}"
                 )
 
             # Final check to ensure shapes now match after correction
             if acceptance.shape[-1] != masked_logits.shape[-1]:
-                 # Keep this error outside the flag check
+                # Keep this error outside the flag check as it indicates alignment failure
                 raise RuntimeError(
                     f"Automatic vocab size alignment failed. "
                     f"Adjusted acceptance shape: {acceptance.shape}, "
                     f"Masked logits shape: {masked_logits.shape}"
                 )
-        # --- END OF REFINED HACKY PATCH ---
-
+        # --- END OF MODIFIED PATCH ---
 
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
@@ -215,7 +220,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         if self.device is None:
             device = scores.device
         else:
-            device = self.device # Use explicitly set device if available
+            device = self.device  # Use explicitly set device if available
 
         # we dynamically create stacks at the first call, so that we know the batch size and beam size
         if self.batch_parsing_states is None:
@@ -261,6 +266,6 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
 
     def reset(self):
         self.batch_parsing_states = None
-        self._vocab_mismatch_logged = False # Reset flag on reset
+        self._vocab_mismatch_logged = False  # Reset flag on reset
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
