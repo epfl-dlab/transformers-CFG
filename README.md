@@ -46,6 +46,8 @@
 
 ### Recent releases
 
+- **[ByT5](https://github.com/epfl-dlab/transformers-CFG/pull/125)** — with @urroxyz (2025-03-29)
+- **[Llama 3.1/3.2/3.3](https://github.com/epfl-dlab/transformers-CFG/issues/119)** (2025-03-09)
 - **[Gemma-2](https://github.com/epfl-dlab/transformers-CFG/pull/75)** — @fillassuncao (2024-08-16)
 - **[DeepSeek](https://github.com/epfl-dlab/transformers-CFG/pull/73)** (2024-07-24)
 - **LLaMA-3** (2024-07-08)
@@ -84,7 +86,7 @@ pip install git+https://github.com/epfl-dlab/transformers-CFG.git@main
 - **EBNF Grammar Support**: Uses Extended Backus-Naur Form (EBNF) for grammar description.
 - **Seamless Integration**: Compatible with the llama-cpp project for easy replacement.
 - **Broad Model Compatibility**: Works with all models in the 🤗 Transformers library.
-- **Multilingual Grammar Support**: Enables grammars in various languages, including Chinese (中文), Japanese (日本語), Korean (한국어), Hindi (हिन्दी), Hebrew (עברית), Arabic (العربية), and emoji (🤗).  
+- **Multilingual Grammar Support**: Enables grammars in various languages, including Chinese (中文), Japanese (日本語), Korean (한국어), Hindi (हिन्दी), Hebrew (עברית), Arabic (العربية), and emoji (🤗).
 
 ## 🤔 What is a grammar?
 
@@ -147,7 +149,7 @@ if __name__ == "__main__":
     root   ::= "The animal is a " animal "."
     animal ::= "cat" | "fish"
     """
-    
+
     # Create grammar constraint and logits processor
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -157,7 +159,7 @@ if __name__ == "__main__":
         'The text says, "The animal is a dog." The answer is obvious. ',
         'I\'m going to say "The animal is a dog." Here I go! '
     ]
-    
+
     # Tokenize prompts
     input_ids = tokenizer(prompts, add_special_tokens=False, return_tensors="pt", padding=True)["input_ids"].to(device)
 
@@ -169,7 +171,7 @@ if __name__ == "__main__":
         repetition_penalty=1.1,
         num_return_sequences=1,
     )
-    
+
     # Decode and print generated text
     generations = tokenizer.batch_decode(output, skip_special_tokens=True)
     for generation in generations:
@@ -207,7 +209,7 @@ if __name__ == "__main__":
     root   ::= "The animal is a " animal "."
     animal ::= "cat" | "fish"
     """
-    
+
     # Create grammar constraint and logits processor
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     prompts = [
         'The text says, "The animal is a dog." The answer is obvious. '
     ]
-    
+
     # Tokenize prompt
     input_ids = tokenizer(prompts, add_special_tokens=False, return_tensors="pt", padding=True)["input_ids"].to(device)
 
@@ -417,74 +419,74 @@ Learn to create grammars for complex JSON objects in our [documentation](example
 
 ### 🤖 Tested models
 
-<details>  
-<summary>Qwen (≤ 2.5)</summary>  
-  
+<details>
+<summary>Qwen (≤ 2.5)</summary>
+
 - [Qwen2](https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f)
 - [Qwen2.5]()
 
-</details>  
+</details>
 
-<details>  
-<summary>LLaMa (≤ 3.3)</summary>  
+<details>
+<summary>LLaMa (≤ 3.3)</summary>
 
-- [huggyllama/llama-7b](https://huggingface.co/huggyllama/llama-7b)  
-- [TinyPixel/Llama-2-7B-bf16-sharded](https://huggingface.co/TinyPixel/Llama-2-7B-bf16-sharded)  
-- [OpenAssistant/llama2-13b-orca-8k-3319](https://huggingface.co/OpenAssistant/llama2-13b-orca-8k-3319)  
-- [NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf)  
-- [NousResearch/Nous-Hermes-Llama2-13b](https://huggingface.co/NousResearch/Nous-Hermes-Llama2-13b)  
-- [TheBloke/Llama-2-13B-chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-13B-chat-GPTQ)  
-- [NousResearch/Llama-2-7b-hf](https://huggingface.co/NousResearch/Llama-2-7b-hf)  
-- [fxmarty/tiny-llama-fast-tokenizer](https://huggingface.co/fxmarty/tiny-llama-fast-tokenizer)  
-- [TheBloke/Llama-2-7B-Chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-GPTQ)  
-- [lmsys/vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5)  
-- [lmsys/vicuna-13b-v1.5](https://huggingface.co/lmsys/vicuna-13b-v1.5)  
-- [togethercomputer/LLaMA-2-7B-32K](https://huggingface.co/togethercomputer/LLaMA-2-7B-32K)  
-- [openlm-research/open_llama_7b_v2](https://huggingface.co/openlm-research/open_llama_7b_v2)  
-- [NousResearch/Nous-Hermes-llama-2-7b](https://huggingface.co/NousResearch/Nous-Hermes-llama-2-7b)  
-- [TheBloke/Llama-2-7B-Chat-AWQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-AWQ)  
-- [h2oai/h2ogpt-4096-llama2-7b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-7b-chat)  
-- [h2oai/h2ogpt-4096-llama2-13b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-13b-chat)  
-- [garage-bAInd/Platypus2-7B](https://huggingface.co/garage-bAInd/Platypus2-7B)  
+- [huggyllama/llama-7b](https://huggingface.co/huggyllama/llama-7b)
+- [TinyPixel/Llama-2-7B-bf16-sharded](https://huggingface.co/TinyPixel/Llama-2-7B-bf16-sharded)
+- [OpenAssistant/llama2-13b-orca-8k-3319](https://huggingface.co/OpenAssistant/llama2-13b-orca-8k-3319)
+- [NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf)
+- [NousResearch/Nous-Hermes-Llama2-13b](https://huggingface.co/NousResearch/Nous-Hermes-Llama2-13b)
+- [TheBloke/Llama-2-13B-chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-13B-chat-GPTQ)
+- [NousResearch/Llama-2-7b-hf](https://huggingface.co/NousResearch/Llama-2-7b-hf)
+- [fxmarty/tiny-llama-fast-tokenizer](https://huggingface.co/fxmarty/tiny-llama-fast-tokenizer)
+- [TheBloke/Llama-2-7B-Chat-GPTQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-GPTQ)
+- [lmsys/vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5)
+- [lmsys/vicuna-13b-v1.5](https://huggingface.co/lmsys/vicuna-13b-v1.5)
+- [togethercomputer/LLaMA-2-7B-32K](https://huggingface.co/togethercomputer/LLaMA-2-7B-32K)
+- [openlm-research/open_llama_7b_v2](https://huggingface.co/openlm-research/open_llama_7b_v2)
+- [NousResearch/Nous-Hermes-llama-2-7b](https://huggingface.co/NousResearch/Nous-Hermes-llama-2-7b)
+- [TheBloke/Llama-2-7B-Chat-AWQ](https://huggingface.co/TheBloke/Llama-2-7B-Chat-AWQ)
+- [h2oai/h2ogpt-4096-llama2-7b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-7b-chat)
+- [h2oai/h2ogpt-4096-llama2-13b-chat](https://huggingface.co/h2oai/h2ogpt-4096-llama2-13b-chat)
+- [garage-bAInd/Platypus2-7B](https://huggingface.co/garage-bAInd/Platypus2-7B)
 
-</details>  
+</details>
 
-<details>  
-<summary>GPT (≤ 2)</summary>  
+<details>
+<summary>GPT (≤ 2)</summary>
 
-- [gpt2](https://huggingface.co/gpt2)  
-- [distilgpt2](https://huggingface.co/distilgpt2)  
-- [openai-community/gpt2-large](https://huggingface.co/openai-community/gpt2-large)  
-- [openai-community/gpt2-xl](https://huggingface.co/openai-community/gpt2-xl)  
-- [openai-community/gpt2-medium](https://huggingface.co/openai-community/gpt2-medium)  
-- [EleutherAI/gpt-neo-125m](https://huggingface.co/EleutherAI/gpt-neo-125m)  
+- [gpt2](https://huggingface.co/gpt2)
+- [distilgpt2](https://huggingface.co/distilgpt2)
+- [openai-community/gpt2-large](https://huggingface.co/openai-community/gpt2-large)
+- [openai-community/gpt2-xl](https://huggingface.co/openai-community/gpt2-xl)
+- [openai-community/gpt2-medium](https://huggingface.co/openai-community/gpt2-medium)
+- [EleutherAI/gpt-neo-125m](https://huggingface.co/EleutherAI/gpt-neo-125m)
 
-</details>  
+</details>
 
-<details>  
-<summary>Mistral (≤ 0.3)</summary>  
+<details>
+<summary>Mistral (≤ 0.3)</summary>
 
-- [mistralai/Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)  
-- [mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  
+- [mistralai/Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)
+- [mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)
 
-</details>  
+</details>
 
-<details>  
-<summary>Falcon (≤ 3.0)</summary>  
+<details>
+<summary>Falcon (≤ 3.0)</summary>
 
-- [tiiuae/falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)  
-- [tiiuae/falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)  
+- [tiiuae/falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)
+- [tiiuae/falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)
 
-</details>  
+</details>
 
-<details>  
-<summary>OPT</summary>  
+<details>
+<summary>OPT</summary>
 
-- [facebook/opt-125m](https://huggingface.co/facebook/opt-125m)  
-- [facebook/opt-2.7b](https://huggingface.co/facebook/opt-2.7b)  
-- [facebook/opt-350m](https://huggingface.co/facebook/opt-350m)  
-- [facebook/opt-1.3b](https://huggingface.co/facebook/opt-1.3b)  
-- [facebook/opt-13b](https://huggingface.co/facebook/opt-13b)  
+- [facebook/opt-125m](https://huggingface.co/facebook/opt-125m)
+- [facebook/opt-2.7b](https://huggingface.co/facebook/opt-2.7b)
+- [facebook/opt-350m](https://huggingface.co/facebook/opt-350m)
+- [facebook/opt-1.3b](https://huggingface.co/facebook/opt-1.3b)
+- [facebook/opt-13b](https://huggingface.co/facebook/opt-13b)
 
 </details>
 

@@ -14,7 +14,7 @@ from transformers.generation.logits_process import (
 from transformers.utils import add_start_docstrings
 
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
-from transformers_cfg.token_grammar_recognizer import AbsTokenRecognizer
+from transformers_cfg.token_grammar_recognizer import BaseTokenRecognizer
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
     def __init__(
         self,
-        grammar_constraint: AbsTokenRecognizer,
+        grammar_constraint: BaseTokenRecognizer,
         valid_token_start_idx: Optional[int] = None,
         execution_mode: Literal["speculation", "full_mask"] = "full_mask",
         device: Optional[torch.device] = None,
@@ -67,7 +67,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         if self.execution_mode == "speculation":
             # try to accept the most likely token
             acceptance = torch.zeros(
-                (logits.shape[0], len(self.grammar_constraint.homomorphism)),
+                (logits.shape[0], len(self.grammar_constraint.token2byte_mapping)),
                 dtype=torch.bool,
                 device=device,
             )

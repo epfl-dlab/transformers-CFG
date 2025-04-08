@@ -31,22 +31,6 @@ class ByteTrie:
         node.is_end_of_word = True
         node.token_id = token_id
 
-    def search(self, word):
-        node = self.root
-        for char in word:
-            if char not in node.children:
-                return False
-            node = node.children[char]
-        return node.is_end_of_word
-
-    def start_with_prefix(self, prefix):
-        node = self.root
-        for char in prefix:
-            if char not in node.children:
-                return False
-            node = node.children[char]
-        return True
-
     @classmethod
     def from_tokenizer(cls, tokenizer):
         vocab: Dict[str, int] = tokenizer.get_vocab()
@@ -68,12 +52,6 @@ class ByteTrie:
     def __len__(self):
         # return len(self.dfs(verbose=False))
         return self.vocab_size
-
-    def dfs(self, accept=lambda x: True, verbose=False) -> List[Tuple[List[int], int]]:
-        result = []
-        counter = {"visited": 0, "pruned": 0}
-        _dfs(self.root, [], result, accept, counter)
-        return result
 
     def bfs(
         self, predicate=lambda x: True, verbose=False
@@ -121,53 +99,6 @@ class ByteTrie:
 
         print("Visualizing ByteTrie:")
         _visualize(self.root, "", 1)
-
-
-def _dfs(
-    node,
-    cur_byte_seq: List[int],
-    result: List[Tuple[List[int], int]],
-    accept: callable,
-    counter: Dict[str, int],
-):
-    counter["visited"] += 1
-    if accept(cur_byte_seq):
-        if node.is_end_of_word:
-            result.append((cur_byte_seq, node.token_id))
-        for char, next_node in node.children.items():
-            new_byte_seq: List[int] = cur_byte_seq.copy()
-            new_byte_seq.append(char)
-            _dfs(next_node, new_byte_seq, result, accept, counter)
-    else:
-        # Skip the entire subtree if the predict function returns False
-        counter["pruned"] += 1
-        return
-
-
-def starts_with_prefix(prefix, target):
-    """
-    Check if the given prefix is a valid start of the target word or if the target word is a valid start of the given prefix.
-
-    Args:
-    prefix (str): The string prefix to be checked.
-    target (str): The target word to compare the prefix against.
-
-    Returns:
-    bool: True if prefix is a valid start of target or if target is a valid start of prefix, False otherwise.
-    """
-
-    # Check if the target word starts with the given prefix.
-    # This covers the case where the prefix is shorter than the target word.
-    if target.startswith(prefix):
-        return True
-
-    # Check if the given prefix starts with the target word.
-    # This covers the case where the prefix is longer than or equal to the target word.
-    if prefix.startswith(target):
-        return True
-
-    # If neither of the above conditions are true, return False.
-    return False
 
 
 if __name__ == "__main__":

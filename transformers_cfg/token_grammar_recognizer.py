@@ -17,14 +17,14 @@ from transformers_cfg.utf8_utils import PartialUTF8
 logger = logging.getLogger(__name__)
 
 
-class AbsTokenRecognizer(ABC):
+class BaseTokenRecognizer(ABC):
     def __init__(
         self,
         grammar_str: str,
         tokenizer: PreTrainedTokenizer,
         start_rule_name: Optional[str] = "root",
         trie: Optional[ByteTrie] = None,
-        homomorphism: Optional[Token2ByteMapping] = None,
+        token2byte_mapping: Optional[Token2ByteMapping] = None,
     ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
@@ -38,10 +38,10 @@ class AbsTokenRecognizer(ABC):
             self.byte_trie = ByteTrie.from_tokenizer(tokenizer)
         else:
             self.byte_trie = trie
-        if homomorphism is None:
-            self.homomorphism = Token2ByteMapping.from_hf_tokenizer(tokenizer)
+        if token2byte_mapping is None:
+            self.token2byte_mapping = Token2ByteMapping.from_hf_tokenizer(tokenizer)
         else:
-            self.homomorphism = homomorphism
+            self.token2byte_mapping = token2byte_mapping
 
     def try_accept_token_id(self, token_id: int, parsing_state: AcceptState) -> bool:
         if parsing_state.must_stop():
@@ -58,7 +58,7 @@ class AbsTokenRecognizer(ABC):
                 return False
         # for code_point in self.mapping.map(token_id):
         #     stacks = self.grammar._consume_char_code_point(code_point, stacks)
-        bytes_or_codepoints = self.homomorphism.map(token_id, verbose=False)
+        bytes_or_codepoints = self.token2byte_mapping.map(token_id, verbose=False)
         new_acc_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state, verbose=False
         )
@@ -82,7 +82,7 @@ class AbsTokenRecognizer(ABC):
         if not parsing_state.stacks:  # Check if stacks is empty
             # Handle the empty case: for example, return a tensor of False
             # The size of the tensor should match the size of your vocabulary
-            vocab_size = len(self.homomorphism)
+            vocab_size = len(self.token2byte_mapping)
             logger.debug(f"Empty stack, sum of acceptance: {0}")
             # size of the vocab
             accepts = [False] * vocab_size
@@ -120,7 +120,7 @@ class AbsTokenRecognizer(ABC):
         return any(ord(char) > 127 for char in text)
 
 
-class IncrementalTokenRecognizer(AbsTokenRecognizer):
+class IncrementalTokenRecognizer(BaseTokenRecognizer):
     def __init__(
         self,
         grammar_str: str,
@@ -134,7 +134,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
             tokenizer,
             start_rule_name,
             trie=trie,
-            homomorphism=homomorphism,
+            token2byte_mapping=homomorphism,
         )
         self.last_size = None
 
@@ -160,7 +160,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                     f"the stacks are {parsing_state.stacks}"
                 )
 
-        bytes_or_codepoints = self.homomorphism.map(token_id)
+        bytes_or_codepoints = self.token2byte_mapping.map(token_id)
         parsing_state = self.string_recognizer._update_state_with_bytes(
             bytes_or_codepoints, parsing_state
         )
@@ -293,7 +293,7 @@ class IncrementalTokenRecognizer(AbsTokenRecognizer):
                 accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
             )
         else:
-            accepts = [False] * len(self.homomorphism)
+            accepts = [False] * len(self.token2byte_mapping)
             token_acceptance = check_token_acceptance_in_trie(
                 self.byte_trie.root,
                 [stack],
