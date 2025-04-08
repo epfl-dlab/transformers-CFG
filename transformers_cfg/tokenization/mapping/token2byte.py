@@ -14,6 +14,7 @@ from transformers import (
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
     ByT5Tokenizer,
+    WhisperTokenizerFast,
 )
 
 from transformers_cfg.tokenization.utils import get_tokenizer_charset
@@ -48,6 +49,7 @@ class Token2ByteMapping(ABC):
                 BartTokenizerFast,
                 CodeGenTokenizerFast,
                 Qwen2TokenizerFast,
+                WhisperTokenizerFast,
             ),
         ):
             return GPT2Token2ByteMapping(hf_tokenizer)

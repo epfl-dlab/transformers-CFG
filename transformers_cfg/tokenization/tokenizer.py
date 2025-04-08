@@ -1,4 +1,4 @@
-from typing import Set
+from typing import List, Set
 from transformers import (
     GPT2TokenizerFast,
     BartTokenizerFast,
@@ -9,6 +9,7 @@ from transformers import (
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
     ByT5Tokenizer,
+    WhisperTokenizerFast,
 )
 
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
@@ -57,6 +58,8 @@ class TCFG_Tokenizer:
             in hf_tokenizer.name_or_path  # this includes llama-3/llama-3.1/llama-3.2/llama-3.3
         ):
             return TCFG_LlamaTokenizer(hf_tokenizer)
+        elif isinstance(hf_tokenizer, WhisperTokenizerFast):
+            return TCFG_WhisperTokenizer(hf_tokenizer)
         else:
             raise NotImplementedError(
                 f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
@@ -103,3 +106,16 @@ class TCFG_PhiTokenizer(TCFG_Tokenizer):
 
     def real_vocab_size(self):
         return 50257  # 50 k tokens + 256 for bytes + 1 for EOS
+
+
+class TCFG_WhisperTokenizer(TCFG_Tokenizer):
+    def __init__(self, hf_tokenizer):
+        super().__init__(hf_tokenizer)
+
+    def get_special_token_ids_to_excluded(self):
+
+        # timestamp token ids
+        timestamp_token_ids: List[int] = self.hf_tokenizer.timestamp_ids()
+        special_token_ids: List[int] = self.hf_tokenizer.all_special_ids
+
+        return set(special_token_ids + timestamp_token_ids)

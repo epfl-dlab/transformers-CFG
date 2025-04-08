@@ -8,6 +8,7 @@ from transformers import (
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
     ByT5Tokenizer,
+    WhisperTokenizerFast,
 )
 
 SUPPORTED_TOKENIZERS = {
@@ -20,4 +21,5 @@ SUPPORTED_TOKENIZERS = {
     GemmaTokenizerFast,
     Qwen2TokenizerFast,
     ByT5Tokenizer,
+    WhisperTokenizerFast,
 }
