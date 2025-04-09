@@ -27,10 +27,14 @@ class Token2ByteMapping(ABC):
         self.bos_token_id = tokenizer.bos_token_id
         self.tokenizer = tokenizer
         self.special = tokenizer.all_special_ids
-        self._length = len(self.tokenizer.get_vocab())
+        # vocab_size and len(get_vocab()) should be identical in most cases
+        # the only known exception is for gemma3, vocab_size is 262144 but len(get_vocab()) is 262145 because the last token is special token called <image_soft_token>
+        self._vocab_size = getattr(
+            tokenizer, "vocab_size", len(self.tokenizer.get_vocab())
+        )
 
     def __len__(self):
-        return self._length
+        return self._vocab_size
 
     @abstractmethod
     def map(self, token_id: int, verbose=False) -> bytes:
