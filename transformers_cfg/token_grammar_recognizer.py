@@ -28,6 +28,7 @@ class BaseTokenRecognizer(ABC):
     ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
+        self.parsed_grammar = parsed_grammar
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
         self.use_unicode = self.detect_unicode(grammar_str)
 
