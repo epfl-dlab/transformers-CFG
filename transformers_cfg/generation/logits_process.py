@@ -3,7 +3,7 @@ import math
 import os
 import pprint
 import importlib
-from typing import Optional, Literal
+from typing import Optional, Literal, List, Callable
 
 import torch
 import logging
@@ -269,3 +269,86 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self._vocab_mismatch_logged = False  # Reset flag on reset
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
+
+# --------------------------------------------------------------------------- #
+# ❶ --  Custom logits‑processor that *blocks* tokens leading to an "E‑state"  #
+# --------------------------------------------------------------------------- #
+class BlockBadStateLogitsProcessor(LogitsProcessor):
+    r"""
+    Masks any token whose acceptance would leave **all** surviving Earley
+    stacks with a next symbol that starts with the prefix ``"E"`` (your
+    convention for error states).
+    """
+
+    def __init__(
+        self,
+        grammar_constraint: IncrementalGrammarConstraint,
+        valid_token_start_idx: Optional[int] = None,
+        device: Optional[torch.device] = None,
+    ):
+        self.constraint           = grammar_constraint
+        self.valid_token_start_idx = valid_token_start_idx
+        self.device               = device
+        self.batch_parsing_states = None            # filled lazily
+        self.id_symbol = {v: k for k, v in self.constraint.parsed_grammar.symbol_table.items()}
+
+    # ---- small helper ----------------------------------------------------- #
+    @staticmethod
+    def _all_stacks_bad(state, id_symbol) -> bool:
+        """Return True iff *every* surviving Earley stack expects an 'E*' symbol."""
+
+        for stack in state.stacks:                  # implementation detail of transformers‑cfg
+            next_sym = id_symbol[stack[-1]]
+            print(f"next_sym: {next_sym}")
+            if next_sym is None or not str(next_sym).startswith("E"):
+                return False                       # at least one good stack
+        return True
+
+    # ---- main entry ------------------------------------------------------- #
+    def __call__(self, input_ids: torch.LongTensor, logits: torch.FloatTensor):
+        device = self.device or logits.device
+
+        # Initialise batch states the first time we are called
+        if self.batch_parsing_states is None:
+            self.batch_parsing_states = [
+                copy.deepcopy(self.constraint.string_recognizer.get_initial_parsing_state())
+                for _ in range(len(input_ids))
+            ]
+
+        # Update parsing states with the *already generated* tokens
+        self.batch_parsing_states = self.constraint.update_state_with_batch_token_seqs(
+            input_ids,
+            self.batch_parsing_states,
+            self.valid_token_start_idx,
+        )
+
+        # ------------------------------------------------------------------ #
+        # For each hypothesis decide which next tokens are *blocked*        #
+        # ------------------------------------------------------------------ #
+        batch_size, vocab_size = logits.shape
+        mask_block = torch.zeros_like(logits, dtype=torch.bool)  # True = set ‑inf
+
+        for b in range(batch_size):
+            current_state = self.batch_parsing_states[b]
+
+            # Get the grammar‑valid tokens first (fast, vectorised)
+            accept_mask = self.constraint.filter_vocab(current_state, device)  # True = grammatically OK
+
+            # Examine only the accepted tokens further
+            candidate_ids = torch.nonzero(accept_mask).flatten()
+
+            # Simulate one‑step look‑ahead for each candidate
+            for tok_id in candidate_ids.tolist():
+                pseudo_state = copy.deepcopy(current_state)
+                self.constraint.accept_token_ids([tok_id], pseudo_state)  # mutates pseudo_state
+
+                if self._all_stacks_bad(pseudo_state, self.id_symbol):
+                    mask_block[b, tok_id] = True  # forbid this token
+
+        logits[mask_block] = -math.inf
+        return logits
+
+    # Optional convenience
+    def reset(self):
+        self.batch_parsing_states = None
+        self.constraint.reset()
