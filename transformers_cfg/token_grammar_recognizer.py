@@ -28,7 +28,8 @@ class BaseTokenRecognizer(ABC):
     ):
         parsed_grammar = parse_ebnf(grammar_str)
         grammar_encoding = parsed_grammar.grammar_encoding
-        self.parsed_grammar = parsed_grammar
+        self.parsed_grammar = parsed_grammar # may not need if we don't use self.id_symbol inside BlockBadStateLogitsProcessor
+        parsed_grammar.print() # added for debugging
         self.start_rule_id = parsed_grammar.symbol_table.get(start_rule_name)
         self.use_unicode = self.detect_unicode(grammar_str)
 

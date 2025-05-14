@@ -3,7 +3,7 @@ import math
 import os
 import pprint
 import importlib
-from typing import Optional, Literal, List, Callable
+from typing import Optional, Literal #, List, Callable
 
 import torch
 import logging
@@ -14,7 +14,7 @@ from transformers.generation.logits_process import (
 from transformers.utils import add_start_docstrings
 
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
-from transformers_cfg.token_grammar_recognizer import BaseTokenRecognizer
+from transformers_cfg.token_grammar_recognizer import BaseTokenRecognizer #, IncrementalTokenRecognizer
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         # acceptance is a tensor of shape (batch_size, vocab_size)
         # get the indices of the accepted tokens
         # do the following operation only in debug mode
-        if os.getenv("DEBUG_MODE") == "True":
+        if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
             # convert acceptance to numpy array
             batch_size, vocab_size = acceptance.shape
             acceptance_np = acceptance.cpu().numpy()
@@ -191,8 +191,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
             accepted_token_indices = {i: [] for i in range(batch_size)}
             for x, y in zip(accepted_x, accepted_y):
                 accepted_token_indices[x].append(y)
-            logger.debug("Accepted token indices for the current batch:")
-            logger.debug("\n" + pprint.pformat(accepted_token_indices))
+            # logger.debug("Accepted token indices for the current batch:\n" + pprint.pformat(accepted_token_indices))
             # convert token_ids to tokens
             accepted_tokens = {
                 i: [
@@ -201,8 +200,7 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 ]
                 for i, token_ids in accepted_token_indices.items()
             }
-            logger.debug("Accepted tokens for the current batch:")
-            logger.debug("\n" + pprint.pformat(accepted_tokens))
+            logger.debug("Accepted tokens for the current batch:\n" + pprint.pformat(accepted_tokens))
 
         # Logits to -inf where False
         # Shapes should match perfectly now due to the patch above
@@ -232,26 +230,27 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
                 for _ in range(len(input_ids))
             ]
 
-        if os.getenv("DEBUG_MODE") == "True":
+        # TODO: not sure why logger.debug is not working here, only starts in the second call
+        if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
             print("-" * 80)
 
-        logger.debug("input_ids: \n" + pprint.pformat(input_ids))
-        # logger.debug("scores: \n" + pprint.pformat(scores))
-        logger.debug("last_size: \n" + pprint.pformat(self.last_size))
-        logger.debug(
-            "num of stacks: \n"
-            + pprint.pformat(
-                [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
-            )
-        )
-        # logger.debug("stacks: \n" + pprint.pformat(self.batch_parsing_states.stacks))
+        print("input_ids: \n" + pprint.pformat(input_ids)) # new token appended to the end of each prompt
+        # logger.debug("scores: \n" + pprint.pformat(scores)) # .shape prints (batch_size, vocab_size)
+        # logger.debug("last_size: \n" + pprint.pformat(self.last_size)) # always None in the toy example
+        # logger.debug(self.valid_token_start_idx) # always None in the toy example
 
         self.batch_parsing_states = (
             self.grammar_constraint.update_state_with_batch_token_seqs(
                 input_ids, self.batch_parsing_states, self.valid_token_start_idx
             )
         )
-        logger.debug(f"input_ids: {input_ids}")
+        # updated parsing states for the current batch
+        print(
+            "updated stacks: \n"
+            + pprint.pformat(
+                [stack for acc_state in self.batch_parsing_states for stack in acc_state.stacks]
+            )
+        )
 
         masked_scores = self.mask_logits(scores, device)
         return masked_scores
@@ -270,19 +269,19 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
 
+
 # --------------------------------------------------------------------------- #
-# ❶ --  Custom logits‑processor that *blocks* tokens leading to an "E‑state"  #
+# -- Custom LogitsProcessor that *blocks* tokens leading to an error state -- #
 # --------------------------------------------------------------------------- #
 class BlockBadStateLogitsProcessor(LogitsProcessor):
     r"""
     Masks any token whose acceptance would leave **all** surviving Earley
-    stacks with a next symbol that starts with the prefix ``"E"`` (your
-    convention for error states).
+    stacks with a next symbol that starts with the prefix "-".
     """
 
     def __init__(
         self,
-        grammar_constraint: IncrementalGrammarConstraint,
+        grammar_constraint: BaseTokenRecognizer, # IncrementalTokenRecognizer, # IncrementalGrammarConstraint,
         valid_token_start_idx: Optional[int] = None,
         device: Optional[torch.device] = None,
     ):
@@ -290,24 +289,148 @@ class BlockBadStateLogitsProcessor(LogitsProcessor):
         self.valid_token_start_idx = valid_token_start_idx
         self.device               = device
         self.batch_parsing_states = None            # filled lazily
-        self.id_symbol = {v: k for k, v in self.constraint.parsed_grammar.symbol_table.items()}
+        self.id_symbol = {v: k for k, v in self.constraint.parsed_grammar.symbol_table.items()} # not implemented correctly
 
-    # ---- small helper ----------------------------------------------------- #
-    @staticmethod
-    def _all_stacks_bad(state, id_symbol) -> bool:
+    
+    """
+    _all_stacks_bad function is not implemented correctly and is causing an error
+    Ignoring (not calling) the function for now
+
+    Error details:
+    'state' refers to where the parser is in the grammar, such as:
+    Grammar Rules:
+    <0>root ::= <2>[T-T] <5>[h-h] <8>[e-e] <11>[ - ] <14>[a-a] <17>[n-n] <20>[i-i] <23>[m-m] <26>[a-a] <29>[l-l] <32>[ - ] <35>[i-i] <38>[s-s] <41>[ - ] <44>[a-a] <47>[ - ] <50>animal <52>[.-.] 
+    <57>animal ::= <59>[c-c] <62>[a-a] <65>[t-t] | <70>[f-f] <73>[i-i] <76>[s-s] <79>[h-h] | <84>[d-d] <87>[o-o] <90>[g-g] 
+    
+    However, 'id_symbol' is implemented as a dictionary, such as:
+    {0: 'root', 1: 'animal'}
+    Hence, KeyError arises since id_symbol is not able to map the state to the correct symbol
+    """
+
+    def _all_stacks_bad(self, state) -> bool:
         """Return True iff *every* surviving Earley stack expects an 'E*' symbol."""
-
-        for stack in state.stacks:                  # implementation detail of transformers‑cfg
-            next_sym = id_symbol[stack[-1]]
-            print(f"next_sym: {next_sym}")
-            if next_sym is None or not str(next_sym).startswith("E"):
+        
+        logger.debug("id_symbol: \n" + pprint.pformat(self.id_symbol))
+        for stack in state.stacks:
+            logger.debug("stack[-1]: \n" + pprint.pformat(stack[-1]))
+            next_sym = self.id_symbol[stack[-1]] # KeyError thrown here
+            logger.debug("next_sym: \n" + pprint.pformat(next_sym))
+            if next_sym is None or not str(next_sym).startswith("-"):
                 return False                       # at least one good stack
         return True
+    
 
-    # ---- main entry ------------------------------------------------------- #
-    def __call__(self, input_ids: torch.LongTensor, logits: torch.FloatTensor):
-        device = self.device or logits.device
+    # Quick hack to check if a token is bad, similar to BadWordLogitsProcessor
+    def _this_token_bad(self, tok_id: int) -> bool:
+        """Return True iff the token ID is a bad token."""
 
+        # TODO: instead of hard-coded bad_word, should connect bad_words to the parsed grammar
+        bad_words = ["dog"]
+        tok_word = self.constraint.tokenizer.decode([tok_id]).strip()
+        logger.debug(f"token:\nid={tok_id}\tstripped word='{tok_word}'")
+
+        if tok_word in bad_words:
+            return True
+        return False
+
+    
+    def mask_logits(
+        self, logits: torch.FloatTensor, device: torch.device
+    ) -> torch.FloatTensor:
+        masked_logits = logits.clone()
+        batch_size, vocab_size = logits.shape
+
+        # First, get the accepted tokens, same as in the original processor
+        # True = grammatically OK
+        acceptance = self.constraint.batch_filter_vocab(self.batch_parsing_states, device)
+        if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
+            acceptance_np = acceptance.cpu().numpy()
+            accepted_x, accepted_y = acceptance_np.nonzero()
+            # dict of {batch_index: [accepted_token_indices]}
+            # initialize the dict with empty list
+            accepted_token_indices = {i: [] for i in range(batch_size)}
+            for x, y in zip(accepted_x, accepted_y):
+                accepted_token_indices[x].append(y)
+            # logger.debug("Accepted token indices for the current batch:\n" + pprint.pformat(accepted_token_indices))
+            # convert token_ids to tokens
+            accepted_tokens = {
+                i: [
+                    self.constraint.tokenizer.decode([token_id])
+                    for token_id in token_ids
+                ]
+                for i, token_ids in accepted_token_indices.items()
+            }
+            logger.debug("Accepted tokens for the current batch:\n" + pprint.pformat(accepted_tokens))
+
+        # Grammatically not-OK tokens are set to -inf
+        masked_logits[~acceptance] = -math.inf
+
+        # So far, the same as the original processor
+
+
+        # Second, additionally block the tokens that lead to an error state
+        # True => set to ‑inf
+        if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
+            print("-" * 40)
+        mask_block = torch.zeros_like(logits, dtype=torch.bool)
+
+        # Iterate over each batch / prompt
+        for b in range(batch_size):
+            if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
+                print("-" * 20)
+                print(f"Batch {b}")
+
+            # Examine further only the tokens that were accepted above
+            accept_mask = acceptance[b]
+            candidate_ids = torch.nonzero(accept_mask).flatten()
+
+            # Get the current parsing state for this batch
+            current_state = self.batch_parsing_states[b]
+
+            # Simulate the acceptance for each candidate token ID
+            for tok_id in candidate_ids.tolist():
+                if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
+                    print("-" * 10)
+
+                # NEW: Quick check if this token is bad
+                if self._this_token_bad(tok_id):
+                    logger.debug(f"Token ID {tok_id} is a bad word. Masking it.")
+                    mask_block[b, tok_id] = True
+
+                
+                # # BEFORE: Create a pseudo state to simulate one‑step look‑ahead
+                # logger.debug(f"current_state.stacks \n" + pprint.pformat(current_state.stacks))
+                # pseudo_state = copy.deepcopy(current_state)
+                
+                # # TODO: the following line should mutate pseudo_state if tok_id leads to an error state, but currently is not implemented as such
+                # # BaseTokenRecognizer version is NotImplemented, IncrementalTokenRecognizer version needs to be adapted
+                # self.constraint.accept_token_ids([tok_id], pseudo_state)
+                # logger.debug("pseudo_state.stacks:\n" + pprint.pformat(pseudo_state.stacks))
+
+                # if self._all_stacks_bad(pseudo_state):
+                #     logger.debug(f"Token ID {tok_id} leads to an error state in all stacks. Masking it.")
+                #     mask_block[b, tok_id] = True  # forbid this token
+
+                
+        masked_logits[mask_block] = -math.inf
+
+        return masked_logits
+
+    def process_logits(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+    ) -> torch.FloatTensor:
+        """
+        :param input_ids:
+        :param scores:
+        :return:
+        """
+
+        # same as above
+        if self.device is None:
+            device = scores.device
+        else:
+            device = self.device
+        
         # Initialise batch states the first time we are called
         if self.batch_parsing_states is None:
             self.batch_parsing_states = [
@@ -315,40 +438,43 @@ class BlockBadStateLogitsProcessor(LogitsProcessor):
                 for _ in range(len(input_ids))
             ]
 
-        # Update parsing states with the *already generated* tokens
-        self.batch_parsing_states = self.constraint.update_state_with_batch_token_seqs(
-            input_ids,
-            self.batch_parsing_states,
-            self.valid_token_start_idx,
+        if os.getenv("TCFG_LOG_LEVEL") == "DEBUG":
+            print("-" * 80)
+
+
+        # TODO: not sure why logger.debug is not working here
+        print("input_ids: \n" + pprint.pformat(input_ids))
+        # print("scores: \n" + pprint.pformat(scores))
+
+        # original parsing states for the current batch
+        logger.debug(
+            "original stacks: \n"
+            + pprint.pformat(
+                [stack for acc_state in self.batch_parsing_states for stack in acc_state.stacks]
+            )
+        )
+        self.batch_parsing_states = (
+            self.constraint.update_state_with_batch_token_seqs(
+                input_ids,
+                self.batch_parsing_states,
+                self.valid_token_start_idx,
+            )
+        )
+        # updated parsing states
+        logger.debug(
+            "updated stacks: \n"
+            + pprint.pformat(
+                [stack for acc_state in self.batch_parsing_states for stack in acc_state.stacks]
+            )
         )
 
-        # ------------------------------------------------------------------ #
-        # For each hypothesis decide which next tokens are *blocked*        #
-        # ------------------------------------------------------------------ #
-        batch_size, vocab_size = logits.shape
-        mask_block = torch.zeros_like(logits, dtype=torch.bool)  # True = set ‑inf
+        masked_scores = self.mask_logits(scores, device)
+        return masked_scores
 
-        for b in range(batch_size):
-            current_state = self.batch_parsing_states[b]
-
-            # Get the grammar‑valid tokens first (fast, vectorised)
-            accept_mask = self.constraint.filter_vocab(current_state, device)  # True = grammatically OK
-
-            # Examine only the accepted tokens further
-            candidate_ids = torch.nonzero(accept_mask).flatten()
-
-            # Simulate one‑step look‑ahead for each candidate
-            for tok_id in candidate_ids.tolist():
-                pseudo_state = copy.deepcopy(current_state)
-                self.constraint.accept_token_ids([tok_id], pseudo_state)  # mutates pseudo_state
-
-                if self._all_stacks_bad(pseudo_state, self.id_symbol):
-                    mask_block[b, tok_id] = True  # forbid this token
-
-        logits[mask_block] = -math.inf
-        return logits
-
-    # Optional convenience
+    @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
+        return self.process_logits(input_ids, scores)
+        
     def reset(self):
         self.batch_parsing_states = None
         self.constraint.reset()
