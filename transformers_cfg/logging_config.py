@@ -6,7 +6,7 @@ import logging
 def setup_logging():
     log_level_name = os.getenv(
         "TCFG_LOG_LEVEL", "WARNING"
-    ).upper()  # Default to WARNING if not set
+    ).upper()  # Default to WARNING, set 'export TCFG_LOG_LEVEL=DEBUG' on the terminal to change
     log_levels = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,
