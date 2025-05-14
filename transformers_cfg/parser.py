@@ -195,13 +195,14 @@ def generate_symbol_id(state: ParseState, base_name: str) -> int:
     return next_id
 
 
+# Changed: no longer allowing "-", since that is used to indicate error state
 def is_word_char(c: str) -> bool:
     """
-    Check if a char is  a-z, A-Z, 0-9, -, _, i.e., chars allowed as rule names
+    Check if a char is  a-z, A-Z, 0-9, _, i.e., chars allowed as rule names
     Returns:
 
     """
-    return c.isalnum() or c == "-" or c == "_"
+    return c.isalnum() or c == "_"
 
 
 def hex_to_int(c: str) -> int:
@@ -410,6 +411,24 @@ def _parse_rhs_symbol_reference(
     return remaining_src
 
 
+def _parse_rhs_error_state(
+    src: str, state: ParseState, rule_name: str, alternative: AlternativeElements # may add or remove some args
+) -> str:
+    assert src[0] == "-", f"rule should start with '-', but got {src[0]}"
+    remaining_src = remove_leading_white_space(src[1:], True)
+    
+    # TODO: currently, we are not using the error state, so whatever follows the "-" is implemented as a normal rule
+
+    # below is the same code as what's done in _parse_rhs_grouping()
+    # but we essentially need a way to NEGATE whatever is generated from the parse_rhs() call done in here
+    
+    # synthetic_rule_id = generate_symbol_id(state, rule_name)          # parse nested alternates into synthesized rule
+    # remaining_src = parse_rhs(state, remaining_src, rule_name, synthetic_rule_id, True)   # TODO: how to NEGATE?
+    # alternative.add_element(ReferenceElement(synthetic_rule_id))      # output reference to synthesized rule
+
+    return remaining_src
+
+
 def _parse_rhs_grouping(
     remaining_src: str,
     state: ParseState,
@@ -522,6 +541,8 @@ def parse_simple_rhs(
     alternative = AlternativeElements()
 
     while remaining_rhs:
+        # print(f"remaining_rhs: '{remaining_rhs}'")
+        # print(f"remaining_rhs[0]: '{remaining_rhs[0]}'")
         if remaining_rhs[0] == '"':
             # literal string
             remaining_rhs = _parse_rhs_literal_string(remaining_rhs, alternative)
@@ -538,6 +559,11 @@ def parse_simple_rhs(
             # rule reference
             remaining_rhs = _parse_rhs_symbol_reference(
                 remaining_rhs, state, alternative
+            )
+        elif remaining_rhs[0] == "-":
+            # our error state
+            remaining_rhs = _parse_rhs_error_state(
+                remaining_rhs, state, rule_name, alternative
             )
         elif remaining_rhs[0] == "(":
             # grouping
@@ -578,6 +604,7 @@ def parse_rhs(
     state: ParseState, rhs: str, rule_name: str, rule_id: int, is_nested: bool
 ) -> str:
     rule = GrammarRule(rule_id, rule_name)
+    # print(f"parsed rule: {rule_name}")
     remaining_rhs = parse_simple_rhs(state, rhs, rule_name, rule, is_nested)
     while remaining_rhs and remaining_rhs[0] == "|":
         remaining_rhs = remove_leading_white_space(remaining_rhs[1:], True)

@@ -19,10 +19,10 @@ if __name__ == "__main__":
     model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
     model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
-    # --- BAD grammar ------------------------------------------------------ #
+    # "cat" and "fish" are allowed, "dog" is an error state, indicated by the preceding "-"
     grammar_str = """
     root   ::= "The animal is a " animal "."
-    animal ::= "cat" | "fish" | "dog" E
+    animal ::= "cat" | "fish" | -"dog"
     """
 
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
