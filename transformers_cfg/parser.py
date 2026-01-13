@@ -515,55 +515,124 @@ def _parse_rhs_numbered_repetition_operators(
     return remaining_src[closing_brace_idx + 1 :]
 
 
+# Handler wrappers to provide uniform signatures for dispatch table
+def _dispatch_literal_string(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for literal string parsing."""
+    return _parse_rhs_literal_string(rhs, alternative)
+
+
+def _dispatch_negated_char_ranges(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for negated character ranges parsing."""
+    return _parse_rhs_negated_char_ranges(rhs, alternative)
+
+
+def _dispatch_char_ranges(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for character ranges parsing."""
+    return _parse_rhs_char_ranges(rhs, alternative)
+
+
+def _dispatch_any_char(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for any-char (.) parsing."""
+    return _parse_rhs_any_char(rhs, alternative)
+
+
+def _dispatch_symbol_reference(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for symbol reference parsing."""
+    return _parse_rhs_symbol_reference(rhs, state, alternative)
+
+
+def _dispatch_grouping(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for grouping (parentheses) parsing."""
+    return _parse_rhs_grouping(rhs, state, rule_name, alternative)
+
+
+def _dispatch_repetition(rhs, state, rule_name, alternative):
+    """Dispatch wrapper for repetition operators (* + ? {})."""
+    if rhs[0] == "{":
+        return _parse_rhs_numbered_repetition_operators(
+            rhs, state, rule_name, alternative
+        )
+    else:
+        return _parse_rhs_repetition_operators(rhs, state, rule_name, alternative)
+
+
+# Dispatch table: (predicate, handler, description)
+# Predicates are checked in order, first match wins
+_RHS_DISPATCH_TABLE = [
+    (lambda s: s[0] == '"', _dispatch_literal_string, "literal string"),
+    (
+        lambda s: len(s) >= 2 and s[:2] == "[^",
+        _dispatch_negated_char_ranges,
+        "negated char range",
+    ),
+    (lambda s: s[0] == "[", _dispatch_char_ranges, "char range"),
+    (lambda s: s[0] == ".", _dispatch_any_char, "any char"),
+    (lambda s: is_word_char(s[0]), _dispatch_symbol_reference, "rule reference"),
+    (lambda s: s[0] == "(", _dispatch_grouping, "grouping"),
+    (
+        lambda s: s[0] in ("*", "+", "?", "{"),
+        _dispatch_repetition,
+        "repetition operator",
+    ),
+]
+
+
+def _find_rhs_handler(remaining_rhs: str):
+    """
+    Find appropriate handler for current input using dispatch table.
+
+    Args:
+        remaining_rhs: Current input string to parse
+
+    Returns:
+        Tuple of (handler_function, description) if match found,
+        None if no handler matches (indicates end of rule)
+    """
+    for predicate, handler, description in _RHS_DISPATCH_TABLE:
+        if predicate(remaining_rhs):
+            return handler, description
+    return None
+
+
 def parse_simple_rhs(
     state: ParseState, rhs: str, rule_name: str, rule: GrammarRule, is_nested: bool
 ) -> str:
+    """
+    Parse a single alternative of a grammar rule's right-hand side.
+
+    Uses a dispatch table to route parsing to specialized handlers based on
+    the current input character. This makes the parsing logic data-driven
+    and easier to extend with new grammar constructs.
+
+    Args:
+        state: Current parsing state with symbol table and rules
+        rhs: Right-hand side string to parse
+        rule_name: Name of the rule being parsed (for error messages)
+        rule: Grammar rule to add parsed alternative to
+        is_nested: Whether parsing inside parentheses (affects whitespace handling)
+
+    Returns:
+        Remaining unparsed input after processing this alternative
+    """
     remaining_rhs = rhs
     alternative = AlternativeElements()
 
     while remaining_rhs:
-        if remaining_rhs[0] == '"':
-            # literal string
-            remaining_rhs = _parse_rhs_literal_string(remaining_rhs, alternative)
-        elif remaining_rhs[:2] == "[^":
-            # negated char range(s)
-            remaining_rhs = _parse_rhs_negated_char_ranges(remaining_rhs, alternative)
-        elif remaining_rhs[0] == "[":
-            # char range(s)
-            remaining_rhs = _parse_rhs_char_ranges(remaining_rhs, alternative)
-        elif remaining_rhs[0] == ".":
-            # any char
-            remaining_rhs = _parse_rhs_any_char(remaining_rhs, alternative)
-        elif is_word_char(remaining_rhs[0]):
-            # rule reference
-            remaining_rhs = _parse_rhs_symbol_reference(
-                remaining_rhs, state, alternative
-            )
-        elif remaining_rhs[0] == "(":
-            # grouping
-            remaining_rhs = _parse_rhs_grouping(
-                remaining_rhs, state, rule_name, alternative
-            )
-        elif remaining_rhs[0] in ("*", "+", "?", "{"):
-            # repetition operator
-            if remaining_rhs[0] == "{":
-                remaining_rhs = _parse_rhs_numbered_repetition_operators(
-                    remaining_rhs, state, rule_name, alternative
-                )
-            else:
-                remaining_rhs = _parse_rhs_repetition_operators(
-                    remaining_rhs, state, rule_name, alternative
-                )
-        else:
-            # case for newline, i.e., end of rule
+        handler_info = _find_rhs_handler(remaining_rhs)
+
+        if handler_info is None:
+            # No handler matched - must be end of rule
             assert remaining_rhs[0] in [
                 "\n",
                 "|",
                 ")",
             ], f"rule should end with newline or '|', but got {remaining_rhs[0]}"
-            # we break here so that we call parse_rule again to parse the next rule
             break
-        # Here we do not rm newline deliberately so that we know the rhs is ended
+
+        handler, description = handler_info
+        remaining_rhs = handler(remaining_rhs, state, rule_name, alternative)
+
+        # Remove leading whitespace (preserving newlines unless nested)
         remaining_rhs = remove_leading_white_space(
             remaining_rhs, rm_leading_newline=is_nested
         )
