@@ -109,7 +109,7 @@ class TokenAcceptanceComputer:
         assert isinstance(stack, tuple)
 
         if self.use_unicode:
-            accept_f = lambda x: self.string_recognizer._try_accept_bytes(
+            accept_f = lambda x: self.string_recognizer._can_accept_bytes(
                 x, {stack}, partial_utf8=partial_utf8
             )
             token_acceptance = self.byte_trie.get_next_token_acceptance(

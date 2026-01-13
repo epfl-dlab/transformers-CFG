@@ -14,6 +14,7 @@ from transformers_cfg.tokenization.mapping.token2byte import (
 )
 from transformers_cfg.utf8_utils import PartialUTF8
 from transformers_cfg.recognition import BatchStateProcessor, TokenAcceptanceComputer
+from transformers_cfg._compat import deprecated_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -133,20 +134,21 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
         acceptance_computer: Computes token acceptance masks
     """
 
+    @deprecated_parameter("homomorphism", "token_mapping")
     def __init__(
         self,
         grammar_str: str,
         start_rule_name: str,
         tokenizer: PreTrainedTokenizer,
         trie: Optional[ByteTrie] = None,
-        homomorphism: Optional[Token2ByteMapping] = None,
+        token_mapping: Optional[Token2ByteMapping] = None,
     ):
         super().__init__(
             grammar_str,
             tokenizer,
             start_rule_name,
             trie=trie,
-            token2byte_mapping=homomorphism,
+            token2byte_mapping=token_mapping,
         )
 
         # Create composed components

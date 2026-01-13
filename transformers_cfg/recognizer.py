@@ -7,6 +7,7 @@ from transformers_cfg.parser import (
 )
 from transformers_cfg.utf8_utils import PartialUTF8, decode_utf8
 from transformers_cfg.grammar import GrammarState, StackManager, CharacterMatcher
+from transformers_cfg._compat import deprecated_method
 
 
 class AcceptState:
@@ -161,7 +162,7 @@ class StringRecognizer:
         return self._update_state_with_bytes(bytes([byte]), parsing_state)
 
     # @lru_cache(maxsize=32768)
-    def _try_accept_bytes(
+    def _can_accept_bytes(
         self,
         byte_seq: bytes,
         stacks: Set[Tuple[int]],
@@ -169,8 +170,23 @@ class StringRecognizer:
         verbose=True,
     ):
         """
-        The difference between accept_bytes and consume_bytes is that accept_bytes returns a boolean and
-        consume_bytes returns a new accept state
+        Check if byte sequence can be accepted by any of the parsing stacks.
+
+        Tests whether the given byte sequence is valid according to the grammar
+        rules for at least one of the provided parsing stacks.
+
+        Args:
+            byte_seq: Byte sequence to test
+            stacks: Set of parsing stacks to test against
+            partial_utf8: Partial UTF-8 state from previous processing
+            verbose: Enable debug logging
+
+        Returns:
+            True if byte sequence can be accepted, False otherwise
+
+        Note:
+            This method returns a boolean indicating acceptance without modifying state.
+            Use _update_state_with_bytes() to actually consume bytes and update state.
         """
         if type(byte_seq) is list:
             byte_seq = bytes(byte_seq)
@@ -184,14 +200,18 @@ class StringRecognizer:
         )
 
         for stack in new_stacks:
-
-            # stack is empty, meaning that the variables are all consumed
+            # stack is empty, meaning that all elements are consumed
             if len(stack) == 0:
                 return True
             element_offset = stack[-1]
             if self.partial_utf8_accept_at_element(element_offset, new_partial_utf8):
                 return True
         return False
+
+    @deprecated_method("_can_accept_bytes")
+    def _try_accept_bytes(self, byte_seq: bytes, stacks: Set[Tuple[int]], partial_utf8: PartialUTF8, verbose=True):
+        """Deprecated: Use _can_accept_bytes() instead."""
+        return self._can_accept_bytes(byte_seq, stacks, partial_utf8, verbose)
 
     def _update_state_with_bytes(
         self,
