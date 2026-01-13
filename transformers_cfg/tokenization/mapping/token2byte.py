@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import torch
 from transformers_cfg.tokenization.SUPPORTED_TOKENIZERS import SUPPORTED_TOKENIZERS
+from transformers_cfg.tokenization.tokenizer_inspector import TokenizerInspector
 from .ByteProxyMapping import ByteProxyMapping, LLAMAByteProxyMapping
 import logging
 from transformers import (
@@ -92,35 +93,41 @@ class Token2ByteMapping(ABC):
 
     @classmethod
     def from_hf_tokenizer(cls, hf_tokenizer):
+        """
+        Create appropriate mapping class for a HuggingFace tokenizer.
+
+        Uses TokenizerInspector to centralize tokenizer family detection.
+
+        Args:
+            hf_tokenizer: HuggingFace tokenizer instance
+
+        Returns:
+            Appropriate Token2ByteMapping subclass instance
+
+        Raises:
+            AssertionError: If tokenizer type is not in SUPPORTED_TOKENIZERS
+            NotImplementedError: If tokenizer family is not supported
+        """
         assert (
             type(hf_tokenizer) in SUPPORTED_TOKENIZERS
         ), f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}, supported tokenizers: {SUPPORTED_TOKENIZERS}"
-        if isinstance(
-            hf_tokenizer,
-            (
-                GPT2TokenizerFast,
-                BartTokenizerFast,
-                CodeGenTokenizerFast,
-                Qwen2TokenizerFast,
-            ),
-        ):
+
+        # Use TokenizerInspector for centralized family detection
+        inspector = TokenizerInspector(hf_tokenizer)
+        family = inspector.get_family()
+
+        if family == "gpt2" or family == "llama3":
+            # GPT2-style tokenizers (includes Llama-3 and deepseek-coder)
             return GPT2Token2ByteMapping(hf_tokenizer)
-        elif isinstance(hf_tokenizer, (LlamaTokenizerFast, GemmaTokenizerFast)):
-            # deepseek, though inheriting from LlamaTokenizerFast, is actually a GPT2TokenizerFast
-            # check https://github.com/epfl-dlab/transformers-CFG/issues/72
-            if "deepseek-coder" in hf_tokenizer.name_or_path:
-                return GPT2Token2ByteMapping(hf_tokenizer)
+        elif family == "llama1":
             return LLAMA1Token2ByteMapping(hf_tokenizer)
-        elif isinstance(hf_tokenizer, T5TokenizerFast):
+        elif family == "t5":
             return T5Token2ByteMapping(hf_tokenizer)
-        elif (
-            isinstance(hf_tokenizer, PreTrainedTokenizerFast)
-            and "Llama-3"
-            in hf_tokenizer.name_or_path  # this includes llama-3/llama-3.1/llama-3.2/llama-3.3
-        ):
-            return GPT2Token2ByteMapping(hf_tokenizer)
-        elif isinstance(hf_tokenizer, ByT5Tokenizer):
+        elif family == "byt5":
             return ByT5Token2ByteMapping(hf_tokenizer)
+        elif family == "codegen":
+            # CodeGen uses GPT2-style mapping
+            return GPT2Token2ByteMapping(hf_tokenizer)
         else:
             raise NotImplementedError(
                 f"Tokenizer not supported: {hf_tokenizer.__class__.__name__}"
