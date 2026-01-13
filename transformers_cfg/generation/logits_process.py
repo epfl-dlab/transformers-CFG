@@ -15,11 +15,27 @@ from transformers.utils import add_start_docstrings
 
 from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 from transformers_cfg.token_grammar_recognizer import BaseTokenRecognizer
+from transformers_cfg.generation.adapter_manager import AdapterManager
+from transformers_cfg.generation.parsing_state_manager import ParsingStateManager
 
 logger = logging.getLogger(__name__)
 
 
 class GrammarConstrainedLogitsProcessor(LogitsProcessor):
+    """
+    Grammar-constrained logits processor using composed managers.
+
+    This class orchestrates AdapterManager and ParsingStateManager to
+    provide grammar-constrained generation with flexible adapter support.
+
+    Attributes:
+        adapter_manager: Manages adapter loading and invocation
+        state_manager: Manages parsing state updates
+        grammar_constraint: Token recognizer for grammar constraints
+        execution_mode: Strategy for computing token acceptance
+        device: Device for tensor operations
+    """
+
     def __init__(
         self,
         grammar_constraint: BaseTokenRecognizer,
@@ -28,37 +44,58 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         device: Optional[torch.device] = None,
         adapter: str = "transformers",
     ) -> None:
-        self.last_size = None
         self.grammar_constraint = grammar_constraint
-        self.batch_parsing_states = None
-        self.valid_token_start_idx = valid_token_start_idx
         self.execution_mode = execution_mode
         self.device = device
         self._vocab_mismatch_logged = False  # Flag to log warning only once
 
-        # Create an alias for llama-cpp-python
-        if adapter == "llama-cpp-python":
-            adapter = "llama_cpp_python"
+        # Create composed managers
+        self._adapter_manager = AdapterManager(adapter, self)
+        self._state_manager = ParsingStateManager(
+            grammar_constraint, valid_token_start_idx
+        )
 
-        self.adapter = adapter
+    # Properties for accessing composed components
+    @property
+    def adapter_manager(self) -> AdapterManager:
+        """Access to adapter manager component."""
+        return self._adapter_manager
 
-        # Load adapter if specified and not "transformers"
-        self._adapter_func = None
-        if adapter != "transformers":
-            try:
-                # Import the adapter module
-                adapter_module = importlib.import_module(
-                    f"transformers_cfg.adapters.{adapter}"
-                )
-                # Get the adapter function with the same name as the module
-                adapter_func = getattr(adapter_module, adapter)
-                # Create the adapter function with this processor
-                self._adapter_func = adapter_func(self)
-            except (ImportError, AttributeError) as e:
-                logger.warning(
-                    f"Failed to load adapter '{adapter}': {str(e)}. "
-                    f"Falling back to default transformers behavior."
-                )
+    @property
+    def state_manager(self) -> ParsingStateManager:
+        """Access to parsing state manager component."""
+        return self._state_manager
+
+    # Backward compatibility properties
+    @property
+    def batch_parsing_states(self):
+        """Get batch parsing states (backward compatibility)."""
+        return self._state_manager.batch_parsing_states
+
+    @batch_parsing_states.setter
+    def batch_parsing_states(self, value):
+        """Set batch parsing states (backward compatibility)."""
+        self._state_manager.batch_parsing_states = value
+
+    @property
+    def valid_token_start_idx(self):
+        """Get valid token start index (backward compatibility)."""
+        return self._state_manager.valid_token_start_idx
+
+    @property
+    def last_size(self):
+        """Get last size (backward compatibility)."""
+        return self._state_manager.last_size
+
+    @property
+    def adapter(self):
+        """Get adapter name (backward compatibility)."""
+        return self._adapter_manager.adapter_name
+
+    @property
+    def _adapter_func(self):
+        """Get adapter function (backward compatibility)."""
+        return self._adapter_manager.adapter_func
 
     def _compute_speculative_acceptance(
         self, logits: torch.FloatTensor, device: torch.device
@@ -312,59 +349,43 @@ class GrammarConstrainedLogitsProcessor(LogitsProcessor):
         self, input_ids: torch.LongTensor, scores: torch.FloatTensor
     ) -> torch.FloatTensor:
         """
-        :param input_ids:
-        :param scores:
-        :return:
+        Process logits with grammar constraints.
+
+        Args:
+            input_ids: Input token IDs
+            scores: Logits scores to be masked
+
+        Returns:
+            Masked logits with grammar constraints applied
         """
         if self.device is None:
             device = scores.device
         else:
             device = self.device  # Use explicitly set device if available
 
-        # we dynamically create stacks at the first call, so that we know the batch size and beam size
-        if self.batch_parsing_states is None:
-            self.batch_parsing_states = [
-                # self.grammar_constraint.init_stacks()
-                copy.deepcopy(
-                    self.grammar_constraint.string_recognizer.get_initial_parsing_state()
-                )
-                for _ in range(len(input_ids))
-            ]
+        # Update parsing states with new tokens (initializes on first call)
+        self._state_manager.update_states(input_ids)
 
-        if os.getenv("DEBUG_MODE") == "True":
-            print("-" * 80)
-
-        logger.debug("input_ids: \n" + pprint.pformat(input_ids))
-        # logger.debug("scores: \n" + pprint.pformat(scores))
-        logger.debug("last_size: \n" + pprint.pformat(self.last_size))
-        logger.debug(
-            "num of stacks: \n"
-            + pprint.pformat(
-                [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
-            )
-        )
-        # logger.debug("stacks: \n" + pprint.pformat(self.batch_parsing_states.stacks))
-
-        self.batch_parsing_states = (
-            self.grammar_constraint.update_state_with_batch_token_seqs(
-                input_ids, self.batch_parsing_states, self.valid_token_start_idx
-            )
-        )
-        logger.debug(f"input_ids: {input_ids}")
-
+        # Apply grammar constraints to logits
         masked_scores = self.mask_logits(scores, device)
         return masked_scores
 
     @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
     def __call__(self, input_ids, scores):
-        # If we have an adapter function, use it
-        if self._adapter_func is not None:
-            return self._adapter_func(input_ids, scores)
+        """
+        Apply grammar constraints to logits.
+
+        Delegates to adapter if one is loaded, otherwise uses default processing.
+        """
+        # If we have an adapter, use it
+        if self._adapter_manager.has_adapter():
+            return self._adapter_manager.invoke_adapter(input_ids, scores)
         # Otherwise, use the default behavior
         return self.process_logits(input_ids, scores)
 
     def reset(self):
-        self.batch_parsing_states = None
+        """Reset processor state for new generation."""
+        self._state_manager.reset()
         self._vocab_mismatch_logged = False  # Reset flag on reset
         if isinstance(self.grammar_constraint, IncrementalGrammarConstraint):
             self.grammar_constraint.reset()
