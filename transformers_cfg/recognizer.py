@@ -3,14 +3,10 @@ from functools import lru_cache
 from typing import List, Tuple, Set, Optional
 
 from transformers_cfg.parser import (
-    END_OF_RULE_MARKER,
-    END_OF_ALTERNATE_MARKER,
     parse_ebnf,
-    REF_RULE_MARKER,
 )
 from transformers_cfg.utf8_utils import PartialUTF8, decode_utf8
-from transformers_cfg.utils import intervals_intersect
-import logging
+from transformers_cfg.grammar import GrammarState, StackManager, CharacterMatcher
 
 
 class AcceptState:
@@ -38,6 +34,29 @@ class AcceptState:
 
 
 class StringRecognizer:
+    """
+    Orchestrates grammar-based string recognition.
+
+    StringRecognizer coordinates GrammarState, StackManager, and CharacterMatcher
+    to implement a pushdown automaton for grammar-constrained string recognition.
+
+    This class maintains backward compatibility with the original API while
+    internally delegating to focused component classes.
+
+    Attributes:
+        grammar_encoding: Flattened integer array encoding the grammar (for compatibility)
+        grammar_state: Manages grammar encoding and rule lookups
+        stack_manager: Handles parsing stack operations
+        character_matcher: Matches characters against grammar rules
+        stacks: Current set of parsing stacks
+        start_rule_id: ID of the start rule
+
+    Example:
+        >>> recognizer = StringRecognizer(grammar_encoding, start_rule_id=0)
+        >>> state = recognizer.get_initial_parsing_state()
+        >>> state = recognizer._update_state_with_bytes(b"hello", state)
+    """
+
     def __init__(
         self,
         grammar_encoding: List[int],
@@ -45,70 +64,74 @@ class StringRecognizer:
         rule_offsets: Optional[List[int]] = None,
         stacks: Optional[Set[Tuple[int]]] = None,
     ):
-        # strictly speaking, we don't need to copy grammar_encoding because we don't modify it
-        # but we do it anyway to be safe
-        # in case where the grammar is very large, we can consider not copying it
+        """
+        Initialize string recognizer with grammar encoding.
+
+        Args:
+            grammar_encoding: Flattened integer array encoding the grammar
+            start_rule_id: ID of the grammar's start rule
+            rule_offsets: Pre-computed rule offset table (optional, computed if None)
+            stacks: Pre-initialized stacks (optional, computed if None)
+
+        Raises:
+            ValueError: If start_rule_id is invalid or rule_offsets/stacks are None
+        """
+        # Store grammar encoding for backward compatibility
         self.grammar_encoding = grammar_encoding
+        self.start_rule_id = start_rule_id
+
+        # Create composed components
+        self._grammar_state = GrammarState(grammar_encoding, start_rule_id)
+        self._stack_manager = StackManager(self._grammar_state)
+        self._character_matcher = CharacterMatcher(self._grammar_state)
+
+        # Initialize rule offsets (use provided or compute from grammar state)
         if rule_offsets is not None:
             self.rule_offsets = rule_offsets
         else:
             if start_rule_id == -1:
-                raise ValueError("start_rule_id cannot be None if rule_offsets is None")
-            self.rule_offsets = self.init_rules(start_rule_id)
-        # each stack is a list of indices into grammar_encoding
-        # each index points to a rule's
+                raise ValueError("start_rule_id cannot be -1 if rule_offsets is None")
+            self.rule_offsets = self._grammar_state.rule_offsets
+
+        # Initialize stacks (use provided or compute from stack manager)
         if stacks is not None:
             self.stacks = stacks
         else:
             if start_rule_id == -1:
-                raise ValueError("start_rule_id cannot be None if stacks is None")
-            self.stacks = self.init_stack(start_rule_id)
-        self.start_rule_id = start_rule_id
+                raise ValueError("start_rule_id cannot be -1 if stacks is None")
+            self.stacks = self._stack_manager.create_initial_stacks()
+
+    # Properties for accessing composed components
+    @property
+    def grammar_state(self) -> GrammarState:
+        """Access to grammar state component."""
+        return self._grammar_state
+
+    @property
+    def stack_manager(self) -> StackManager:
+        """Access to stack manager component."""
+        return self._stack_manager
+
+    @property
+    def character_matcher(self) -> CharacterMatcher:
+        """Access to character matcher component."""
+        return self._character_matcher
 
     def init_rules(self, start_rule_id: int) -> List[int]:
-        _rule_offset = 0
-        rule_offsets: List = []
-        # Build `rules` as an array of rule IDs to their positions in `grammar_src`
-        while self.grammar_encoding[_rule_offset] != 0xFFFF:
-            rule_id = self.grammar_encoding[_rule_offset]
-            # store the offset idx
-            if len(rule_offsets) <= rule_id:
-                rule_offsets.extend([-1] * (rule_id - len(rule_offsets) + 1))
-            rule_offsets[rule_id] = _rule_offset
+        """
+        Build rule offset table (backward compatibility wrapper).
 
-            # Skip rule ID
-            # _rule_offset += 1
-            simple_rhs_offset = _rule_offset + 1
-
-            # Skip rule alternates
-            while self.grammar_encoding[simple_rhs_offset] != END_OF_RULE_MARKER:
-                simple_rhs_offset = (
-                    simple_rhs_offset + 1 + self.grammar_encoding[simple_rhs_offset]
-                )
-
-            # Skip 0 denoting end of rule
-            # _rule_offset += 1
-            _rule_offset = simple_rhs_offset + 1
-
-        retrieved_start_rule_id = self.grammar_encoding[rule_offsets[start_rule_id]]
-        assert retrieved_start_rule_id == start_rule_id
-
-        return rule_offsets
+        Deprecated: New code should use grammar_state.rule_offsets directly.
+        """
+        return self._grammar_state.rule_offsets
 
     def init_stack(self, start_rule_id: int) -> Set[Tuple[int]]:
+        """
+        Create initial parsing stacks (backward compatibility wrapper).
 
-        stacks = set()
-        # Loop over alternates of start rule to build initial stacks
-        sub_rhs_offset = self.rule_offsets[start_rule_id] + 1
-        while self.grammar_encoding[sub_rhs_offset]:
-            stack: List[int] = []
-            # If alternate is nonempty, add to stack
-            element_offset = sub_rhs_offset + 1
-            if self.grammar_encoding[element_offset] != END_OF_ALTERNATE_MARKER:
-                stack.append(element_offset)
-            stacks.update(self.expand_stack_head(tuple(stack)))
-            sub_rhs_offset += 1 + self.grammar_encoding[sub_rhs_offset]
-        return stacks
+        Deprecated: New code should use stack_manager.create_initial_stacks() directly.
+        """
+        return self._stack_manager.create_initial_stacks()
 
     def get_initial_parsing_state(self) -> AcceptState:
         return AcceptState(self.init_stack(self.start_rule_id), PartialUTF8())
@@ -116,135 +139,19 @@ class StringRecognizer:
     def get_termination_parsing_state(self) -> AcceptState:
         return AcceptState(set(), PartialUTF8())
 
-    def _is_rule_reference(self, element_offset: int) -> bool:
-        """
-        Check if the grammar element at given offset is a non-terminal rule reference.
-
-        Args:
-            element_offset: Offset into grammar encoding
-
-        Returns:
-            True if element is a rule reference, False if it's a terminal
-        """
-        return self.grammar_encoding[element_offset] == REF_RULE_MARKER
-
-    def _get_referenced_rule_id(self, element_offset: int) -> int:
-        """
-        Get the rule ID that a reference element points to.
-
-        Args:
-            element_offset: Offset of the REF_RULE_MARKER element
-
-        Returns:
-            Rule ID being referenced
-        """
-        return self.grammar_encoding[element_offset + 1]
-
-    def _create_alternative_stack(
-        self,
-        original_stack: Tuple[int],
-        current_element_offset: int,
-        alternative_offset: int,
-    ) -> Tuple[int]:
-        """
-        Create a new stack for one alternative of a rule reference.
-
-        When expanding a rule reference, we create a new stack that includes:
-        1. All elements from the original stack except the rule reference
-        2. The continuation element (if any) after the rule reference
-        3. The first element of the alternative (if non-empty)
-
-        Args:
-            original_stack: Stack before expansion
-            current_element_offset: Offset of the rule reference being expanded
-            alternative_offset: Offset of one alternative of the referenced rule
-
-        Returns:
-            New stack tuple with the alternative incorporated
-        """
-        # Start with original stack minus the rule reference
-        new_stack = list(original_stack[:-1])
-
-        # Add continuation element if present (element after rule reference)
-        next_element_offset = current_element_offset + 2
-        if self.grammar_encoding[next_element_offset] != END_OF_ALTERNATE_MARKER:
-            new_stack.append(next_element_offset)
-
-        # Add first element of alternative if it's non-empty
-        alternative_element_offset = alternative_offset + 1
-        if self.grammar_encoding[alternative_element_offset] != END_OF_ALTERNATE_MARKER:
-            new_stack.append(alternative_element_offset)
-
-        return tuple(new_stack)
-
-    def _expand_rule_reference(
-        self, stack: Tuple[int], element_offset: int
-    ) -> Set[Tuple[int]]:
-        """
-        Expand a rule reference into all its alternatives.
-
-        Creates a new stack for each alternative of the referenced rule,
-        then recursively expands those stacks in case they also start
-        with rule references.
-
-        Args:
-            stack: Current parsing stack
-            element_offset: Offset of the rule reference to expand
-
-        Returns:
-            Set of expanded stacks (one per alternative)
-        """
-        ref_rule_id = self._get_referenced_rule_id(element_offset)
-
-        # Find start of the referenced rule's alternatives
-        ref_subrule_offset = self.rule_offsets[ref_rule_id] + 1
-
-        new_stacks: Set[Tuple[int]] = set()
-
-        # Process each alternative of the referenced rule
-        while self.grammar_encoding[ref_subrule_offset] != END_OF_RULE_MARKER:
-            alternative_stack = self._create_alternative_stack(
-                stack, element_offset, ref_subrule_offset
-            )
-
-            # Recursively expand in case new stack also starts with rule reference
-            new_stacks.update(self.expand_stack_head(alternative_stack))
-
-            # Move to next alternative (skip over current alternative's length)
-            ref_subrule_offset += self.grammar_encoding[ref_subrule_offset] + 1
-
-        return new_stacks
-
-    @lru_cache(maxsize=32768)
     def expand_stack_head(self, stack: Tuple[int]) -> Set[Tuple[int]]:
         """
-        Expand stack by processing rule references at the top.
+        Expand stack by processing rule references at the top (backward compatibility wrapper).
 
-        Stacks represent the internal state of the pushdown automaton used for
-        grammar recognition. When the top of the stack is a non-terminal (rule
-        reference), we must expand it by replacing it with each alternative of
-        the referenced rule, creating multiple possible parse paths.
+        Deprecated: New code should use stack_manager.expand_stack_head() directly.
 
         Args:
             stack: Current parsing stack (tuple of offsets into grammar encoding)
 
         Returns:
-            Set of stacks after expansion. If the top element is not a rule
-            reference, returns a set containing just the original stack.
+            Set of stacks after expansion.
         """
-        # Empty stack cannot be expanded
-        if len(stack) == 0:
-            return {stack}
-
-        # Get element at top of stack
-        current_element_offset = stack[-1]
-
-        # Terminal elements don't need expansion
-        if not self._is_rule_reference(current_element_offset):
-            return {stack}
-
-        # Expand rule reference into all its alternatives
-        return self._expand_rule_reference(stack, current_element_offset)
+        return self._stack_manager.expand_stack_head(stack)
 
     def _update_state_with_byte(
         self, byte: int, parsing_state: AcceptState
@@ -412,17 +319,12 @@ class StringRecognizer:
     def accept_code_point_at_element(
         self, code_point: int, element_offset: int
     ) -> bool:
-        size = self.grammar_encoding[element_offset]
-        # to make idx point to the range_start of the first range
-        element_offset += 1
-        for i in range(0, size, 2):
-            if (
-                self.grammar_encoding[element_offset + i]
-                <= code_point
-                <= self.grammar_encoding[element_offset + i + 1]
-            ):
-                return True
-        return False
+        """
+        Check if element accepts code point (backward compatibility wrapper).
+
+        Delegates to character_matcher.accepts_code_point().
+        """
+        return self._character_matcher.accepts_code_point(code_point, element_offset)
 
     #############################
     #
@@ -433,49 +335,14 @@ class StringRecognizer:
     def partial_utf8_accept_at_element(
         self, element_offset: int, partial_utf8: PartialUTF8
     ) -> bool:
-        # Extract the accumulated value and the number of remaining bytes from the partial_utf8 object.
-        partial_value = partial_utf8.value
-        n_remain = partial_utf8.n_remain
+        """
+        Check if element can accept partial UTF-8 sequence (backward compatibility wrapper).
 
-        # Return False if there are no remaining bytes to process or if it's an invalid UTF-8 sequence.
-        if n_remain == 1 and partial_value < 2:
-            return False
-
-        # If there are no remaining bytes, this means we had already consumed a complete UTF-8 sequence.
-        if n_remain <= 0:
-            return True
-
-        # Calculate the lowest possible Unicode code point that can be formed with the remaining bytes.
-        low = partial_value << (n_remain * 6)
-        # Calculate the highest possible Unicode code point by setting all remaining bits to 1.
-        high = low | ((1 << (n_remain * 6)) - 1)
-
-        # If the low end of the range is 0 and a specific number of bytes remain, adjust low to the minimum value
-        # that can be represented with that number of bytes. This accounts for UTF-8 encoding rules.
-        if low == 0:
-            if n_remain == 2:
-                low = 1 << 11  # Minimum value representable with 2 additional bytes.
-            elif n_remain == 3:
-                low = 1 << 16  # Minimum value representable with 3 additional bytes.
-
-        # Get the size of the grammar rule starting at the current element_offset.
-        size = self.grammar_encoding[element_offset]
-        # Move the element_offset to the start of the grammar rule's definition.
-        element_offset += 1
-
-        # Iterate over the grammar rule, checking if the range defined by low-high overlaps with any specified ranges.
-        for i in range(0, size, 2):
-            # If the current range (specified in the grammar encoding) overlaps with the low-high range, return True.
-            if intervals_intersect(
-                low,
-                high,
-                self.grammar_encoding[element_offset + i],
-                self.grammar_encoding[element_offset + i + 1],
-            ):
-                return True
-
-        # If no overlap is found with any of the ranges, return False, indicating no valid partial match.
-        return False
+        Delegates to character_matcher.accepts_partial_utf8().
+        """
+        return self._character_matcher.accepts_partial_utf8(
+            element_offset, partial_utf8
+        )
 
     #############################
     #
