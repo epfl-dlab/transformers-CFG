@@ -12,8 +12,8 @@ def parse_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        default="/dlabdata1/llm_hub/Mistral-7B-v0.1",
-        help="Model ID",
+        default="meta-llama/Llama-3.2-1B",
+        help="Model ID (default: Llama 3.2 1B)",
     )
     parser.add_argument("--device", type=str, help="Device to put the model on")
     return parser.parse_args()
@@ -34,6 +34,12 @@ def main():
     tokenizer.pad_token = tokenizer.eos_token
     # Load model to defined device
     model = AutoModelForCausalLM.from_pretrained(model_id).to(device)
+
+    # Handle pad_token_id (eos_token_id might be a list for some models)
+    eos_token_id = model.generation_config.eos_token_id
+    if isinstance(eos_token_id, list):
+        eos_token_id = eos_token_id[0]
+    model.generation_config.pad_token_id = eos_token_id
 
     # Load grammar
     with open(f"examples/grammars/geo_query.ebnf", "r") as file:
