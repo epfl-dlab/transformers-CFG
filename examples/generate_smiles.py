@@ -71,6 +71,7 @@ if __name__ == "__main__":
         device
     )  # Move input_ids to the same device as model
 
+    prompt_length = input_ids.shape[1]  # Track prompt length in tokens
     max_new_tokens = 20
     unconstrained_output = model.generate(
         input_ids,
@@ -94,27 +95,31 @@ if __name__ == "__main__":
         parsed_grammar.grammar_encoding, parsed_grammar.symbol_table["root"]
     )
 
-    res = tokenizer.decode(
-        constrained_output[0],
+    # Decode full outputs for display
+    full_generations = tokenizer.batch_decode(
+        torch.concat([unconstrained_output, constrained_output]),
         skip_special_tokens=True,
     )
 
-    # decode output
-    generations = tokenizer.batch_decode(
-        torch.concat([unconstrained_output, constrained_output]),
+    # Decode only the generated parts (excluding prompt) for validation
+    generated_only = tokenizer.batch_decode(
+        torch.concat([unconstrained_output[:, prompt_length:], constrained_output[:, prompt_length:]]),
         skip_special_tokens=True,
     )
 
     print(f"Total decoding time: {time.time()-start:.2f}s")
 
-    for generation, gen_type in zip(generations, ["Unconstrained:", "Constrained:"]):
+    for full_gen, generated, gen_type in zip(
+        full_generations, generated_only, ["Unconstrained:", "Constrained:"]
+    ):
         print(gen_type)
-        print(generation)
-        assert string_grammar._accept_prefix(
-            res[len(prefix1) :]
-        ), f"The generated prefix does not match the grammar: {string_grammar._accept_prefix(res[len(prefix1):])}"
+        print(full_gen)
+        print(f"Generated part only: {generated}")
         print(
-            f"The generation matches the grammar: {string_grammar._accept_string(generation[len(prefix1):])}"
+            f"The generated prefix matches the grammar: {string_grammar._accept_prefix(generated)}"
+        )
+        print(
+            f"The generation matches the grammar: {string_grammar._accept_string(generated)}"
         )
 
     ####

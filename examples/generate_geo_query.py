@@ -12,7 +12,7 @@ def parse_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        default="meta-llama/Llama-3.2-1B",
+        default="meta-llama/Llama-3.2-3B",
         help="Model ID (default: Llama 3.2 1B)",
     )
     parser.add_argument("--device", type=str, help="Device to put the model on")
@@ -47,6 +47,10 @@ def main():
 
     parsed_grammar = parse_ebnf(grammar_str)
     grammar = IncrementalGrammarConstraint(grammar_str, "root", tokenizer)
+
+    # Note: We cannot use valid_token_start_idx here because we need to generate
+    # both unconstrained and constrained outputs with the same input_ids.
+    # For proper grammar constraint, the prompt should NOT be included.
     grammar_processor = GrammarConstrainedLogitsProcessor(grammar)
 
     # Generate
@@ -65,6 +69,7 @@ def main():
     )  # Move input_ids to the same device as model
 
     n_examples = input_ids.shape[0]
+    prompt_lengths = input_ids.shape[1]  # Track prompt length in tokens
 
     max_new_tokens = 50
     unconstrained_output = model.generate(
@@ -88,20 +93,32 @@ def main():
         parsed_grammar.grammar_encoding, parsed_grammar.symbol_table["root"]
     )
 
-    # decode outputs (possibly of different lengths across decoding modes)
-    generations = tokenizer.batch_decode(
+    # Decode full outputs for display
+    full_generations = tokenizer.batch_decode(
         unconstrained_output, skip_special_tokens=True
     ) + tokenizer.batch_decode(constrained_output, skip_special_tokens=True)
+
+    # Decode only the generated parts (excluding prompt) for validation
+    unconstrained_only = tokenizer.batch_decode(
+        unconstrained_output[:, prompt_lengths:], skip_special_tokens=True
+    )
+    constrained_only = tokenizer.batch_decode(
+        constrained_output[:, prompt_lengths:], skip_special_tokens=True
+    )
+
     print()
     for i in range(n_examples):
-        print(f"Unconstrained: {generations[i]}")
-        constrained_generation = generations[i + n_examples]
-        print(f"Constrained: {generations[i + n_examples]}")
+        print(f"Unconstrained: {full_generations[i]}")
+        print(f"Constrained: {full_generations[i + n_examples]}")
+
+        # Validate using the generated-only part (no prompt)
+        generated_text = constrained_only[i]
+        print(f"Generated part only: {generated_text}")
         print(
-            f"The constrained generation matches the grammar: {string_grammar._accept_string(constrained_generation[len(prompts[i]):])}"
+            f"The constrained generation matches the grammar: {string_grammar._accept_string(generated_text)}"
         )
         print(
-            f"The generated prefix matches the grammar: {string_grammar._accept_prefix(constrained_generation[len(prompts[i]):])}"
+            f"The generated prefix matches the grammar: {string_grammar._accept_prefix(generated_text)}"
         )
         print()
 

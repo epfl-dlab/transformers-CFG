@@ -25,6 +25,24 @@ ValueError: All stacks are empty, so the only token accepted is EOS(128009), but
 ✅ **Still capable:** Decent quality for grammar-constrained generation
 ✅ **Less memory:** Runs on modest GPUs or even CPU
 
+### ⚠️ Model Capability Limitations
+
+**Llama 3.2 1B works great for:**
+- ✅ JSON generation (simple structures)
+- ✅ Testing grammar constraints
+- ✅ Development and quick iteration
+
+**Llama 3.2 1B is limited for:**
+- ⚠️ GeoQuery (complex semantic parsing)
+- ⚠️ PDDL (planning domain language)
+- ⚠️ SMILES (chemistry notation)
+
+For these complex tasks, the 1B model produces grammatically valid but semantically trivial outputs (e.g., `answer(0)` instead of `answer(smallest_one(area_1(stateid('colorado'))))`).
+
+**Recommendation:** Use Llama 3.2 3B or Mistral 7B for complex semantic parsing tasks.
+
+See [MODEL_RECOMMENDATIONS.md](MODEL_RECOMMENDATIONS.md) for detailed guidance on which model to use for each example.
+
 ## Updated Examples
 
 All these examples now default to `meta-llama/Llama-3.2-1B` (base model):

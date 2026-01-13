@@ -77,6 +77,7 @@ def main():
     )  # Move input_ids to the same device as model
 
     n_examples = input_ids.shape[0]
+    prompt_lengths = input_ids.shape[1]  # Track prompt length in tokens
 
     max_new_tokens = 50
     unconstrained_output = model.generate(
@@ -100,27 +101,38 @@ def main():
         parsed_grammar.grammar_encoding, parsed_grammar.symbol_table["root"]
     )
 
-    # decode outputs (possibly of different lengths across decoding modes)
-    generations = tokenizer.batch_decode(
+    # Decode full outputs for display
+    full_generations = tokenizer.batch_decode(
         unconstrained_output, skip_special_tokens=True
     ) + tokenizer.batch_decode(constrained_output, skip_special_tokens=True)
+
+    # Decode only the generated parts (excluding prompt) for validation
+    unconstrained_only = tokenizer.batch_decode(
+        unconstrained_output[:, prompt_lengths:], skip_special_tokens=True
+    )
+    constrained_only = tokenizer.batch_decode(
+        constrained_output[:, prompt_lengths:], skip_special_tokens=True
+    )
+
     print()
 
     for i in range(n_examples):
-        unconstrained_generation = generations[i]
-        constrained_generation = generations[i + n_examples]
+        unconstrained_generation = full_generations[i]
+        constrained_generation = full_generations[i + n_examples]
         prompt = prompts[i]
 
-        for generation, generation_type in zip(
+        for full_gen, generated_only, generation_type in zip(
             [unconstrained_generation, constrained_generation],
+            [unconstrained_only[i], constrained_only[i]],
             ["unconstrained", "constrained"],
         ):
-            print(f"The {generation_type} generation:\n{generation}")
+            print(f"The {generation_type} generation:\n{full_gen}")
+            print(f"Generated part only: {generated_only}")
             print(
-                f"The {generation_type} generation is a valid prefix for the grammar: {string_grammar._accept_prefix(generation[len(prompt):])}"
+                f"The {generation_type} generation is a valid prefix for the grammar: {string_grammar._accept_prefix(generated_only)}"
             )
             print(
-                f"The {generation_type} generation is a valid sentence for the grammar: {string_grammar._accept_string(generation[len(prompt):])}"
+                f"The {generation_type} generation is a valid sentence for the grammar: {string_grammar._accept_string(generated_only)}"
             )
             print()
 
