@@ -22,6 +22,13 @@ log = logging.getLogger(__name__)
 
 
 class Token2ByteMapping(ABC):
+    """
+    Base class for token-to-byte mapping with common template methods.
+
+    This class provides template methods to reduce code duplication across
+    different tokenizer families (GPT2, LLAMA1, T5, etc.).
+    """
+
     def __init__(self, tokenizer):
         self.eos_token_id = tokenizer.eos_token_id
         self.bos_token_id = tokenizer.bos_token_id
@@ -35,6 +42,53 @@ class Token2ByteMapping(ABC):
     @abstractmethod
     def map(self, token_id: int, verbose=False) -> bytes:
         pass
+
+    def _normalize_token_id(self, token_id: int) -> int:
+        """
+        Convert token ID to integer if it's a tensor.
+
+        Args:
+            token_id: Token ID as int or tensor
+
+        Returns:
+            Token ID as integer
+        """
+        if isinstance(token_id, torch.Tensor):
+            return token_id.item()
+        return token_id
+
+    def _is_special_token(self, token_id: int) -> bool:
+        """
+        Check if token ID is a special token.
+
+        Args:
+            token_id: Token ID to check
+
+        Returns:
+            True if token is special (BOS, EOS, PAD, etc.)
+        """
+        return token_id in self.special
+
+    def _handle_special_token(self) -> bytes:
+        """
+        Handle special tokens (BOS, EOS, PAD, etc.).
+
+        Returns:
+            Empty bytes for special tokens
+        """
+        return b""
+
+    def _get_proxy_token(self, token_id: int) -> str:
+        """
+        Get proxy token string for a token ID.
+
+        Args:
+            token_id: Token ID to convert
+
+        Returns:
+            Proxy token string representation
+        """
+        return self.tokenizer.convert_ids_to_tokens(token_id)
 
     @classmethod
     def from_hf_tokenizer(cls, hf_tokenizer):
@@ -93,14 +147,14 @@ class GPT2Token2ByteMapping(Token2ByteMapping):
         self.byte_proxy_mapping = ByteProxyMapping(tokenizer)
 
     def map2proxy_token(self, token_id: int) -> str:
-        # This is the case for BOS,
-        if token_id in self.special:
+        """Get proxy token, handling special tokens."""
+        # This is the case for BOS, EOS, etc.
+        if self._is_special_token(token_id):
             return ""
-        # if token_id is tensor, convert it to int
-        if isinstance(token_id, torch.Tensor):
-            token_id = token_id.item()
-        proxy_token = self.tokenizer.convert_ids_to_tokens(token_id)
-        return proxy_token
+        # Normalize token_id (convert tensor to int if needed)
+        token_id = self._normalize_token_id(token_id)
+        # Get proxy token representation
+        return self._get_proxy_token(token_id)
 
     def map(self, token_id: int, verbose=False) -> bytes:
         proxy_token = self.map2proxy_token(token_id)
@@ -117,26 +171,26 @@ class LLAMA1Token2ByteMapping(Token2ByteMapping):
         self.byte_proxy_mapping = LLAMAByteProxyMapping()
 
     def map(self, token_id: int, verbose=False) -> bytes:
-        # we need to check if the token is at the beginning of the sentence to remove the space
-        # specific to BPE
+        # Check if we're at the beginning of the sentence
+        # (need to remove space for BPE tokenizers)
         at_bos = False
         if self.last_token_id is not None and self.last_token_id == self.bos_token_id:
             at_bos = True
         self.last_token_id = token_id
 
-        # This is the case for BOS,
-        if token_id in self.special:
-            return b""
-        # if token_id is tensor, convert it to int
-        if isinstance(token_id, torch.Tensor):
-            token_id = token_id.item()
-        proxy_token = self.tokenizer.convert_ids_to_tokens(token_id)
+        # Handle special tokens (BOS, EOS, PAD, etc.)
+        if self._is_special_token(token_id):
+            return self._handle_special_token()
 
+        # Normalize token_id (convert tensor to int if needed)
+        token_id = self._normalize_token_id(token_id)
+
+        # Get proxy token and convert to bytes
+        proxy_token = self._get_proxy_token(token_id)
         token_bytes = self.byte_proxy_mapping.map(proxy_token)
 
-        # check if the first byte is a space
-        if token_bytes[0] == 32 and at_bos:
-            # remove space at the beginning of the sentence
+        # Remove leading space at beginning of sentence (BPE-specific)
+        if token_bytes and token_bytes[0] == 32 and at_bos:
             token_bytes = token_bytes[1:]
 
         return token_bytes
@@ -149,23 +203,20 @@ class T5Token2ByteMapping(Token2ByteMapping):
         self.byte_proxy_mapper = LLAMAByteProxyMapping()
 
     def map(self, token_id: int, verbose=False) -> bytes:
-        # we need to check if the token is at the beginning of the sentence to remove the space
-        # specific to BPE
-
-        # This is the case for BOS,
-        if token_id in self.special:
+        # Handle special tokens (BOS, EOS, PAD, etc.)
+        if self._is_special_token(token_id):
             self.at_bos = False
-            return b""
-        # if token_id is tensor, convert it to int
-        if isinstance(token_id, torch.Tensor):
-            token_id = token_id.item()
-        proxy_token = self.tokenizer.convert_ids_to_tokens(token_id)
+            return self._handle_special_token()
 
+        # Normalize token_id (convert tensor to int if needed)
+        token_id = self._normalize_token_id(token_id)
+
+        # Get proxy token and convert to bytes
+        proxy_token = self._get_proxy_token(token_id)
         token_bytes = self.byte_proxy_mapper.map(proxy_token)
 
-        # check if the first byte is a space
-        if token_bytes[0] == 32 and self.at_bos:
-            # remove space at the beginning of the sentence
+        # Remove leading space at beginning of sentence (BPE-specific)
+        if token_bytes and token_bytes[0] == 32 and self.at_bos:
             token_bytes = token_bytes[1:]
 
         self.at_bos = False
@@ -178,17 +229,20 @@ class ByT5Token2ByteMapping(Token2ByteMapping):
         self.token_id_to_bytes = {}
 
     def map(self, token_id: int, verbose=False) -> bytes:
-        # By inspecting the token vocab, we can see that the first 3 tokens are special tokens
-        # and the tokens after 258 are also special tokens
-        # only the tokens between 3 and 258 are valid tokens, 256 bytes
-        if isinstance(token_id, torch.Tensor):
-            token_id = token_id.item()
+        # Normalize token_id (convert tensor to int if needed)
+        token_id = self._normalize_token_id(token_id)
+
+        # Check cache first
         if token_id in self.token_id_to_bytes:
             return self.token_id_to_bytes[token_id]
+
+        # By inspecting the token vocab: first 3 tokens are special,
+        # tokens after 258 are also special
+        # Only tokens between 3 and 258 are valid (256 bytes)
         if 3 <= token_id <= 258:
             return ord(self.tokenizer.convert_ids_to_tokens(token_id)).to_bytes(
                 1, "big"
             )
         else:
-            # return empty bytes for special tokens
+            # Return empty bytes for special tokens
             return bytes()
