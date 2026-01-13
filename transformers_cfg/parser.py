@@ -1,3 +1,67 @@
+"""
+EBNF grammar parsing and encoding.
+
+This module provides functionality to parse Extended Backus-Naur Form (EBNF)
+grammars into an efficient integer encoding format used by the grammar recognizer.
+It handles parsing grammar rules, character classes, alternatives, and sequences,
+converting them into a flattened array representation optimized for fast lookups.
+
+Key Components:
+    ParseState: Maintains grammar rules and symbol table during parsing
+    GrammarRule: Represents a single grammar production rule
+    GrammarElement: Base class for terminal and non-terminal elements
+    parse_ebnf: Main entry point for parsing EBNF grammar strings
+
+Grammar Encoding Format:
+    The grammar is encoded as a flat list of integers where:
+    - Each rule starts with its ID
+    - Alternatives are separated by length markers
+    - Terminal elements encode character ranges
+    - Reference elements point to other rules by ID
+    - Special markers (0, 0xFFFF) delimit structures
+
+Example:
+    >>> from transformers_cfg.parser import parse_ebnf
+    >>>
+    >>> # Define a simple JSON grammar
+    >>> grammar = '''
+    ... root ::= object | array
+    ... object ::= "{" members "}"
+    ... members ::= pair | pair "," members | ""
+    ... pair ::= string ":" value
+    ... '''
+    >>>
+    >>> # Parse into encoded format
+    >>> parsed = parse_ebnf(grammar)
+    >>>
+    >>> # Access components
+    >>> print(f"Root rule ID: {parsed.symbol_table['root']}")
+    >>> print(f"Grammar encoding length: {len(parsed.grammar_encoding)}")
+    >>>
+    >>> # Visualize structure
+    >>> parsed.print()  # Print human-readable format
+    >>> parsed.graph("grammar_diagram")  # Generate graphviz diagram
+
+Architecture:
+    The parser operates in multiple phases:
+    1. Tokenization: Split input into tokens (identifiers, literals, operators)
+    2. Rule parsing: Build GrammarRule objects with alternatives
+    3. Element parsing: Parse right-hand sides into terminal/reference elements
+    4. Serialization: Convert to flat integer encoding
+
+    The RHSParser class uses a dispatch table pattern to handle different
+    EBNF constructs (character classes, ranges, literals, references).
+
+Performance:
+    - Parsing is O(n) in grammar size
+    - Character class optimizations for common patterns
+    - Cached properties prevent recomputation of encodings
+
+See Also:
+    - recognizer.py: Uses the encoded grammar for string validation
+    - grammar/: Components that operate on the grammar encoding
+"""
+
 import argparse
 import logging
 import sys

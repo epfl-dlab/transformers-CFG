@@ -1,4 +1,91 @@
-"""Character and code point matching against grammar rules."""
+"""
+Character and code point matching against grammar rules.
+
+This module provides the CharacterMatcher class which tests whether characters
+(represented as Unicode code points or partial UTF-8 sequences) are accepted by
+grammar elements. It handles both complete and partial character matching with
+LRU caching for performance.
+
+Key Components:
+    CharacterMatcher: Tests character acceptance against grammar terminal elements
+
+Architecture:
+    Character matching operates on grammar terminal elements which encode
+    character ranges. Each terminal element contains pairs of (start, end)
+    code points defining acceptable character ranges.
+
+    Terminal element structure in grammar encoding:
+    [num_ranges*2, start1, end1, start2, end2, ..., next_element_offset]
+
+    Matching modes:
+    1. Complete code point matching (accepts_code_point):
+       - Check if code point falls in any range
+       - Returns boolean acceptance result
+       - Used for fully decoded characters
+
+    2. Partial UTF-8 matching (accepts_partial_utf8):
+       - Check if partial byte sequence could become valid
+       - Returns (accepted, rejected) tuple
+       - Used for streaming/incremental parsing
+
+Example:
+    >>> from transformers_cfg.grammar.character_matcher import CharacterMatcher
+    >>> from transformers_cfg.grammar.grammar_state import GrammarState
+    >>>
+    >>> # Create matcher
+    >>> matcher = CharacterMatcher(grammar_state)
+    >>>
+    >>> # Test if 'a' is accepted by element at offset 100
+    >>> element_offset = 100
+    >>> accepted = matcher.accepts_code_point(ord('a'), element_offset)
+    >>> print(f"Character 'a' accepted: {accepted}")
+    >>>
+    >>> # Test partial UTF-8 sequence
+    >>> partial = PartialUTF8()
+    >>> partial.n_remain = 1  # Expecting 1 more byte
+    >>> partial.value = 0xC2  # First byte of 2-byte sequence
+    >>> accepted, rejected = matcher.accepts_partial_utf8(partial, element_offset)
+
+Character Range Matching:
+    The matcher checks if a code point falls within any of the element's ranges:
+    ```
+    For element with ranges [(97, 122), (65, 90)]:  # [a-z] and [A-Z]
+    - 'a' (97): Accepted (falls in first range)
+    - 'A' (65): Accepted (falls in second range)
+    - '0' (48): Rejected (not in any range)
+    ```
+
+Partial UTF-8 Handling:
+    For partial sequences, the matcher determines if completing the sequence
+    could yield a code point in the acceptable ranges:
+    - accepted=True: Partial sequence could become valid
+    - rejected=True: Partial sequence cannot become valid
+    - Both False: Need more bytes to determine
+    - Both True: Should not occur (logical inconsistency)
+
+Caching Strategy:
+    Uses @lru_cache(maxsize=30000) on accepts_code_point() because:
+    - Same (code_point, element_offset) pairs recur frequently
+    - Range checking involves iterating through element ranges
+    - Cache provides O(1) lookup for repeated checks
+    - 30000 entries balances memory usage vs. hit rate
+
+Integration:
+    Used by StringRecognizer to validate characters during parsing. Works with
+    StackManager to determine which stacks can advance based on character
+    acceptance.
+
+Performance:
+    - Code point matching without cache: O(num_ranges in element)
+    - Code point matching with cache: O(1) for cache hits
+    - Partial UTF-8 matching: O(num_ranges * range_intersection_complexity)
+    - Memory: One cache entry per unique (code_point, offset) pair
+
+See Also:
+    - grammar_state.py: Provides grammar encoding accessed by matcher
+    - ../recognizer.py: Uses CharacterMatcher for input validation
+    - ../utf8_utils.py: Defines PartialUTF8 structure for partial sequences
+"""
 
 import logging
 from functools import lru_cache

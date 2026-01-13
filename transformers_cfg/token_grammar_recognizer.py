@@ -1,3 +1,79 @@
+"""
+Token-level grammar recognition for constrained generation.
+
+This module provides token-level recognizers that bridge between string-level
+grammar validation and token-based generation in language models. It processes
+tokenized sequences incrementally, maintaining parsing states and computing
+which tokens are valid at each generation step.
+
+Key Components:
+    BaseTokenRecognizer: Abstract base providing common token recognition logic
+    IncrementalTokenRecognizer: Main recognizer using composed batch processor
+        and acceptance computer for efficient incremental processing
+    NonIncrementalTokenSeqRecognizer: Alternative recognizer for non-incremental
+        token sequence processing
+
+Architecture:
+    IncrementalTokenRecognizer composes two specialized components:
+    - BatchStateProcessor: Handles batch token sequence updates
+    - TokenAcceptanceComputer: Computes acceptable tokens given parsing state
+
+    This composition enables:
+    - Separation of concerns between state updates and acceptance computation
+    - Independent testing and optimization of each component
+    - Clear upgrade path for alternative implementations
+
+Usage Patterns:
+    1. Incremental Generation (most common):
+       - Process tokens one at a time as model generates
+       - Maintain parsing state across generation steps
+       - Compute token acceptance masks for logit filtering
+
+    2. Batch Processing:
+       - Process multiple sequences simultaneously
+       - Track separate parsing state per batch element
+       - Efficient GPU-accelerated acceptance computation
+
+Example:
+    >>> from transformers import AutoTokenizer
+    >>> from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
+    >>>
+    >>> # Define grammar and create recognizer
+    >>> grammar = 'root ::= "hello" | "world"'
+    >>> tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    >>> recognizer = IncrementalTokenRecognizer(
+    ...     grammar_str=grammar,
+    ...     start_rule_name="root",
+    ...     tokenizer=tokenizer
+    ... )
+    >>>
+    >>> # Check if token sequence is accepted
+    >>> tokens = tokenizer.encode("hello")
+    >>> is_valid = recognizer.accept_token_ids(tokens)
+    >>> print(f"Token sequence valid: {is_valid}")
+    >>>
+    >>> # Get acceptance mask for next token
+    >>> state = recognizer.string_recognizer.get_initial_parsing_state()
+    >>> acceptance = recognizer.get_next_token_acceptance(state, torch.device("cpu"))
+    >>> valid_tokens = acceptance.nonzero().squeeze().tolist()
+
+Integration with Generation:
+    Token recognizers are typically wrapped by GrammarConstrainedLogitsProcessor
+    for integration with HuggingFace Transformers generation pipeline. They can
+    also be used standalone for validation or analysis.
+
+Performance Considerations:
+    - Uses LRU caching for token acceptance computation (32768 entries)
+    - Supports both unicode (byte-by-byte) and non-unicode (trie-based) modes
+    - Batch processing optimized for GPU execution
+    - Incremental state updates minimize redundant computation
+
+See Also:
+    - recognition/batch_processor.py: Batch state update logic
+    - recognition/acceptance_computer.py: Token acceptance computation
+    - generation/logits_process.py: Integration with model generation
+"""
+
 import logging
 from abc import ABC
 from functools import lru_cache
@@ -246,9 +322,7 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
 
         Deprecated: New code should use acceptance_computer.compute_token_acceptance() directly.
         """
-        return self._acceptance_computer.compute_token_acceptance(
-            parsing_state, device
-        )
+        return self._acceptance_computer.compute_token_acceptance(parsing_state, device)
 
     # If running on a GPU device this cache can continue to fill up GPU memory
     # Dereferencing the object will not clear the cache

@@ -1,4 +1,66 @@
-"""Adapter loading and invocation for grammar-constrained generation."""
+"""
+Adapter loading and invocation for grammar-constrained generation.
+
+This module provides the AdapterManager class which enables integration with
+multiple generation backends beyond HuggingFace Transformers. Adapters are
+dynamically loaded modules that provide custom logits processing logic for
+different frameworks.
+
+Key Components:
+    AdapterManager: Manages adapter lifecycle (loading, invocation, checking)
+
+Architecture:
+    Adapters follow a simple pattern:
+    1. Each adapter is a Python module in transformers_cfg/adapters/
+    2. Module exports a function that takes a LogitsProcessor instance
+    3. Function returns a callable with signature (input_ids, scores) -> scores
+    4. AdapterManager dynamically imports and invokes the adapter
+
+Supported Adapters:
+    - transformers (default): No adapter needed, uses standard processing
+    - llama-cpp-python: Integration with llama.cpp Python bindings
+    - Custom adapters: Add new files in adapters/ directory
+
+Example - Using llama-cpp-python adapter:
+    >>> from transformers_cfg.generation.adapter_manager import AdapterManager
+    >>> from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+    >>>
+    >>> # Create processor
+    >>> processor = GrammarConstrainedLogitsProcessor(
+    ...     grammar_constraint=recognizer,
+    ...     adapter="llama-cpp-python"
+    ... )
+    >>>
+    >>> # Manager automatically loads and uses the adapter
+    >>> # No manual adapter invocation needed
+
+Creating Custom Adapters:
+    1. Create file in transformers_cfg/adapters/ (e.g., my_adapter.py)
+    2. Define function that takes LogitsProcessor and returns callable:
+       ```python
+       def my_adapter_function(logits_processor):
+           def process(input_ids, scores):
+               # Custom processing logic
+               return logits_processor.process_logits(input_ids, scores)
+           return process
+       ```
+    3. Use by passing adapter name to GrammarConstrainedLogitsProcessor:
+       ```python
+       processor = GrammarConstrainedLogitsProcessor(
+           grammar_constraint=recognizer,
+           adapter="my_adapter"
+       )
+       ```
+
+Extension Points:
+    - Add new adapters without modifying existing code
+    - Adapter name normalization (e.g., "llama-cpp-python" → "llama_cpp_python")
+    - Automatic module import with informative error messages
+
+See Also:
+    - ../adapters/: Directory containing adapter implementations
+    - logits_process.py: Main processor that uses AdapterManager
+"""
 
 import importlib
 import logging

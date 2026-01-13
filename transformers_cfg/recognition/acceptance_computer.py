@@ -1,4 +1,89 @@
-"""Token acceptance computation for grammar-constrained generation."""
+"""
+Token acceptance computation for grammar-constrained generation.
+
+This module provides the TokenAcceptanceComputer class which determines which
+tokens in the vocabulary are acceptable given the current parsing state. It uses
+byte tries and string recognizers to efficiently compute acceptance masks for
+constraining model generation.
+
+Key Components:
+    TokenAcceptanceComputer: Computes boolean acceptance tensors indicating
+        which tokens are valid according to grammar constraints
+
+Architecture:
+    The computer operates in two modes:
+    1. Unicode Mode (use_unicode=True):
+       - Uses byte-by-byte validation via _can_accept_bytes()
+       - Handles multibyte UTF-8 characters correctly
+       - Works with byte_trie.get_next_token_acceptance()
+
+    2. Non-Unicode Mode (use_unicode=False):
+       - Uses trie-based token validation via check_token_acceptance_in_trie()
+       - More efficient for ASCII-only grammars
+       - Traverses byte trie while checking grammar acceptance
+
+    Acceptance computation flow:
+    1. For each stack in parsing_state.stacks:
+       - Compute per-stack acceptance mask
+       - Check each token's byte sequence against grammar
+       - Handle EOS token specially (accepted if stack is empty)
+    2. Merge stack results: token accepted if ANY stack accepts it
+    3. Return boolean tensor of shape (vocab_size,)
+
+Caching Strategy:
+    Uses @lru_cache(maxsize=32768) on compute_for_single_stack() to avoid
+    redundant computation for identical (stack, partial_utf8) pairs.
+    Note: GPU cache memory persists even after object dereferencing.
+
+Example:
+    >>> from transformers_cfg.recognition.acceptance_computer import TokenAcceptanceComputer
+    >>> from transformers_cfg.recognizer import StringRecognizer
+    >>>
+    >>> # Create computer
+    >>> computer = TokenAcceptanceComputer(
+    ...     string_recognizer=recognizer,
+    ...     byte_trie=trie,
+    ...     token2byte_mapping=mapping,
+    ...     eos_token_id=2,
+    ...     use_unicode=True
+    ... )
+    >>>
+    >>> # Compute acceptance for current parsing state
+    >>> state = recognizer.get_initial_parsing_state()
+    >>> acceptance = computer.compute_token_acceptance(state, torch.device("cpu"))
+    >>>
+    >>> # Find acceptable tokens
+    >>> valid_token_ids = acceptance.nonzero().squeeze().tolist()
+    >>> print(f"Number of valid tokens: {len(valid_token_ids)}")
+
+Stack Merging:
+    When multiple parsing stacks exist (representing alternative parse paths),
+    the computer computes acceptance for each stack independently, then merges:
+    - acceptance_matrix shape: (num_stacks, vocab_size)
+    - final acceptance: acceptance_matrix.any(dim=0)
+    - Result: token accepted if valid on ANY parse path
+
+EOS Handling:
+    The EOS (end-of-sequence) token receives special treatment:
+    - Accepted when parsing stack is empty (grammar complete)
+    - Rejected when parsing stack is non-empty (grammar incomplete)
+    - Prevents premature sequence termination
+
+Integration:
+    Used by IncrementalTokenRecognizer to provide token filtering capability.
+    Typically invoked via get_next_token_acceptance() for backward compatibility.
+
+Performance:
+    - LRU cache dramatically reduces redundant computation
+    - Cache size of 32768 balances memory vs. hit rate
+    - GPU memory accumulation can occur with CUDA tensors
+    - Consider clearing caches for long-running processes
+
+See Also:
+    - batch_processor.py: Updates parsing states processed by this computer
+    - ../recognizer.py: Provides _can_accept_bytes() for unicode mode
+    - ../token_grammar_recognizer.py: Uses this for check_token_acceptance_in_trie()
+"""
 
 import logging
 from functools import lru_cache

@@ -1,4 +1,71 @@
-"""Grammar encoding state management."""
+"""
+Grammar encoding state management.
+
+This module provides the GrammarState class which manages the internal integer
+representation of parsed EBNF grammars. It builds efficient lookup structures
+for O(1) rule offset access and provides read-only views over the grammar encoding.
+
+Key Components:
+    GrammarState: Stores grammar encoding and provides rule offset indexing
+
+Architecture:
+    The grammar encoding is a flattened integer array where:
+    - Each rule starts with its ID followed by alternative definitions
+    - Alternatives are sequences of elements (terminals or rule references)
+    - Special markers (0, 0xFFFF) delimit structural boundaries
+    - GrammarState builds a rule_offsets dict mapping rule_id → encoding position
+
+    Grammar encoding structure:
+    [rule_id, alt1_data..., 0, alt2_data..., 0, ..., 0, next_rule_id, ...]
+
+    The rule_offsets index enables:
+    - O(1) lookup of rule position by ID
+    - Fast rule expansion during parsing
+    - Efficient stack-based grammar traversal
+
+Example:
+    >>> from transformers_cfg.parser import parse_ebnf
+    >>> from transformers_cfg.grammar.grammar_state import GrammarState
+    >>>
+    >>> # Parse grammar into encoding
+    >>> parsed = parse_ebnf('root ::= "hello" | "world"')
+    >>>
+    >>> # Create state for efficient access
+    >>> state = GrammarState(
+    ...     grammar_encoding=parsed.grammar_encoding,
+    ...     start_rule_id=parsed.symbol_table["root"]
+    ... )
+    >>>
+    >>> # O(1) rule lookup
+    >>> root_offset = state.get_rule_offset(state.start_rule_id)
+    >>> print(f"Root rule starts at offset: {root_offset}")
+
+Usage Patterns:
+    1. Read-only access (typical):
+       - Create once during recognizer initialization
+       - Use get_rule_offset() for rule expansion
+       - Access grammar_encoding directly for element inspection
+
+    2. Rule traversal:
+       - Use rule_offsets to jump to rule definitions
+       - Follow REF_RULE_MARKER elements to referenced rules
+       - Navigate alternatives using length markers
+
+Integration:
+    GrammarState is composed by StringRecognizer along with StackManager and
+    CharacterMatcher to provide complete grammar recognition functionality.
+    It serves as the foundational data structure for all grammar operations.
+
+Performance:
+    - Rule offset index built once at initialization: O(n) where n = encoding length
+    - Rule lookups are O(1) via rule_offsets dictionary
+    - Memory overhead: One dict entry per rule (typically small)
+
+See Also:
+    - stack_manager.py: Uses GrammarState for stack expansion operations
+    - character_matcher.py: Uses GrammarState for character acceptance checks
+    - ../parser.py: Generates the grammar_encoding consumed by this module
+"""
 
 import logging
 from typing import List

@@ -1,4 +1,80 @@
-"""Parsing state management for batch grammar-constrained generation."""
+"""
+Parsing state management for batch grammar-constrained generation.
+
+This module provides the ParsingStateManager class which handles initialization
+and incremental updates of parsing states across batches during generation. It
+ensures that each sequence in a batch maintains correct grammar state tracking
+as new tokens are generated.
+
+Key Components:
+    ParsingStateManager: Orchestrates state initialization and updates for
+        batch generation with grammar constraints
+
+Architecture:
+    The manager handles two phases of state management:
+    1. Initialization: Create initial parsing states for each batch element,
+       optionally skipping prefix tokens before valid_token_start_idx
+    2. Updates: Incrementally update states as new tokens are generated,
+       processing only new tokens to minimize computation
+
+    State tracking uses the following strategy:
+    - batch_parsing_states: List of AcceptState per batch element
+    - last_size: Tracks input length to identify new tokens
+    - Delegates token processing to grammar_constraint.update_state_with_batch_token_seqs()
+
+Usage Patterns:
+    1. Single generation run (typical):
+       - Initialize states on first call with valid prefix
+       - Incrementally update as each token is generated
+       - Reset for next generation run
+
+    2. Custom prefix handling:
+       - Set valid_token_start_idx to skip prompt tokens
+       - Grammar validation starts after this index
+       - Useful for instruction-following models
+
+Example:
+    >>> from transformers_cfg.generation.parsing_state_manager import ParsingStateManager
+    >>> from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
+    >>>
+    >>> # Create state manager
+    >>> manager = ParsingStateManager(
+    ...     grammar_constraint=recognizer,
+    ...     valid_token_start_idx=5  # Skip first 5 tokens
+    ... )
+    >>>
+    >>> # Initialize and update states during generation
+    >>> input_ids = torch.tensor([[1, 2, 3, 4, 5, 6, 7]])
+    >>> manager.update_states(input_ids)  # Initializes on first call
+    >>> # States now track grammar compliance starting from token 6
+    >>>
+    >>> # Add more tokens
+    >>> input_ids = torch.tensor([[1, 2, 3, 4, 5, 6, 7, 8]])
+    >>> manager.update_states(input_ids)  # Incrementally processes token 8
+    >>>
+    >>> # Reset for next generation
+    >>> manager.reset()
+
+State Lifecycle:
+    1. Manager created with grammar_constraint and optional valid_token_start_idx
+    2. First update_states() call initializes batch_parsing_states
+    3. Subsequent calls process only new tokens (incremental)
+    4. reset() clears state for next generation run
+
+Integration:
+    Typically used by GrammarConstrainedLogitsProcessor, not directly by users.
+    The processor calls update_states() before each logits masking operation.
+
+Performance:
+    - Incremental updates minimize redundant processing
+    - Batch processing leverages GPU parallelization
+    - Debug logging available with DEBUG_MODE=True environment variable
+
+See Also:
+    - logits_process.py: Uses ParsingStateManager for state coordination
+    - ../recognition/batch_processor.py: Handles actual token sequence processing
+    - ../recognizer.py: Defines AcceptState structure
+"""
 
 import copy
 import logging
@@ -71,9 +147,7 @@ class ParsingStateManager:
         ]
         return self.batch_parsing_states
 
-    def update_states(
-        self, input_ids: torch.LongTensor
-    ) -> List[AcceptState]:
+    def update_states(self, input_ids: torch.LongTensor) -> List[AcceptState]:
         """
         Update parsing states with new input tokens.
 
@@ -101,10 +175,7 @@ class ParsingStateManager:
             logger.debug(
                 "num of stacks: \n"
                 + pprint.pformat(
-                    [
-                        len(acc_state.stacks)
-                        for acc_state in self.batch_parsing_states
-                    ]
+                    [len(acc_state.stacks) for acc_state in self.batch_parsing_states]
                 )
             )
 

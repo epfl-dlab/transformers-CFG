@@ -1,3 +1,44 @@
+"""
+String recognition for grammar-constrained parsing.
+
+This module provides the core string recognition functionality using a pushdown
+automaton approach. It orchestrates grammar state management, stack operations,
+and character matching to validate strings against EBNF grammars.
+
+Key Classes:
+    AcceptState: Represents parsing state with stacks and partial UTF-8 data
+    StringRecognizer: Main orchestrator for grammar-based string recognition
+
+Architecture:
+    StringRecognizer composes three focused components:
+    - GrammarState: Manages grammar encoding and rule lookups
+    - StackManager: Handles parsing stack operations and expansion
+    - CharacterMatcher: Matches characters against grammar rules
+
+Example:
+    >>> from transformers_cfg.parser import parse_ebnf
+    >>> from transformers_cfg.recognizer import StringRecognizer
+    >>>
+    >>> # Parse an EBNF grammar
+    >>> parsed = parse_ebnf('root ::= "hello" | "world"')
+    >>>
+    >>> # Create recognizer
+    >>> recognizer = StringRecognizer(
+    ...     parsed.grammar_encoding,
+    ...     start_rule_id=parsed.symbol_table["root"]
+    ... )
+    >>>
+    >>> # Check if string is accepted
+    >>> state = recognizer.get_initial_parsing_state()
+    >>> state = recognizer._update_state_with_string("hello", state)
+    >>> accepted = len(state.stacks) > 0  # True if accepted
+
+See Also:
+    - transformers_cfg.grammar: Grammar state management components
+    - transformers_cfg.parser: EBNF grammar parsing
+    - transformers_cfg.token_grammar_recognizer: Token-level recognition
+"""
+
 import logging
 from functools import lru_cache
 from typing import List, Tuple, Set, Optional
@@ -209,7 +250,13 @@ class StringRecognizer:
         return False
 
     @deprecated_method("_can_accept_bytes")
-    def _try_accept_bytes(self, byte_seq: bytes, stacks: Set[Tuple[int]], partial_utf8: PartialUTF8, verbose=True):
+    def _try_accept_bytes(
+        self,
+        byte_seq: bytes,
+        stacks: Set[Tuple[int]],
+        partial_utf8: PartialUTF8,
+        verbose=True,
+    ):
         """Deprecated: Use _can_accept_bytes() instead."""
         return self._can_accept_bytes(byte_seq, stacks, partial_utf8, verbose)
 

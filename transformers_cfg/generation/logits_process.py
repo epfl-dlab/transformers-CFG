@@ -1,8 +1,83 @@
-import copy
+"""
+Grammar-constrained logits processing for generation.
+
+This module provides the main entry point for applying grammar constraints during
+language model generation. It orchestrates parsing state management and token
+acceptance computation to mask invalid tokens in the logits before sampling.
+
+Key Components:
+    GrammarConstrainedLogitsProcessor: Main logits processor that integrates
+        grammar constraints with HuggingFace Transformers generation pipeline
+
+Architecture:
+    The logits processor composes two managers:
+    - AdapterManager: Handles loading and invoking generation adapters for
+      different backends (transformers, llama-cpp-python)
+    - ParsingStateManager: Manages batch parsing state initialization and updates
+
+    This composition enables:
+    - Support for multiple generation backends through adapters
+    - Clean separation between state management and logit masking
+    - Easy extension with new adapter types
+
+Execution Modes:
+    1. Speculation Mode ("speculation"):
+       - Try most likely token first
+       - If accepted, only mark that token as valid
+       - Fall back to full computation if rejected
+       - Best when grammar rarely rejects tokens
+
+    2. Full Mask Mode ("full_mask", default):
+       - Compute acceptance for entire vocabulary
+       - Comprehensive but more expensive
+       - Best for strict grammar constraints
+
+Example:
+    >>> from transformers import AutoModelForCausalLM, AutoTokenizer
+    >>> from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+    >>> from transformers_cfg.token_grammar_recognizer import IncrementalTokenRecognizer
+    >>>
+    >>> # Setup model and tokenizer
+    >>> model = AutoModelForCausalLM.from_pretrained("gpt2")
+    >>> tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    >>>
+    >>> # Create grammar constraint
+    >>> grammar = 'root ::= "yes" | "no"'
+    >>> recognizer = IncrementalTokenRecognizer(grammar, "root", tokenizer)
+    >>>
+    >>> # Create logits processor
+    >>> processor = GrammarConstrainedLogitsProcessor(
+    ...     grammar_constraint=recognizer,
+    ...     execution_mode="full_mask"
+    ... )
+    >>>
+    >>> # Generate with constraints
+    >>> output = model.generate(
+    ...     input_ids=tokenizer.encode("Answer: ", return_tensors="pt"),
+    ...     logits_processor=[processor],
+    ...     max_new_tokens=10
+    ... )
+
+Integration Points:
+    - HuggingFace Transformers: Via LogitsProcessor interface
+    - llama-cpp-python: Via custom adapter
+    - Custom backends: Implement adapter in adapters/ directory
+
+Performance:
+    - Handles vocabulary size mismatches automatically
+    - Caches token acceptance computation (see TokenAcceptanceComputer)
+    - Supports GPU acceleration for batch processing
+    - Optional debug logging with DEBUG_MODE=True environment variable
+
+See Also:
+    - adapter_manager.py: Adapter loading and invocation
+    - parsing_state_manager.py: Batch state management
+    - ../recognition/acceptance_computer.py: Token acceptance computation
+"""
+
 import math
 import os
 import pprint
-import importlib
 from typing import Optional, Literal
 
 import torch

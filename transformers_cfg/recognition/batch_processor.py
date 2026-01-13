@@ -1,4 +1,85 @@
-"""Batch state processing for incremental token recognition."""
+"""
+Batch state processing for incremental token recognition.
+
+This module provides the BatchStateProcessor class which handles incremental
+processing of token sequences in batch mode. It updates parsing states as new
+tokens are generated, converting tokens to byte sequences and validating them
+against grammar rules.
+
+Key Components:
+    BatchStateProcessor: Processes batch token sequences and maintains parsing
+        states for each sequence in the batch
+
+Architecture:
+    The processor handles three levels of updates:
+    1. Batch-level: update_batch_states() processes entire batches
+    2. Sequence-level: update_single_sequence() processes individual sequences
+    3. Token-level: update_with_token() processes single tokens
+
+    Processing flow:
+    Token ID → Token2ByteMapping → Byte sequence → StringRecognizer → New AcceptState
+
+    The processor tracks last_size to identify new tokens and avoid redundant
+    processing during incremental generation.
+
+Usage Patterns:
+    1. Incremental Batch Processing (typical):
+       - Call update_batch_states() with growing input_ids tensor
+       - Only new tokens (beyond last_size) are processed
+       - Each batch element maintains independent parsing state
+
+    2. Single Sequence Processing:
+       - Use update_single_sequence() for non-batch scenarios
+       - Converts token IDs to string if as_string=True for cleaner logging
+
+    3. Single Token Updates:
+       - Use update_with_token() for token-by-token validation
+       - Most granular level of processing
+
+Example:
+    >>> from transformers_cfg.recognition.batch_processor import BatchStateProcessor
+    >>> from transformers_cfg.recognizer import StringRecognizer
+    >>>
+    >>> # Create processor
+    >>> processor = BatchStateProcessor(
+    ...     string_recognizer=recognizer,
+    ...     tokenizer=tokenizer,
+    ...     token2byte_mapping=mapping,
+    ...     eos_token_id=2
+    ... )
+    >>>
+    >>> # Process batch of sequences
+    >>> input_ids = torch.tensor([[1, 2, 3], [4, 5, 6]])
+    >>> initial_states = [recognizer.get_initial_parsing_state() for _ in range(2)]
+    >>> updated_states = processor.update_batch_states(input_ids, initial_states)
+    >>>
+    >>> # Check if sequences are valid
+    >>> for i, state in enumerate(updated_states):
+    ...     valid = len(state.stacks) > 0
+    ...     print(f"Sequence {i} valid: {valid}")
+
+State Management:
+    - Each AcceptState contains:
+      - stacks: Set of parsing stacks representing possible parse states
+      - partial_utf8: Partial UTF-8 sequence state for multibyte characters
+    - Empty stacks (len(stacks) == 0) indicate invalid/rejected sequence
+    - Non-empty stacks indicate sequence is still valid according to grammar
+
+Integration:
+    Used by IncrementalTokenRecognizer to provide batch processing capability.
+    The recognizer exposes this via update_state_with_batch_token_seqs() for
+    backward compatibility.
+
+Performance:
+    - Incremental processing minimizes redundant work
+    - Batch processing leverages parallel token decoding
+    - last_size tracking enables efficient new token identification
+
+See Also:
+    - acceptance_computer.py: Computes which tokens are acceptable
+    - ../recognizer.py: Provides string-level grammar validation
+    - ../tokenization/mapping/token2byte.py: Token-to-byte conversion
+"""
 
 import logging
 from typing import List, Optional

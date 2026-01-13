@@ -1,4 +1,86 @@
-"""Parsing stack management for grammar recognition."""
+"""
+Parsing stack management for grammar recognition.
+
+This module provides the StackManager class which handles all parsing stack
+operations for pushdown automaton-based grammar recognition. It manages stack
+creation, expansion, and rule reference resolution with LRU caching for performance.
+
+Key Components:
+    StackManager: Manages parsing stacks representing possible parse states
+
+Architecture:
+    Grammar recognition uses a set-based pushdown automaton approach:
+    - Each stack is a tuple of grammar element offsets
+    - Multiple stacks represent alternative parse paths
+    - Stack operations include:
+      * Initialization: Create stacks from start rule alternatives
+      * Expansion: Resolve rule references and follow alternatives
+      * Advancement: Move to next element after consuming input
+
+    Stack representation:
+    stack = (element_offset_1, element_offset_2, ..., element_offset_n)
+    where each offset points to a grammar element that expects the next input.
+
+    Stack expansion flow:
+    1. Check if stack head is a rule reference (REF_RULE_MARKER)
+    2. If yes, replace with all alternatives from referenced rule
+    3. If no (terminal), stack is already expanded
+    4. Recursively expand any new rule references
+    5. Cache result for this stack tuple
+
+Example:
+    >>> from transformers_cfg.grammar.stack_manager import StackManager
+    >>> from transformers_cfg.grammar.grammar_state import GrammarState
+    >>>
+    >>> # Create manager with grammar state
+    >>> manager = StackManager(grammar_state)
+    >>>
+    >>> # Initialize parsing stacks
+    >>> initial_stacks = manager.create_initial_stacks()
+    >>> print(f"Starting with {len(initial_stacks)} parse paths")
+    >>>
+    >>> # Expand a stack (e.g., after consuming a character)
+    >>> if initial_stacks:
+    ...     stack = list(initial_stacks)[0]
+    ...     expanded = manager.expand_stack_head(stack)
+    ...     print(f"Expansion yielded {len(expanded)} stacks")
+
+Stack Operations:
+    1. create_initial_stacks():
+       - Called once to initialize parsing
+       - Expands start rule into all possible starting stacks
+       - Each alternative of start rule becomes a stack
+       - Critical bug fixed: Now processes ALL alternatives, not just first
+
+    2. expand_stack_head(stack):
+       - Called after consuming input to advance parser
+       - If stack head is rule reference, replace with rule alternatives
+       - If stack head is terminal, return as-is
+       - Cached via @lru_cache(maxsize=32768) for performance
+
+Caching Strategy:
+    Stack expansion uses LRU cache with 32768 entries because:
+    - Same stacks recur frequently during generation
+    - Expansion involves recursive grammar traversal (expensive)
+    - Cache dramatically improves performance for complex grammars
+    - Note: Cache persists in memory until explicit clearing
+
+Integration:
+    Used by StringRecognizer to manage parsing state as it consumes input
+    characters/bytes. Works closely with GrammarState for rule lookups and
+    CharacterMatcher for determining when to advance stacks.
+
+Performance:
+    - Initial stack creation: O(alternatives in start rule)
+    - Stack expansion without cache: O(depth of rule references)
+    - Stack expansion with cache: O(1) for cache hits
+    - Memory: One cache entry per unique stack configuration encountered
+
+See Also:
+    - grammar_state.py: Provides grammar encoding and rule offset lookups
+    - character_matcher.py: Determines when to advance stacks
+    - ../recognizer.py: Uses StackManager for parsing orchestration
+"""
 
 import logging
 from functools import lru_cache
