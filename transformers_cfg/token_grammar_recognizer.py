@@ -13,6 +13,7 @@ from transformers_cfg.tokenization.mapping.token2byte import (
     Token2ByteMapping,
 )
 from transformers_cfg.utf8_utils import PartialUTF8
+from transformers_cfg.recognition import BatchStateProcessor, TokenAcceptanceComputer
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,17 @@ class BaseTokenRecognizer(ABC):
 
 
 class IncrementalTokenRecognizer(BaseTokenRecognizer):
+    """
+    Incremental token recognizer using composed components.
+
+    This class orchestrates BatchStateProcessor and TokenAcceptanceComputer
+    to provide incremental token recognition with grammar constraints.
+
+    Attributes:
+        batch_processor: Handles batch state updates
+        acceptance_computer: Computes token acceptance masks
+    """
+
     def __init__(
         self,
         grammar_str: str,
@@ -136,38 +148,52 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
             trie=trie,
             token2byte_mapping=homomorphism,
         )
-        self.last_size = None
+
+        # Create composed components
+        self._batch_processor = BatchStateProcessor(
+            self.string_recognizer,
+            self.tokenizer,
+            self.token2byte_mapping,
+            self.eos_token_id,
+        )
+        self._acceptance_computer = TokenAcceptanceComputer(
+            self.string_recognizer,
+            self.byte_trie,
+            self.token2byte_mapping,
+            self.eos_token_id,
+            self.use_unicode,
+        )
+
+    # Properties for accessing composed components
+    @property
+    def batch_processor(self) -> BatchStateProcessor:
+        """Access to batch processor component."""
+        return self._batch_processor
+
+    @property
+    def acceptance_computer(self) -> TokenAcceptanceComputer:
+        """Access to acceptance computer component."""
+        return self._acceptance_computer
+
+    @property
+    def last_size(self):
+        """Get last processed size (backward compatibility)."""
+        return self._batch_processor.last_size
+
+    @last_size.setter
+    def last_size(self, value):
+        """Set last processed size (backward compatibility)."""
+        self._batch_processor.last_size = value
 
     def _update_state_with_token_id(
         self, token_id: int, parsing_state: AcceptState
     ) -> AcceptState:
-        if parsing_state.must_stop():
-            if token_id == self.eos_token_id:
-                return self.string_recognizer.get_termination_parsing_state()
-            else:
-                raise ValueError(
-                    f"All stacks are empty, so the only token accepted is EOS({self.eos_token_id}), but got {token_id}.\
-                        This error is likely due to the previous token not being accepted by the grammar."
-                )
-        if token_id == self.eos_token_id:
-            if parsing_state.can_stop():
-                # if at least one of the stack is empty, we can stop
-                # we clear all the stacks, meaning that we don't accept any token after EOS
-                return self.string_recognizer.get_termination_parsing_state()
-            else:
-                raise ValueError(
-                    f"At least one of the stack should be empty when EOS is reached. However, "
-                    f"the stacks are {parsing_state.stacks}"
-                )
+        """
+        Update state with single token (backward compatibility wrapper).
 
-        bytes_or_codepoints = self.token2byte_mapping.map(token_id)
-        parsing_state = self.string_recognizer._update_state_with_bytes(
-            bytes_or_codepoints, parsing_state
-        )
-        return parsing_state
-
-        # if self.last_size is not set (which would be the case when processing the first token).
-        # In this case, do nothing.
+        Deprecated: New code should use batch_processor.update_with_token() directly.
+        """
+        return self._batch_processor.update_with_token(token_id, parsing_state)
 
     def update_state_with_batch_token_seqs(
         self,
@@ -175,54 +201,14 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
         batch_parsing_states: list[AcceptState],
         valid_token_start_idx: Optional[int] = None,
     ) -> list[AcceptState]:
+        """
+        Update parsing states for batch of token sequences (backward compatibility wrapper).
 
-        if self.last_size is None:
-            valid_prefix_tokens = [
-                (
-                    single_input_ids[valid_token_start_idx:]
-                    if valid_token_start_idx is not None
-                    else []
-                )
-                for single_input_ids in input_ids
-            ]
-
-            # self.grammar_acceptor.accept_token_ids(valid_prefix_tokens, self.stacks)
-            batch_parsing_states = [
-                self._update_state_with_single_token_seq(prefix, parsing_state)
-                for prefix, parsing_state in zip(
-                    valid_prefix_tokens, batch_parsing_states
-                )
-            ]
-            #  if the length of the current input IDs (input_ids[0]) is exactly one more than self.last_size.
-            #  This is expected in a scenario where inputs are processed incrementally, one token at a time.
-        elif len(input_ids[0]) == self.last_size + 1:
-            batch_parsing_states = [
-                self._update_state_with_token_id(single_input_ids[-1], parsing_state)
-                for single_input_ids, parsing_state in zip(
-                    input_ids, batch_parsing_states
-                )
-            ]
-            #  ensure that the input size is consistent with the expected incremental processing
-            #  (i.e., one token at a time).
-        else:
-            # here we check if the input_ids are one token longer than the last time we processed
-            # but we don't check if input_ids are actually valid.
-            # Imagine a scenario where we generate 10 tokens, then we replace the 10 generated tokens with 10 new tokens.
-            # In this case, the input_ids will be consistent with the last_size, but the input_ids are not valid.
-            # However, should we really check if the input_ids are valid here?
-            # If we do, then we need to reparse the whole input_ids at each call, which is not efficient.
-            # Maybe we should just trust the user to provide valid input_ids?
-            # The conclusion is that, we assume the input_ids are valid, and our generation will be correct.
-            # If the input_ids are not valid, then the generation result will be wrong and we don't take responsibility for that.
-            raise RuntimeError(
-                "Input ID's length is inconsistent with the current state of "
-                "the GrammarConstrainedLogitsProcessor. If you want to process "
-                "another input sequence, please instantiate a new "
-                "GrammarConstrainedLogitsProcessor."
-            )
-        self.last_size = len(input_ids[0])
-
-        return batch_parsing_states
+        Deprecated: New code should use batch_processor.update_batch_states() directly.
+        """
+        return self._batch_processor.update_batch_states(
+            input_ids, batch_parsing_states, valid_token_start_idx
+        )
 
     def _update_state_with_single_token_seq(
         self,
@@ -230,24 +216,14 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
         parsing_state: Optional[AcceptState] = None,
         as_string=True,
     ) -> AcceptState:
-        if parsing_state is None:
-            parsing_state = self.string_recognizer.get_initial_parsing_state()
-        if as_string:
-            string = self.tokenizer.decode(token_ids)
-            parsing_state = self.string_recognizer._update_state_with_string(
-                string, parsing_state
-            )
-        else:
-            for i, token_id in enumerate(token_ids):
-                parsing_state = self._update_state_with_token_id(
-                    token_id, parsing_state
-                )
-                if len(parsing_state.stacks) > 0:
-                    cur_token_ids = token_ids[: i + 1]
-                    logging.debug(f"{cur_token_ids} is accepted")
-                    decoded_string = self.tokenizer.decode(cur_token_ids)
-                    logging.debug(f"The decoded string is {decoded_string}")
-        return parsing_state
+        """
+        Update state with token sequence (backward compatibility wrapper).
+
+        Deprecated: New code should use batch_processor.update_single_sequence() directly.
+        """
+        return self._batch_processor.update_single_sequence(
+            token_ids, parsing_state, as_string
+        )
 
     def accept_token_ids(
         self,
@@ -263,17 +239,14 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
     def get_next_token_acceptance(
         self, parsing_state: AcceptState, device: torch.device
     ) -> torch.Tensor:
-        acceptance_matrix = torch.stack(
-            [
-                self.get_next_token_acceptance_for_single_stack(
-                    tuple(stack), parsing_state.partial_utf8, device
-                )
-                for stack in parsing_state.stacks
-            ]
+        """
+        Compute token acceptance (backward compatibility wrapper).
+
+        Deprecated: New code should use acceptance_computer.compute_token_acceptance() directly.
+        """
+        return self._acceptance_computer.compute_token_acceptance(
+            parsing_state, device
         )
-        # Merge stacks: any True => True
-        acceptance = acceptance_matrix.any(dim=0)
-        return acceptance
 
     # If running on a GPU device this cache can continue to fill up GPU memory
     # Dereferencing the object will not clear the cache
@@ -281,32 +254,18 @@ class IncrementalTokenRecognizer(BaseTokenRecognizer):
     def get_next_token_acceptance_for_single_stack(
         self, stack: Tuple[int], partial_utf8: PartialUTF8, device: torch.device
     ) -> torch.Tensor:
-        # stack = list(stack)  # needs to come in as a tuple for lru_cache
-        assert isinstance(stack, tuple)
+        """
+        Compute token acceptance for single stack (backward compatibility wrapper).
 
-        if self.use_unicode:
-
-            accept_f = lambda x: self.string_recognizer._try_accept_bytes(
-                x, {stack}, partial_utf8=partial_utf8
-            )
-            token_acceptance = self.byte_trie.get_next_token_acceptance(
-                accept=accept_f, accept_eos=False, eos_token_id=self.eos_token_id
-            )
-        else:
-            accepts = [False] * len(self.token2byte_mapping)
-            token_acceptance = check_token_acceptance_in_trie(
-                self.byte_trie.root,
-                [stack],
-                self.string_recognizer,
-                self.eos_token_id,
-                accepts,
-            )
-        x = torch.tensor(token_acceptance, dtype=torch.bool, device=device)
-        x_eos = self.validate_and_set_eos_acceptance(x, stack)
-        return x_eos
+        Deprecated: New code should use acceptance_computer.compute_for_single_stack() directly.
+        """
+        return self._acceptance_computer.compute_for_single_stack(
+            stack, partial_utf8, device
+        )
 
     def reset(self):
-        self.last_size = None
+        """Reset processor state (backward compatibility wrapper)."""
+        self._batch_processor.reset()
 
 
 # def check_token_acceptance_in_trie(trie, stacks, grammar, eos_token_id, accepts):
